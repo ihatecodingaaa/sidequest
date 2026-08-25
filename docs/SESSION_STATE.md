@@ -4,8 +4,9 @@ Kept current so another session can pick this up cold. Update after every major
 stage.
 
 **Last updated:** 26 August 2026
-**Status:** feature complete, verified, ready to deploy
-**Deployment:** local only. Not pushed to GitHub, not deployed to Vercel.
+**Status:** feature complete, verified, pushed to GitHub
+**Repository:** https://github.com/ihatecodingaaa/sidequest
+**Deployment:** not yet deployed to Vercel.
 
 ---
 
@@ -96,17 +97,18 @@ Deliberate, and mostly documented in the product itself.
 
 ## Next actions
 
-1. **Push to GitHub and deploy to Vercel.** Needs the user: it touches external
-   accounts. No environment variables, no database, no secrets. `npm run build`
-   passes locally.
+1. **Deploy on Vercel.** Import the GitHub repo through the Vercel web UI.
+   Framework preset is Next.js, root directory is the repo root, and every
+   build setting is the default. There are no environment variables to set.
 2. After deploying, test the live URL at phone width and on a laptop: direct
-   route refresh, the manifest, install prompt, and every outbound link.
+   route refresh, the manifest, the install prompt, and every outbound link.
 3. Record the deployment URL in this file.
-4. Rehearse `docs/DEMO_SCRIPT.md` twice on the deployed URL.
+4. Rehearse `docs/DEMO_SCRIPT.md` twice against the deployed URL.
 
 ## Repository
 
-- Branch: `master`
+- Remote: https://github.com/ihatecodingaaa/sidequest
+- Branch: `main`, tracking `origin/main`
 - Working tree: clean
 - Author on every commit: Lucas Tan
 - No `Co-Authored-By` trailers, and no AI attribution anywhere in the history.
