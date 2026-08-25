@@ -1,0 +1,207 @@
+@import "tailwindcss";
+
+/*
+  SIDEQUEST design system.
+  Dark-first by deliberate choice: the product is a night-friendly consumer app,
+  and committing to one look removes a whole class of contrast bugs before judging.
+  Pillar colour coding: Pulse = cyan, Missions = violet, Safe = coral, progress = volt.
+*/
+
+@theme {
+  --color-ink-950: #06070c;
+  --color-ink-900: #0a0b12;
+  --color-ink-850: #0f111a;
+  --color-ink-800: #14161f;
+  --color-ink-700: #1a1d28;
+  --color-ink-600: #242836;
+  --color-ink-500: #333849;
+
+  --color-chalk: #f4f5f9;
+  --color-mist: #b6bccd;
+  --color-muted: #858ca3;
+  --color-faint: #5d6478;
+
+  --color-quest-300: #a99bff;
+  --color-quest-400: #8b78ff;
+  --color-quest-500: #6e56f8;
+  --color-quest-600: #573fdb;
+
+  --color-volt-300: #d2ff86;
+  --color-volt-400: #c2ff5c;
+  --color-volt-500: #b4ff3d;
+  --color-volt-600: #8fd613;
+
+  --color-pulse-300: #7ee8f7;
+  --color-pulse-400: #4fddf2;
+  --color-pulse-500: #22cde6;
+  --color-pulse-600: #12a6bd;
+
+  --color-coral-300: #ffa1a1;
+  --color-coral-400: #ff8080;
+  --color-coral-500: #ff5f5f;
+  --color-coral-600: #e23f3f;
+
+  --color-gold-400: #ffd479;
+  --color-gold-500: #ffc94d;
+  --color-gold-600: #e0a92a;
+
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-grotesk), var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 1.25rem;
+  --radius-tile: 1rem;
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root {
+  color-scheme: dark;
+  --bg: var(--color-ink-900);
+  --nav-height: 4.5rem;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+@layer base {
+  * {
+    border-color: color-mix(in oklab, var(--color-chalk) 8%, transparent);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--color-chalk);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  /* Visible, on-brand focus ring everywhere. */
+  :focus-visible {
+    outline: 2px solid var(--color-quest-400);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-quest-500) 45%, transparent);
+    color: var(--color-chalk);
+  }
+
+  button, [role="button"], a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer utilities {
+  .sq-app-bg {
+    background:
+      radial-gradient(120% 70% at 50% -10%, color-mix(in oklab, var(--color-quest-500) 22%, transparent) 0%, transparent 60%),
+      radial-gradient(90% 55% at 100% 0%, color-mix(in oklab, var(--color-pulse-500) 12%, transparent) 0%, transparent 55%),
+      var(--color-ink-900);
+  }
+
+  .sq-card {
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-chalk) 6%, transparent) 0%,
+      color-mix(in oklab, var(--color-chalk) 2.5%, transparent) 100%
+    );
+    border: 1px solid color-mix(in oklab, var(--color-chalk) 9%, transparent);
+    border-radius: var(--radius-card);
+    backdrop-filter: blur(8px);
+  }
+
+  .sq-card-flat {
+    background: var(--color-ink-800);
+    border: 1px solid color-mix(in oklab, var(--color-chalk) 8%, transparent);
+    border-radius: var(--radius-card);
+  }
+
+  .sq-pressable {
+    transition:
+      transform 160ms var(--ease-out-quint),
+      background-color 160ms ease,
+      border-color 160ms ease,
+      box-shadow 160ms ease;
+  }
+
+  .sq-pressable:active {
+    transform: scale(0.985);
+  }
+
+  .sq-scroll-x {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    overscroll-behavior-x: contain;
+  }
+
+  .sq-scroll-x::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sq-edge-fade {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+  }
+
+  .sq-grid-lines {
+    background-image:
+      linear-gradient(color-mix(in oklab, var(--color-chalk) 4%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in oklab, var(--color-chalk) 4%, transparent) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .text-balance-tight {
+    text-wrap: balance;
+  }
+}
+
+/* Motion: everything opt-out friendly. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes sq-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sq-pop {
+  0% { opacity: 0; transform: scale(0.9); }
+  60% { opacity: 1; transform: scale(1.03); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes sq-shimmer {
+  from { background-position: -160% 0; }
+  to { background-position: 260% 0; }
+}
+
+@keyframes sq-pulse-ring {
+  0% { opacity: 0.55; transform: scale(0.85); }
+  70% { opacity: 0; transform: scale(1.5); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+
+.animate-rise { animation: sq-rise 420ms var(--ease-out-quint) both; }
+.animate-pop { animation: sq-pop 380ms var(--ease-out-quint) both; }
+.animate-pulse-ring { animation: sq-pulse-ring 2.4s ease-out infinite; }
