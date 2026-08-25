@@ -33,7 +33,11 @@ export function CheckoutMock({
   return (
     <div
       className={cn(
-        "relative aspect-[3/4] w-full overflow-hidden rounded-3xl border transition-colors duration-500",
+        "relative w-full overflow-hidden rounded-3xl border transition-colors duration-500",
+        // Hotspots are positioned by percentage, so the observe phase needs a
+        // fixed box. The comparison view has none and must size to its content,
+        // otherwise a narrow column forces the internals to overlap.
+        onHotspot ? "aspect-[3/4]" : "h-full",
         after ? "border-volt-500/30 bg-ink-850" : "border-white/10 bg-ink-850",
       )}
     >
@@ -45,7 +49,7 @@ export function CheckoutMock({
         <span className="text-[0.7rem] font-semibold text-faint">Lane 4</span>
       </div>
 
-      <div className="flex h-[calc(100%-2.75rem)] flex-col p-4">
+      <div className={cn("flex flex-col p-3.5", onHotspot ? "h-[calc(100%-2.75rem)]" : "")}>
         {/* Scan status */}
         <div
           className={cn(
@@ -61,7 +65,7 @@ export function CheckoutMock({
             {after && has("patch-confirmation") ? (
               <div className="min-w-0">
                 <p className="font-display text-base leading-tight font-bold text-chalk">
-                  Kopi O 3-in-1, 20s
+                  Kopi O 3-in-1
                 </p>
                 <p className="text-sm font-semibold text-volt-300">Added &middot; $4.20</p>
               </div>
@@ -72,7 +76,7 @@ export function CheckoutMock({
         </div>
 
         {/* Item list */}
-        <div className="mt-3 min-h-0 flex-1">
+        <div className={cn("mt-3", onHotspot ? "min-h-0 flex-1" : "")}>
           <p className="text-[0.6rem] font-semibold uppercase tracking-wider text-faint">
             {after && has("patch-confirmation") ? "Your basket (6 items)" : "Items"}
           </p>
@@ -103,7 +107,7 @@ export function CheckoutMock({
           </ul>
 
           {!after ? (
-            <p className="mt-1 text-[0.6rem] text-faint/70">+3 more</p>
+            <p className="mt-1 text-[0.6rem] text-faint">+3 more</p>
           ) : null}
         </div>
 
@@ -146,7 +150,7 @@ export function CheckoutMock({
               className="min-h-11 rounded-xl border border-white/8 bg-white/3 text-[0.7rem] font-medium text-faint"
             >
               Remove item
-              <span className="mt-0.5 block text-[0.55rem] text-faint/70">staff approval</span>
+              <span className="mt-0.5 block text-[0.55rem] text-faint">staff approval</span>
             </button>
           )}
 
@@ -166,7 +170,7 @@ export function CheckoutMock({
             >
               <CircleHelp aria-hidden className="mr-1 inline size-3" />
               Call assistant
-              <span className="mt-0.5 block text-[0.55rem] text-faint/70">light + queue pause</span>
+              <span className="mt-0.5 block text-[0.55rem] text-faint">light + queue pause</span>
             </button>
           )}
         </div>
