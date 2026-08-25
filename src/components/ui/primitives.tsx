@@ -137,7 +137,7 @@ export function SectionHeader({
       {action && href ? (
         <Link
           href={href}
-          className="shrink-0 rounded-full px-2 py-1 text-sm font-semibold text-quest-300 hover:text-quest-400"
+          className="-mr-2 inline-flex min-h-11 shrink-0 items-center rounded-full px-2 text-sm font-semibold text-quest-300 hover:text-quest-400"
         >
           {action}
         </Link>
@@ -176,7 +176,7 @@ export function ProgressBar({
       aria-valuenow={pct}
       aria-valuemin={0}
       aria-valuemax={100}
-      aria-label={label}
+      aria-label={label ?? "Progress"}
     >
       <div
         className={cn("h-full rounded-full transition-[width] duration-700 ease-out", fill[accent])}

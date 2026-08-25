@@ -65,14 +65,19 @@ export function SettingsScreen() {
 
       {/* Name */}
       <section>
-        <SectionHeader title="Name" subtitle="Used only for the greeting on Home." />
-        <input
-          value={ready ? profile.displayName : ""}
-          onChange={(event) => setDisplayName(event.target.value)}
-          placeholder="Optional"
-          maxLength={24}
-          className="h-12 w-full rounded-2xl border border-white/10 bg-white/5 px-4 text-base text-chalk placeholder:text-faint focus:border-quest-400 focus:outline-none"
-        />
+        <label className="block">
+          <span className="text-lg font-bold tracking-tight text-chalk">Name</span>
+          <span className="mt-0.5 block text-sm text-muted">
+            Used only for the greeting on Home.
+          </span>
+          <input
+            value={ready ? profile.displayName : ""}
+            onChange={(event) => setDisplayName(event.target.value)}
+            placeholder="Optional"
+            maxLength={24}
+            className="mt-3 h-12 w-full rounded-2xl border border-white/10 bg-white/5 px-4 text-base text-chalk placeholder:text-faint focus:border-quest-400 focus:outline-none"
+          />
+        </label>
       </section>
 
       {/* Age band */}
