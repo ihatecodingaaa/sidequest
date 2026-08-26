@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { useAppStore } from "@/store/app-store";
+import { clearInstallDismissal } from "@/hooks/use-install";
 
 /**
  * Demo shortcuts, driven by the URL so they can be bookmarked before judging.
@@ -24,8 +25,14 @@ export function DemoModeParam() {
   useEffect(() => {
     if (!demo) return;
 
-    if (demo === "reset") resetDemo();
-    else loadDemoProgress();
+    if (demo === "reset") {
+      // Same reason as the Settings reset: the dismissal is device state and
+      // has to go too, or the next judge sees a different app.
+      clearInstallDismissal();
+      resetDemo();
+    } else {
+      loadDemoProgress();
+    }
 
     router.replace("/");
   }, [demo, loadDemoProgress, resetDemo, router]);

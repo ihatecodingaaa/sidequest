@@ -9,6 +9,7 @@ import { INTEREST_OPTIONS, NEIGHBOURHOOD_NAMES, nearestNeighbourhood } from "@/d
 import { PageHeader } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/primitives";
+import { clearInstallDismissal } from "@/hooks/use-install";
 import { useAppStore } from "@/store/app-store";
 import { useProfile } from "@/hooks/use-profile";
 
@@ -21,7 +22,18 @@ export function SettingsScreen() {
   const setNeighbourhood = useAppStore((state) => state.setNeighbourhood);
   const setDisplayName = useAppStore((state) => state.setDisplayName);
   const loadDemoProgress = useAppStore((state) => state.loadDemoProgress);
-  const resetDemo = useAppStore((state) => state.resetDemo);
+  const resetStore = useAppStore((state) => state.resetDemo);
+
+  /*
+   * The install dismissal is a device preference rather than profile state, so
+   * it lives outside the store. A demo reset still has to clear it: judging
+   * happens more than once and the next judge should see the same app the last
+   * one did.
+   */
+  const resetDemo = () => {
+    clearInstallDismissal();
+    resetStore();
+  };
 
   const [locationState, setLocationState] = useState<LocationState>("idle");
   const [confirmReset, setConfirmReset] = useState(false);

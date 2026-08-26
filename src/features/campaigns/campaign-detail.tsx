@@ -24,6 +24,8 @@ import { PageHeader } from "@/components/layout/app-shell";
 import { useCampaign } from "./use-campaign";
 import { SidekickLine } from "./sidekick";
 import { FollowUpList } from "./follow-up-list";
+import { InstallInvite } from "@/features/pwa/install-invite";
+import { useCampaignWarmup } from "./use-campaign-warmup";
 import { CampaignDemoControls } from "./campaign-demo-controls";
 import {
   campaignFraction,
@@ -40,6 +42,9 @@ import type { Campaign, CampaignMode } from "@/types/campaign";
 
 export function CampaignDetail({ campaign }: { campaign: Campaign }) {
   const { ready, progress, ensureStarted, changeMode } = useCampaign(campaign);
+
+  // Above the early returns: hooks cannot live behind a conditional.
+  useCampaignWarmup(campaign);
 
   if (!ready) return <CampaignSkeleton campaign={campaign} />;
   if (!progress) return <CampaignStart campaign={campaign} onStart={ensureStarted} />;
@@ -258,6 +263,13 @@ export function CampaignDetail({ campaign }: { campaign: Campaign }) {
       <StationCodeEntry campaign={campaign} />
 
       <FollowUpList campaign={campaign} />
+
+      {/*
+        The one moment SIDEQUEST has an honest reason to ask. The follow-ups
+        above unlock on a delay, so "come back later" is a fact rather than a
+        retention tactic. Dismissible, remembered, and it gates nothing.
+      */}
+      <InstallInvite eligible={progress.finaleCompleted} />
 
       {/*
         Organiser and evaluator tools. Quiet links rather than two full-width
