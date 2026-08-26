@@ -16,6 +16,7 @@ import { CrewShiftPlayer } from "./crew-shift/crew-shift-player";
 import { StoryView, useSegment } from "./story-view";
 import { storyBeatLabel } from "@/components/story/story-beat";
 import { CharacterPortrait } from "@/components/story/character-portrait";
+import { MissionWorld } from "@/components/mission/mission-world";
 import { SidekickLine } from "./sidekick";
 import { ChapterComplete } from "./chapter-complete";
 import { useCampaign } from "./use-campaign";
@@ -179,7 +180,27 @@ export function ChapterRunner({
             assistive technology still hears the same short screen it did
             before.
           */}
-          {chapter.intro?.slug ? (
+          {/*
+            Crew Shift opens on its mechanic rather than on the cast.
+
+            Every other chapter is a scene four people are standing in, so four
+            portraits and a timestamp are the right establishing shot. Crew
+            Shift is not about who is present, it is about a room moving after
+            it talks, and that is a thing a group photo cannot show. Its world
+            draws four figures of equal weight with scattered arrows becoming
+            aligned ones, and marks none of them as the reason the others
+            moved, which is the same rule the mission itself follows.
+          */}
+          {chapter.config.mechanic === "crew-shift" ? (
+            <div className="mt-10">
+              <MissionWorld art="crew-shift" accent={chapter.accent} scale="intro" />
+              {chapter.intro?.slug ? (
+                <p className="mt-4 text-center text-[0.7rem] font-bold uppercase tracking-[0.18em] text-faint">
+                  {chapter.intro.slug}
+                </p>
+              ) : null}
+            </div>
+          ) : chapter.intro?.slug ? (
             <div className="mt-10">
               <div className="relative overflow-hidden rounded-3xl border border-white/8 bg-white/[0.03] px-5 py-10">
                 <div
