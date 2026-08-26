@@ -346,3 +346,47 @@ test.describe("completion is reward-first", () => {
     await expect(page.getByText("New Echo unlocked")).toHaveCount(0);
   });
 });
+
+/*
+ * The mission worlds.
+ *
+ * These are decorative by design, so nothing here can be asserted through the
+ * accessibility tree. That is exactly why they need covering another way: the
+ * failure that matters is a mission rendering somebody else's scene, and every
+ * existing test would stay green through it.
+ */
+test.describe("hero missions carry their own world", () => {
+  const HERO = [
+    { path: "/missions/mission-rewind", world: "rewind" },
+    { path: "/missions/mission-norm-mirror", world: "norm-mirror" },
+    { path: "/missions/mission-breaksafe", world: "breaksafe" },
+  ];
+
+  for (const { path, world } of HERO) {
+    test(`${world} appears on its own discovery surface and no other does`, async ({ page }) => {
+      await seedProfile(page);
+      await page.goto(path);
+
+      await expect(page.locator(`[data-mission-world="${world}"]`).first()).toBeAttached();
+
+      for (const other of HERO.filter((entry) => entry.world !== world)) {
+        await expect(page.locator(`[data-mission-world="${other.world}"]`)).toHaveCount(0);
+      }
+    });
+  }
+
+  test("the worlds stay decorative, so they never shadow the mission title", async ({ page }) => {
+    await seedProfile(page);
+    await page.goto("/missions");
+
+    const worlds = page.locator("[data-mission-world]");
+    expect(await worlds.count()).toBeGreaterThan(0);
+
+    for (const handle of await worlds.all()) {
+      await expect(handle).toHaveAttribute("aria-hidden", "true");
+    }
+
+    // The title is the thing that names the mission, not the drawing.
+    await expect(page.getByRole("link", { name: /REWIND/ }).first()).toBeVisible();
+  });
+});

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { ArrowRight, Lightbulb, RotateCcw } from "lucide-react";
 
 import { cn } from "@/lib/cn";
+import { MissionWorld } from "@/components/mission/mission-world";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/primitives";
 import { MissionShell } from "@/features/missions/engine/mission-shell";
@@ -162,6 +163,18 @@ export function RewindPlayer({
         }
       >
         <div className="animate-rise py-6">
+          {/*
+            The world before the words.
+
+            This screen is where somebody decides whether to spend six minutes,
+            and it used to open with a chip and a headline over most of a
+            screen of empty black. The scene states the shape of the mission
+            (a moment, a pivot, two futures, one of them folding back) before
+            a single line is read, which is the job the small corner mark was
+            never able to do at that size.
+          */}
+          <MissionWorld art="rewind" accent="coral" scale="intro" className="mb-6" />
+
           <Chip accent="coral">{scenario.intro.kicker}</Chip>
           <h1 className="mt-4 text-balance-tight font-display text-[2.1rem] leading-[1.05] font-extrabold tracking-tight text-chalk">
             {scenario.intro.title}

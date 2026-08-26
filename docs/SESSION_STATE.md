@@ -177,6 +177,26 @@ have caught any of them, because none of them are defects in the components.
 | The Start pill sat across a face | The hero cast is anchored bottom right and the control is in flow, so they collided at every phone width | Left edge of the cluster masked out, which also pushes the eye to Ken |
 | Chapter intros were mostly empty | Roughly 750px of black between the last line and the footer, which reads as a failed load rather than restraint | A scene band: the four leads and the timestamp, decorative, so the reading load the tap audit lowered stays lowered |
 
+### Mission worlds pass
+
+The audit before this one graded mission artwork FAIL and it was the right
+call. Eleven dark rectangles with a 38px line drawing in the corner is a list.
+
+| Change | Effect |
+| ------ | ------ |
+| Worlds, above marks | A wide scene per signature mission in `mission-world.tsx`, on discovery cards, mission detail and mission intros. The marks keep the compact rows, where a scene would blur. |
+| REWIND | Three figures, a filled pivot, one future running on and one folding back into it. The mechanic is legible before the copy. |
+| Norm Mirror | An imagined crowd inside a thought outline against a measured handful, across a bent mirror. No numbers and no axis, so the drawing cannot claim more than prototype data supports. |
+| BREAKSAFE | The same figure at the same coordinates in both halves, with only the environment rearranged. The mission's claim is now the picture. |
+| Crew Shift | Four figures of equal weight, scattered arrows becoming aligned ones. No individual is marked as the cause. |
+| Mission detail gained art | It was the last surface before committing minutes and the only discovery surface with no picture of what was being committed to. |
+| Story beats centre | Narration used to render two lines at the top of a 62vh column with the control in a fixed footer. Centred instead: no decoration added, no reading added. |
+| Speaker portraits at 56px | At 44px they sat below the cap height of two lines and read as a bullet beside the name. |
+
+Verified by rendering, not by inspection: speaker beats now confirmed to show
+the portrait, the name and the expression together, which the previous audit
+could not confirm.
+
 ## Verification
 
 Baseline before this stage, then after.

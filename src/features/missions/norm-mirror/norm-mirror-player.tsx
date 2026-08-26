@@ -6,6 +6,7 @@ import { ArrowRight, Info, Users } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/primitives";
+import { MissionWorld } from "@/components/mission/mission-world";
 import { MissionShell } from "@/features/missions/engine/mission-shell";
 import { ShiftReveal } from "@/components/reveal/shift-reveal";
 import {
@@ -116,6 +117,18 @@ export function NormMirrorPlayer({
         }
       >
         <div className="animate-rise py-6">
+          {/*
+            The gap, drawn, before the gap is described.
+
+            The scene is a crowd you imagine set against the handful actually
+            measured, across a mirror line that is bent rather than straight.
+            It carries no numbers and no axis on purpose: the aggregates behind
+            this mission are prototype data, the provenance note below says so,
+            and a drawing that looked like a chart would quietly claim more
+            than the data can support.
+          */}
+          <MissionWorld art="norm-mirror" accent="volt" scale="intro" className="mb-6" />
+
           <Chip accent="volt">Hero Mission</Chip>
           <h1 className="mt-4 text-balance-tight font-display text-[2.1rem] leading-[1.05] font-extrabold tracking-tight text-chalk">
             What you think everyone does

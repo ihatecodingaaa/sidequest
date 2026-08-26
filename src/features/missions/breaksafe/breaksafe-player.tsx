@@ -6,6 +6,7 @@ import { ArrowRight, Blocks, Check, ShieldCheck, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/primitives";
+import { MissionWorld } from "@/components/mission/mission-world";
 import { MissionShell } from "@/features/missions/engine/mission-shell";
 import { ShiftReveal } from "@/components/reveal/shift-reveal";
 import {
@@ -103,6 +104,19 @@ export function BreaksafePlayer({
         }
       >
         <div className="animate-rise py-6">
+          {/*
+            The argument, drawn.
+
+            The same figure stands at the same coordinates in both halves. Only
+            the environment around it moves: loose parts and a friction marker
+            on the left, the identical parts squared up and resolved on the
+            right. That is the mission's whole claim, and drawing it this way
+            makes it very hard to misread as being about the person. If a later
+            edit ever makes the figure differ between halves, the claim has
+            been inverted and the drawing is wrong.
+          */}
+          <MissionWorld art="breaksafe" accent="quest" scale="intro" className="mb-6" />
+
           <Chip accent="quest">Hero Mission</Chip>
           <h1 className="mt-4 text-balance-tight font-display text-[2.1rem] leading-[1.05] font-extrabold tracking-tight text-chalk">
             Crime prevention as engineering

@@ -8,7 +8,8 @@ import { ACCENT_GRADIENT, ACCENT_TEXT } from "@/lib/accent";
 import { formatDuration } from "@/lib/format";
 import { HERO_MISSION_IDS, getMissions } from "@/data/missions";
 import { useProfile } from "@/hooks/use-profile";
-import { MISSION_ART, MissionArt } from "@/components/mission/mission-art";
+import { MISSION_ART } from "@/components/mission/mission-art";
+import { MissionWorld } from "@/components/mission/mission-world";
 
 /**
  * The three signature missions, given their own treatment.
@@ -40,29 +41,38 @@ export function SignatureStrip({ className }: { className?: string }) {
                 )}
               />
 
+              {/*
+                The mark became a scene.
+
+                A mark answers "which mission is this" once you already know
+                the set. It cannot answer "what kind of thing is this" for
+                somebody who has never opened one, and that is the question a
+                discovery card exists to answer. The scene is the widest
+                element on the card so it is read first, and it carries the
+                mechanic: two futures, a distorted mirror, an unchanged person
+                in a changed room, a group turning together.
+
+                The mark is not gone. It still runs the compact rows and the
+                thumbnail sizes, where a scene would turn to mush.
+              */}
+              {MISSION_ART[mission.id] ? (
+                <MissionWorld
+                  art={MISSION_ART[mission.id]}
+                  accent={mission.accent}
+                  scale="card"
+                  className="mb-3"
+                />
+              ) : null}
+
               <span className="flex items-start justify-between gap-3">
-                {/*
-                  A mark rather than a word. "Signature" told a first-time
-                  reader nothing about which mission this is, and three
-                  identical text rows are what made this strip feel flat. The
-                  mark's job is recognition, and it is the only image here.
-                */}
-                {MISSION_ART[mission.id] ? (
-                  <MissionArt
-                    art={MISSION_ART[mission.id]}
-                    accent={mission.accent}
-                    className="size-16 shrink-0"
-                  />
-                ) : (
-                  <span
-                    className={cn(
-                      "font-display text-[0.65rem] font-bold uppercase tracking-[0.14em]",
-                      ACCENT_TEXT[mission.accent],
-                    )}
-                  >
-                    Signature
-                  </span>
-                )}
+                <span
+                  className={cn(
+                    "font-display text-[0.65rem] font-bold uppercase tracking-[0.14em]",
+                    ACCENT_TEXT[mission.accent],
+                  )}
+                >
+                  Signature
+                </span>
                 {complete ? (
                   <Check aria-hidden className="size-4 shrink-0 text-volt-400" strokeWidth={3} />
                 ) : null}

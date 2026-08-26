@@ -12,6 +12,8 @@ import { getSkill } from "@/data/skills";
 import { getCrew } from "@/data/crews";
 import { ButtonLink } from "@/components/ui/button";
 import { Chip, ProvenanceTag } from "@/components/ui/primitives";
+import { MISSION_ART } from "@/components/mission/mission-art";
+import { MissionWorld } from "@/components/mission/mission-world";
 import { useProfile } from "@/hooks/use-profile";
 import type { Mission } from "@/types/mission";
 
@@ -30,6 +32,26 @@ export function MissionDetail({ mission }: { mission: Mission }) {
         <ArrowLeft aria-hidden className="size-4" />
         Missions
       </Link>
+
+      {/*
+        The detail page is the last surface before somebody commits minutes to
+        a mission, and it was the one discovery surface with no picture of what
+        they were committing to. The signature missions get their scene here at
+        card height, above the chips, for the same reason the browser cards do:
+        the shape of the experience should arrive before the metadata about it.
+
+        Missions without a world fall through unchanged. Adding a generic
+        illustration to the rest would be decoration, which is the thing this
+        art direction exists to avoid.
+      */}
+      {MISSION_ART[mission.id] ? (
+        <MissionWorld
+          art={MISSION_ART[mission.id]}
+          accent={mission.accent}
+          scale="card"
+          className="mb-5"
+        />
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-1.5">
         <Chip accent={mission.accent}>{MISSION_TYPE_LABELS[mission.missionType]}</Chip>

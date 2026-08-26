@@ -203,6 +203,39 @@ visual without a job", not a gap to fill later.
 
 ---
 
+## Mission worlds
+
+Two layers, because one drawing cannot serve a 40px row and a mission intro.
+
+**Marks** (`mission-art.tsx`) stay as they are: a 48 unit diagram in a rounded
+square, for compact rows and thumbnails. Their job is recognition once you
+already know the set.
+
+**Worlds** (`mission-world.tsx`) are wide scenes composed inside a 320x120
+viewBox, used on discovery cards, mission detail and mission intros. Their job
+is different and larger: state what kind of experience this is to somebody who
+has never opened one. Card height is 96 to 112px, intro height 160 to 192px,
+and both use `preserveAspectRatio="meet"` so a scene is never cropped.
+
+Each world is a diagram of the mechanic, not an illustration of a place:
+
+| World | What it draws | What it must never imply |
+| ----- | ------------- | ------------------------ |
+| REWIND | Three figures at a moment, a filled pivot, one future running on and one folding back to the pivot | That the second run is a different story rather than the same one |
+| Norm Mirror | A crowd you picture inside a thought outline, against a handful measured, across a bent mirror line | That the aggregates are real survey data. No numbers, no axis, no chart. |
+| BREAKSAFE | The same figure at the same coordinates twice, with the environment loose on one side and squared on the other | That the person is the variable. The figure is identical by rule. |
+| Crew Shift | Four figures of equal weight, faint scattered arrows and solid aligned ones | That any one person caused the shift |
+
+Shared vocabulary: one `Figure` silhouette, one `LINE` stroke spec, accent
+colour through `currentColor`, and an accent-tinted ground. No faces are drawn
+at this scale, so nobody in a world is identifiable.
+
+All worlds are `aria-hidden` and carry `data-mission-world` so the suite can
+prove a mission renders its own scene and no other. The mission title always
+sits beside the art in real text: the drawing never names the mission.
+
+---
+
 ## Colour
 
 Pillar accents are unchanged: quest violet, pulse cyan, volt green, coral,

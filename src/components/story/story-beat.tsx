@@ -122,7 +122,27 @@ export function StoryBeat({
   }, [advance, complete]);
 
   return (
-    <div className={cn("relative flex min-h-[62vh] flex-col", className)}>
+    /*
+      When the host owns the advance control, the scene is centred rather than
+      pinned to the top.
+
+      A narration beat is often two lines. Top-aligned inside a 62vh column
+      with the button in a fixed footer, that rendered as a sentence, then most
+      of a screen of black, then a control, which the audit fairly called a
+      failed load rather than restraint. Centring spends the same space on both
+      sides of the text and costs nothing: no decoration is added, no reading
+      is added, and the segmenting that lowered the reading load is untouched.
+
+      The inline case keeps its top alignment, because there the control is in
+      flow directly beneath the scene and already has a growing spacer.
+    */
+    <div
+      className={cn(
+        "relative flex min-h-[62vh] flex-col",
+        !inlineAdvance && "justify-center",
+        className,
+      )}
+    >
       {slug ? (
         <p className="mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-faint">{slug}</p>
       ) : null}
@@ -251,10 +271,17 @@ function Speech({
 }) {
   return (
     <div className="flex gap-3">
+      {/*
+        56px, not 44px. At the smaller size the portrait sat below the cap
+        height of two lines of dialogue and read as a bullet beside the name
+        rather than as the person saying the words. The face plane and the
+        brows are what carry expression in this drawing, and they need the
+        extra pixels to survive.
+      */}
       <CharacterPortrait
         characterId={turn.characterId}
         expression={turn.expression}
-        className="mt-0.5 size-11"
+        className="mt-0.5 size-14"
       />
       <div className="min-w-0 flex-1">
         <p className="text-xs font-bold uppercase tracking-[0.08em] text-quest-300">
