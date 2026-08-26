@@ -6,7 +6,8 @@ import { ArrowRight, Check, EyeOff, MessagesSquare, Minus, Plus, Timer, Users } 
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { MissionShell } from "@/features/missions/engine/mission-shell";
-import { StoryView } from "@/features/campaigns/story-view";
+import { StoryView, useSegment } from "@/features/campaigns/story-view";
+import { storyBeatLabel } from "@/components/story/story-beat";
 import { SidekickLine } from "@/features/campaigns/sidekick";
 import { ShiftReveal, TallyBars, type TallyRow } from "@/components/reveal/shift-reveal";
 import { WhatChanged } from "@/components/reveal/what-changed";
@@ -65,6 +66,8 @@ export function CrewShiftPlayer({
   onResult?: (outcome: CrewShiftOutcome) => void;
 }) {
   const reduced = usePrefersReducedMotion();
+  // Above the early returns: hooks cannot live behind a conditional.
+  const situationBeat = useSegment(round.situation);
 
   const [step, setStep] = useState<Step>("setup");
   const [playerCount, setPlayerCount] = useState(3);
@@ -246,7 +249,7 @@ export function CrewShiftPlayer({
   if (step === "situation") {
     return shell(
       <div className="animate-rise py-2">
-        <StoryView segment={round.situation} />
+        <StoryView segment={round.situation} beat={situationBeat} />
       </div>,
       {
         progress: 0.15,
@@ -255,9 +258,13 @@ export function CrewShiftPlayer({
             variant="volt"
             size="lg"
             full
-            onClick={() => setStep(playerCount > 1 ? "handoff" : "private")}
+            onClick={() =>
+              situationBeat.complete
+                ? setStep(playerCount > 1 ? "handoff" : "private")
+                : situationBeat.advance()
+            }
           >
-            {playerCount > 1 ? "Pass to player 1" : "Your call"}
+            {storyBeatLabel(situationBeat, playerCount > 1 ? "Pass to player 1" : "Your call")}
             <ArrowRight aria-hidden className="size-4" />
           </Button>
         ),

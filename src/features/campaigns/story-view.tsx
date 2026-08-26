@@ -1,62 +1,40 @@
-import { cn } from "@/lib/cn";
+"use client";
+
+import { StoryBeat, useStoryBeat, type StoryBeatState } from "@/components/story/story-beat";
 import type { StorySegment } from "@/types/campaign";
+import type { StoryLineInput } from "@/types/story";
 
 /**
- * Renders a story beat.
+ * A campaign story segment, played rather than printed.
  *
- * Short lines, generous spacing, and message exchanges as actual chat bubbles.
- * Nobody standing at a roadshow reads a paragraph, so the content model does
- * not allow one.
+ * This used to render every line at once, which is what the testers meant by
+ * "too many words": chapter one opened with three paragraphs and one small
+ * button. It now reveals one idea at a time at the player's pace, which is
+ * segmenting rather than a word cut. The words are mostly the same words.
+ *
+ * Message exchanges are appended to the end of the scene. A chat thread is one
+ * artefact and drip-feeding it line by line would read as affectation.
  */
+export function segmentLines(segment: StorySegment): StoryLineInput[] {
+  const messages = segment.messages ?? [];
+  return messages.length > 0
+    ? [...segment.lines, { kind: "thread" as const, messages }]
+    : [...segment.lines];
+}
+
+/** Hook form, for hosts that render their own advance control in a footer. */
+export function useSegment(segment: StorySegment): StoryBeatState {
+  return useStoryBeat(segmentLines(segment));
+}
+
 export function StoryView({
   segment,
+  beat,
   className,
 }: {
   segment: StorySegment;
+  beat: StoryBeatState;
   className?: string;
 }) {
-  return (
-    <div className={cn("space-y-4", className)}>
-      {segment.slug ? (
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-faint">
-          {segment.slug}
-        </p>
-      ) : null}
-
-      <div className="space-y-3">
-        {segment.lines.map((line, index) => (
-          <p key={index} className="text-lg leading-relaxed text-chalk">
-            {line}
-          </p>
-        ))}
-      </div>
-
-      {segment.messages?.length ? (
-        <ul className="space-y-2 pt-1">
-          {segment.messages.map((message, index) => (
-            <li
-              key={index}
-              className={cn("flex", message.isYou ? "justify-end" : "justify-start")}
-            >
-              <div
-                className={cn(
-                  "max-w-[80%] rounded-2xl px-3.5 py-2",
-                  message.isYou
-                    ? "rounded-br-sm bg-quest-500/20 text-chalk"
-                    : "rounded-bl-sm bg-white/6 text-mist",
-                )}
-              >
-                {!message.isYou ? (
-                  <p className="text-[0.65rem] font-bold uppercase tracking-wide text-faint">
-                    {message.from}
-                  </p>
-                ) : null}
-                <p className="text-sm leading-snug">{message.text}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </div>
-  );
+  return <StoryBeat beat={beat} slug={segment.slug} className={className} />;
 }

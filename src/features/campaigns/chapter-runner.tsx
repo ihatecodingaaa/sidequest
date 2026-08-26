@@ -8,13 +8,13 @@ import { ArrowRight, Check, Footprints, Lock, ScanLine } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { ACCENT_TEXT } from "@/lib/accent";
 import { Button, ButtonLink } from "@/components/ui/button";
-import { Chip, ProvenanceTag } from "@/components/ui/primitives";
 import { MissionShell } from "@/features/missions/engine/mission-shell";
 import { RewindPlayer } from "@/features/missions/rewind/rewind-player";
 import { NormMirrorPlayer } from "@/features/missions/norm-mirror/norm-mirror-player";
 import { BreaksafePlayer } from "@/features/missions/breaksafe/breaksafe-player";
 import { CrewShiftPlayer } from "./crew-shift/crew-shift-player";
-import { StoryView } from "./story-view";
+import { StoryView, useSegment } from "./story-view";
+import { storyBeatLabel } from "@/components/story/story-beat";
 import { SidekickLine } from "./sidekick";
 import { ChapterComplete } from "./chapter-complete";
 import { useCampaign } from "./use-campaign";
@@ -27,6 +27,9 @@ import type { AwardResult } from "@/lib/xp";
 import type { Campaign, CampaignChapter, ChapterResult } from "@/types/campaign";
 
 type Phase = "unlock" | "intro" | "play" | "outro" | "complete";
+
+/** Stand-in for a chapter with no intro or outro, so the hooks stay unconditional. */
+const EMPTY_SEGMENT = { lines: [] as string[] };
 
 /**
  * Runs one Campaign chapter.
@@ -51,6 +54,14 @@ export function ChapterRunner({
   const [phase, setPhase] = useState<Phase>("unlock");
   const [award, setAward] = useState<AwardResult | null>(null);
   const [outcome, setOutcome] = useState<ChapterResult>({ mechanic: chapter.config.mechanic } as ChapterResult);
+
+  /*
+   * Above every early return: hooks cannot live behind a conditional. Both
+   * segments are prepared even though only one renders, which costs nothing
+   * because a beat is a counter over an array the fixture already holds.
+   */
+  const introBeat = useSegment(chapter.intro ?? EMPTY_SEGMENT);
+  const outroBeat = useSegment(chapter.outro ?? EMPTY_SEGMENT);
 
   const mode = progress?.mode ?? "story";
   const alreadyDone = Boolean(progress?.completedChapterIds.includes(chapter.id));
@@ -104,39 +115,35 @@ export function ChapterRunner({
           </Button>
         }
       >
-        <div className="animate-rise py-4">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <Chip accent={chapter.accent}>Chapter {chapter.chapterNumber}</Chip>
-            <ProvenanceTag provenance={campaign.provenance} compact />
-          </div>
+        {/*
+          This screen was the heaviest reading load in the whole chapter, which
+          was a surprise: the tap audit found its worst step was here rather
+          than in any story beat. It carried a chapter chip, a provenance tag,
+          an unlock badge, a title, a description, a boxed congestion
+          instruction, the brief, and a metadata row, all above the fold.
 
-          <p className="animate-pop mt-6 inline-flex items-center gap-2 rounded-full bg-volt-500/15 px-4 py-2 font-display text-sm font-extrabold uppercase tracking-[0.1em] text-volt-300">
+          It now says three things: it worked, what this chapter is, and move
+          away from the station. The brief belongs to the story that is about to
+          start, so it moved there. The provenance tag moved to the Campaign
+          screen, which is where the Campaign is described and where the rule
+          about declaring once per screen is satisfied.
+        */}
+        <div className="animate-rise py-4">
+          <p className="animate-pop inline-flex items-center gap-2 rounded-full bg-volt-500/15 px-4 py-2 font-display text-sm font-extrabold uppercase tracking-[0.1em] text-volt-300">
             <Check aria-hidden className="size-4" strokeWidth={3} />
-            Chapter unlocked
+            Chapter {chapter.chapterNumber} unlocked
           </p>
 
-          <h1 className="mt-4 text-balance-tight font-display text-[2.1rem] leading-[1.05] font-extrabold tracking-tight text-chalk">
+          <h1 className="mt-5 text-balance-tight font-display text-[2.1rem] leading-[1.05] font-extrabold tracking-tight text-chalk">
             {chapter.title}
           </h1>
-          <p className="mt-2 text-base leading-relaxed text-mist">{chapter.shortDescription}</p>
 
-          {/* The congestion instruction. This is the point of the screen. */}
-          <div className="mt-7 flex gap-3.5 rounded-3xl border border-volt-500/25 bg-volt-500/8 p-4">
-            <Footprints aria-hidden className="mt-0.5 size-6 shrink-0 text-volt-300" />
-            <div>
-              <h2 className="font-display text-lg leading-tight font-bold text-chalk">
-                Move away from the station
-              </h2>
-              <p className="mt-1.5 text-sm leading-relaxed text-mist">
-                It is saved to your phone now. Find somewhere to stand and play it there, so the
-                next person can scan.
-              </p>
-            </div>
-          </div>
+          <p className="mt-6 flex items-center gap-2.5 text-sm font-semibold text-volt-300">
+            <Footprints aria-hidden className="size-5 shrink-0" />
+            Move away from the station, then play.
+          </p>
 
-          <p className="mt-5 text-sm text-muted">{chapter.brief}</p>
-
-          <div className="mt-4 flex flex-wrap items-center gap-3 text-xs font-semibold text-faint">
+          <div className="mt-6 flex flex-wrap items-center gap-3 text-xs font-semibold text-faint">
             <span>About {chapter.estimatedMinutes} min</span>
             <span aria-hidden>&middot;</span>
             <span className={ACCENT_TEXT[chapter.accent]}>{chapter.xp} XP</span>
@@ -169,17 +176,26 @@ export function ChapterRunner({
         progress={0.1}
         exitHref={campaignHref}
         footer={
-          <Button variant="volt" size="lg" full onClick={() => setPhase("play")}>
-            Continue
+          <Button
+            variant="volt"
+            size="lg"
+            full
+            onClick={() => (introBeat.complete ? setPhase("play") : introBeat.advance())}
+          >
+            {/* One word throughout: the intro flows straight into the chapter. */}
+            {storyBeatLabel(introBeat, "Continue")}
             <ArrowRight aria-hidden className="size-4" />
           </Button>
         }
       >
         <div className="animate-rise py-2">
-          <StoryView segment={chapter.intro} />
-          <SidekickLine mood="thinking" className="mt-7">
-            {chapter.brief}
-          </SidekickLine>
+          <StoryView segment={chapter.intro} beat={introBeat} />
+          {/* Echo waits until the scene has finished rather than talking over it. */}
+          {introBeat.complete ? (
+            <SidekickLine mood="thinking" className="mt-7">
+              {chapter.brief}
+            </SidekickLine>
+          ) : null}
         </div>
       </MissionShell>
     );
@@ -208,14 +224,26 @@ export function ChapterRunner({
         progress={1}
         exitHref={campaignHref}
         footer={
-          <ButtonLink href={campaignHref} variant="volt" size="lg" full>
-            Back to the Campaign
-            <ArrowRight aria-hidden className="size-4" />
-          </ButtonLink>
+          /*
+            One control, two jobs: it plays the scene out, and only once the
+            scene is finished does it become the way back. A link here would
+            have let the closing beat be skipped without meaning to.
+          */
+          outroBeat.complete ? (
+            <ButtonLink href={campaignHref} variant="volt" size="lg" full>
+              Back to the Campaign
+              <ArrowRight aria-hidden className="size-4" />
+            </ButtonLink>
+          ) : (
+            <Button variant="volt" size="lg" full onClick={outroBeat.advance}>
+              Continue
+              <ArrowRight aria-hidden className="size-4" />
+            </Button>
+          )
         }
       >
         <div className="animate-rise py-2">
-          <StoryView segment={chapter.outro} />
+          <StoryView segment={chapter.outro} beat={outroBeat} />
           {award?.awarded ? (
             <p className="mt-7 inline-flex items-center gap-2 rounded-full bg-volt-500/12 px-3.5 py-1.5 text-sm font-bold text-volt-300">
               +{award.xpGained} XP added

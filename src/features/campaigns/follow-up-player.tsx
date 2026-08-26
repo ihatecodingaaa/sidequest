@@ -5,7 +5,8 @@ import { ArrowRight, ArrowLeft, Check, Lock, Zap } from "lucide-react";
 
 import { Button, ButtonLink } from "@/components/ui/button";
 import { MissionShell } from "@/features/missions/engine/mission-shell";
-import { StoryView } from "./story-view";
+import { StoryView, useSegment } from "./story-view";
+import { storyBeatLabel } from "@/components/story/story-beat";
 import { SidekickLine } from "./sidekick";
 import { useCampaign } from "./use-campaign";
 import { getStoryBeat } from "@/data/campaigns/story-beats";
@@ -39,6 +40,8 @@ export function FollowUpPlayer({
 
   const campaignHref = `/campaigns/${campaign.slug}`;
   const beat = followUp.config.mechanic === "story" ? getStoryBeat(followUp.config.storyId) : undefined;
+  // Above the early returns: hooks cannot live behind a conditional.
+  const setupBeat = useSegment(beat?.setup ?? { lines: [] });
 
   if (!ready || !mounted) {
     return (
@@ -79,8 +82,13 @@ export function FollowUpPlayer({
         progress={0.15}
         exitHref={campaignHref}
         footer={
-          <Button variant="volt" size="lg" full onClick={() => setStep("decide")}>
-            Continue
+          <Button
+            variant="volt"
+            size="lg"
+            full
+            onClick={() => (setupBeat.complete ? setStep("decide") : setupBeat.advance())}
+          >
+            {storyBeatLabel(setupBeat, "Continue")}
             <ArrowRight aria-hidden className="size-4" />
           </Button>
         }
@@ -90,7 +98,7 @@ export function FollowUpPlayer({
           <h1 className="mt-2 font-display text-3xl leading-tight font-extrabold tracking-tight text-chalk">
             {followUp.title}
           </h1>
-          <StoryView segment={beat.setup} className="mt-6" />
+          <StoryView segment={beat.setup} beat={setupBeat} className="mt-6" />
         </div>
       </MissionShell>
     );

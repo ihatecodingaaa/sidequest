@@ -204,4 +204,17 @@
 
 .animate-rise { animation: sq-rise 420ms var(--ease-out-quint) both; }
 .animate-pop { animation: sq-pop 380ms var(--ease-out-quint) both; }
+
+/*
+ * The one deliberate loop in the product, and it is small on purpose: a 6px
+ * drift on the "tap to continue" chevron. Its job is to say the scene is
+ * waiting for the player rather than finished, which is the affordance the
+ * testers said they had to hunt for. It carries no information, so the global
+ * reduced-motion rule below can stop it dead without anything being lost.
+ */
+@keyframes sq-nudge {
+  0%, 60%, 100% { transform: translateY(0); }
+  80% { transform: translateY(3px); }
+}
+.animate-nudge { animation: sq-nudge 2.4s ease-in-out infinite; }
 .animate-pulse-ring { animation: sq-pulse-ring 2.4s ease-out infinite; }

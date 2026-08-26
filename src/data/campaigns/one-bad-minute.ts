@@ -1,4 +1,5 @@
 import type { Campaign } from "@/types/campaign";
+import { says } from "@/types/story";
 
 /**
  * ONE BAD MINUTE. The flagship Campaign.
@@ -23,8 +24,13 @@ export const ONE_BAD_MINUTE: Campaign = {
   slug: "one-bad-minute",
   title: "ONE BAD MINUTE",
   subtitle: "Four friends, one ordinary day",
-  description:
-    "One friend asks another for a favour. Nobody plans anything. Over one day, four small decisions decide how it ends. You are not solving anything. You are learning to see the moments where it can still change direction.",
+  /*
+   * Four short lines, not a paragraph. This is the first thing anybody reads
+   * after scanning a QR code at a roadshow, and the old version spent five
+   * sentences explaining what the Campaign was for before saying what happens
+   * in it. What it is for becomes obvious by playing it.
+   */
+  description: "Four friends. One ordinary day. Four decisions that look smaller than they are.",
   premise: "Small decisions change the direction of a situation.",
   status: "available",
   ageBands: ["13-15", "16-18", "19-25"],
@@ -76,7 +82,7 @@ export const ONE_BAD_MINUTE: Campaign = {
         slug: "Thursday, 4:12pm",
         lines: [
           "Four of you. A void deck near the interchange. Nothing happening.",
-          "Ken has been building up to asking something for about ten minutes.",
+          says("ken", "Ken", "So. Random question.", "uncertain"),
         ],
       },
       outro: {

@@ -7,7 +7,8 @@ import { ArrowRight, Check, Lock, Sparkles, Zap } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { MissionShell } from "@/features/missions/engine/mission-shell";
-import { StoryView } from "./story-view";
+import { StoryView, useSegment } from "./story-view";
+import { storyBeatLabel } from "@/components/story/story-beat";
 import { SidekickLine } from "./sidekick";
 import { useCampaign } from "./use-campaign";
 import { getSkill } from "@/data/skills";
@@ -36,6 +37,8 @@ export function FinalePlayer({ campaign }: { campaign: Campaign }) {
 
   const campaignHref = `/campaigns/${campaign.slug}`;
   const finale = campaign.finale;
+  // Above the early returns: hooks cannot live behind a conditional.
+  const introBeat = useSegment(finale.intro);
 
   if (!ready) {
     return (
@@ -89,8 +92,13 @@ export function FinalePlayer({ campaign }: { campaign: Campaign }) {
         progress={0.1}
         exitHref={campaignHref}
         footer={
-          <Button variant="danger" size="lg" full onClick={() => setStep("decide")}>
-            Answer him
+          <Button
+            variant="danger"
+            size="lg"
+            full
+            onClick={() => (introBeat.complete ? setStep("decide") : introBeat.advance())}
+          >
+            {storyBeatLabel(introBeat, "Answer him")}
             <ArrowRight aria-hidden className="size-4" />
           </Button>
         }
@@ -102,7 +110,7 @@ export function FinalePlayer({ campaign }: { campaign: Campaign }) {
           <h1 className="mt-2 text-balance-tight font-display text-[2.1rem] leading-[1.05] font-extrabold tracking-tight text-chalk">
             {finale.title}
           </h1>
-          <StoryView segment={finale.intro} className="mt-6" />
+          <StoryView segment={finale.intro} beat={introBeat} className="mt-6" />
         </div>
       </MissionShell>
     );

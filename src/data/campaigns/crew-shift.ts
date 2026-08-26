@@ -63,9 +63,10 @@ export const CREW_SHIFT_ROUNDS: Record<string, CrewShiftRound> = {
     situation: {
       slug: "Saturday, 8:20pm",
       lines: [
-        "Ilyas took the first offer. The money came, and nothing happened, and that is the problem.",
-        "Now there is a second one, for more, and he has stopped mentioning it in the group chat.",
-        "The four of you are outside, and he is inside getting drinks.",
+        "Ilyas took the first offer. The money came and nothing happened.",
+        "That is the problem.",
+        "There is a second one now, for more. He has stopped mentioning it in the chat.",
+        "You are all outside. He is inside getting drinks.",
       ],
       messages: [
         { from: "Ken", text: "he said he already did it once and it was fine" },

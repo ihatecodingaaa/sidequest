@@ -1,4 +1,5 @@
 import type { AgeBand, ContentCategory, DataProvenance, SkillAward } from "./core";
+import type { StoryLineInput } from "./story";
 import type { Accent } from "@/lib/accent";
 
 /**
@@ -41,8 +42,14 @@ export type ChapterConfig =
 export interface StorySegment {
   /** Scene label, e.g. "Thursday, 4:12pm". */
   slug?: string;
-  /** Short lines. Kept short on purpose: nobody reads paragraphs at a booth. */
-  lines: string[];
+  /**
+   * The scene, one idea per entry, revealed at the player's pace.
+   *
+   * A bare string is narration. Use `says()` where knowing who is talking is
+   * part of understanding the scene, which in a four-character story is most
+   * of the time.
+   */
+  lines: StoryLineInput[];
   /** Optional message-style exchange rendered as chat bubbles. */
   messages?: { from: string; text: string; isYou?: boolean }[];
 }

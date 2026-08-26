@@ -7,6 +7,9 @@ import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/primitives";
 import { MissionShell } from "./mission-shell";
+import { StoryBeat, useStoryBeat } from "@/components/story/story-beat";
+import { WhyThisWorks } from "@/components/reveal/why-this-works";
+import { toStoryLines } from "@/types/story";
 import { useMissionHost, type MissionHost } from "./mission-host";
 import type { AwardResult } from "@/lib/xp";
 import type { Mission } from "@/types/mission";
@@ -104,12 +107,15 @@ export function ScenarioPlayer({
           </h1>
           <p className="mt-4 text-base leading-relaxed text-mist">{scenario.intro.setup}</p>
 
-          <div className="sq-card mt-8 flex gap-3 p-4">
-            <Lightbulb aria-hidden className="mt-0.5 size-5 shrink-0 text-gold-400" />
-            <p className="text-sm leading-relaxed text-mist">
-              There is no trick answer. Pick what you would actually do, then read what it leads to.
-            </p>
-          </div>
+          {/*
+            One line, not a boxed card. The reassurance matters, but it was
+            competing with the title for the eye on a screen whose only job is
+            to make somebody press Start.
+          */}
+          <p className="mt-6 flex items-center gap-2.5 text-sm text-muted">
+            <Lightbulb aria-hidden className="size-4 shrink-0 text-gold-400" />
+            No trick answers. Pick what you would actually do.
+          </p>
         </div>
       </MissionShell>
     );
@@ -145,11 +151,18 @@ export function ScenarioPlayer({
         }
       >
         <div className="animate-rise py-4">
-          {beat.lines.map((line, index) => (
-            <p key={index} className="mb-3 text-base leading-relaxed text-mist">
-              {line}
-            </p>
-          ))}
+          {/*
+            The outcome beat is a conclusion rather than a scene, so it arrives
+            whole. Nothing here is a chat thread, but narrowing the type keeps
+            that assumption honest instead of implicit.
+          */}
+          {toStoryLines(beat.lines).map((line, index) =>
+            line.kind === "thread" || line.kind === "exchange" ? null : (
+              <p key={index} className="mb-3 text-base leading-relaxed text-mist">
+                {line.text}
+              </p>
+            ),
+          )}
 
           <div className="sq-card mt-6 p-5">
             <p className={cn("font-display text-xl leading-tight font-extrabold", toneColour)}>
@@ -190,7 +203,6 @@ export function ScenarioPlayer({
           <h1 className="font-display text-2xl font-extrabold tracking-tight text-chalk">
             {scenario.debrief.title}
           </h1>
-          <p className="mt-3 text-sm leading-relaxed text-mist">{scenario.debrief.mechanism}</p>
 
           <ul className="mt-6 space-y-3">
             {scenario.debrief.points.map((point) => (
@@ -203,6 +215,8 @@ export function ScenarioPlayer({
               </li>
             ))}
           </ul>
+
+          <WhyThisWorks>{scenario.debrief.mechanism}</WhyThisWorks>
         </div>
       </MissionShell>
     );
@@ -280,20 +294,21 @@ export function BeatView({
         <p className="mb-2.5 text-sm font-bold text-quest-300">{beat.speaker}</p>
       ) : null}
 
-      <div className="space-y-3.5">
-        {beat.lines.map((line, index) => (
-          <p key={index} className="text-lg leading-relaxed text-chalk">
-            {line}
-          </p>
-        ))}
-      </div>
-
-      {beat.choices?.length ? (
-        <div className="mt-8">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-faint">
-            {choiceHint ?? "What do you do?"}
-          </p>
-          <div className="space-y-2.5">
+      {/*
+        The scene plays out one idea at a time and the choices only appear once
+        it has finished, so a player cannot answer a question they have not
+        finished reading. That ordering is the point: the old version printed
+        the whole beat and the options together, which is what made a decision
+        feel like the bottom of an essay.
+      */}
+      {/* Keyed on the beat so a new scene restarts its own reveal. */}
+      <BeatScene key={beat.id} lines={beat.lines}>
+        {beat.choices?.length ? (
+          <div>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-faint">
+              {choiceHint ?? "What do you do?"}
+            </p>
+            <div className="space-y-2.5">
             {beat.choices.map((choice) => {
               const disabled = disabledChoiceIds.includes(choice.id);
               return (
@@ -320,9 +335,36 @@ export function BeatView({
                 </button>
               );
             })}
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </BeatScene>
     </div>
+  );
+}
+
+
+/**
+ * One scenario beat. The scene plays out an idea at a time and the choices only
+ * appear once it has finished, so nobody is asked a question they have not read
+ * to the end of. The old version printed the whole beat and the options
+ * together, which is what made a decision feel like the bottom of an essay.
+ *
+ * The advance control is inline here rather than in a footer, because a
+ * scenario beat's choices live in the body and adding a second control in the
+ * action bar would give the same scene two different ways forward.
+ */
+function BeatScene({
+  lines,
+  children,
+}: {
+  lines: ScenarioBeat["lines"];
+  children?: React.ReactNode;
+}) {
+  const beat = useStoryBeat(lines);
+  return (
+    <StoryBeat beat={beat} inlineAdvance>
+      {children}
+    </StoryBeat>
   );
 }

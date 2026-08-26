@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/primitives";
 import { MissionShell } from "@/features/missions/engine/mission-shell";
 import { ShiftReveal } from "@/components/reveal/shift-reveal";
+import { toStoryLines } from "@/types/story";
 import { WhatChanged } from "@/components/reveal/what-changed";
+import { WhyThisWorks } from "@/components/reveal/why-this-works";
 import {
   useMissionHost,
   type MissionHost,
@@ -234,11 +236,18 @@ export function RewindPlayer({
         }
       >
         <div className="animate-rise py-4">
-          {beat.lines.map((line, index) => (
-            <p key={index} className="mb-3 text-base leading-relaxed text-mist">
-              {line}
-            </p>
-          ))}
+          {/*
+            The outcome beat is a conclusion rather than a scene, so it arrives
+            whole. Nothing here is a chat thread, but narrowing the type keeps
+            that assumption honest instead of implicit.
+          */}
+          {toStoryLines(beat.lines).map((line, index) =>
+            line.kind === "thread" || line.kind === "exchange" ? null : (
+              <p key={index} className="mb-3 text-base leading-relaxed text-mist">
+                {line.text}
+              </p>
+            ),
+          )}
 
           <div className="sq-card mt-6 p-5">
             <p className={cn("font-display text-xl leading-tight font-extrabold", toneColour)}>
@@ -330,9 +339,13 @@ export function RewindPlayer({
           <h1 className="font-display text-2xl font-extrabold tracking-tight text-chalk">
             {scenario.debrief.title}
           </h1>
-          <p className="mt-3 text-sm leading-relaxed text-mist">{scenario.debrief.mechanism}</p>
 
-          <ul className="mt-6 space-y-3">
+          {/*
+            The mechanism paragraph used to sit here, second thing on the
+            screen, in the vocabulary of the research rather than of the story.
+            It is still available, one tap down, for the people who want it.
+          */}
+          <ul className="mt-5 space-y-3">
             {scenario.debrief.points.map((point) => (
               <li key={point} className="sq-card-flat flex gap-3 p-3.5">
                 <span aria-hidden className="mt-1 size-1.5 shrink-0 rounded-full bg-coral-400" />
@@ -340,6 +353,8 @@ export function RewindPlayer({
               </li>
             ))}
           </ul>
+
+          <WhyThisWorks>{scenario.debrief.mechanism}</WhyThisWorks>
 
           <div className="sq-card mt-6 flex gap-3 p-4">
             <Lightbulb aria-hidden className="mt-0.5 size-5 shrink-0 text-gold-400" />

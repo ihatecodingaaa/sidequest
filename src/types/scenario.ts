@@ -1,5 +1,6 @@
 import type { SkillAward } from "./core";
 import type { ProtectiveFactorId } from "./protective";
+import type { StoryLineInput } from "./story";
 
 /** Data-driven branching engine shared by quick quests and REWIND. */
 
@@ -19,7 +20,8 @@ export interface ScenarioBeat {
   /** Optional scene-setting label, e.g. "6:41pm, bus stop". */
   slug?: string;
   speaker?: string;
-  lines: string[];
+  /** One idea per entry, revealed at the player's pace. Strings are narration. */
+  lines: StoryLineInput[];
   choices?: ScenarioChoice[];
   /** Terminal beats carry an outcome instead of choices. */
   outcome?: ScenarioOutcome;

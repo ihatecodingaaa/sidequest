@@ -1,4 +1,5 @@
 import type { Scenario } from "@/types/scenario";
+import { says } from "@/types/story";
 
 /**
  * REWIND.
@@ -18,8 +19,7 @@ export const REWIND_SCENARIO: Scenario = {
   intro: {
     kicker: "Hero Mission",
     title: "The five minutes you would take back",
-    setup:
-      "Thursday, 5:40pm. Four of you, a shop near the interchange, twenty minutes before anyone has to be anywhere.",
+    setup: "Thursday, 5:40pm. Four of you in a shop, with nowhere to be.",
   },
   startBeatId: "shop",
   beats: [
@@ -27,8 +27,8 @@ export const REWIND_SCENARIO: Scenario = {
       id: "shop",
       slug: "5:41pm, near the interchange",
       lines: [
-        "Wei is holding a pair of earphones and reading the price for the third time.",
-        "Jas is at the drinks fridge. Ken is filming something on his phone that will not be funny later.",
+        "Wei is holding a pair of earphones, reading the price for the third time.",
+        "Jas is at the drinks fridge. Ken is filming something that will not be funny later.",
         "You are half watching, half thinking about dinner.",
       ],
       choices: [{ id: "on", label: "Keep watching", next: "pivot", tone: "neutral" }],
@@ -38,10 +38,10 @@ export const REWIND_SCENARIO: Scenario = {
       slug: "5:43pm",
       isPivot: true,
       lines: [
-        "Wei looks up at the counter. The staff member is dealing with a queue.",
+        "Wei looks up. The staff member is dealing with a queue.",
         "The earphones go into his jacket pocket. It takes about a second.",
-        "Ken sees it and grins. Jas has not noticed.",
-        "Wei catches your eye.",
+        says("ken", "Ken", "Ohhh.", "amused"),
+        "Jas has not noticed. Wei catches your eye.",
       ],
       choices: [
         {

@@ -1,4 +1,5 @@
 import type { Scenario } from "@/types/scenario";
+import { says } from "@/types/story";
 
 /**
  * ONE BAD MINUTE, chapter 1. Runs on the existing REWIND mechanic.
@@ -24,8 +25,7 @@ export const QUICK_MONEY_SCENARIO: Scenario = {
   intro: {
     kicker: "Chapter 1",
     title: "The favour",
-    setup:
-      "Thursday, 4:12pm. Void deck near the interchange. Ken has been building up to asking something for about ten minutes.",
+    setup: "Thursday, 4:12pm. A void deck, and a question Ken has been sitting on.",
   },
   startBeatId: "offer",
   beats: [
@@ -33,9 +33,13 @@ export const QUICK_MONEY_SCENARIO: Scenario = {
       id: "offer",
       slug: "4:12pm",
       lines: [
-        "Ken finally says it. He needs an account that is not his, just for a week.",
-        "Something about reselling, and his own account being a problem, and it being completely fine.",
-        "He is looking at Ilyas when he says it.",
+        says(
+          "ken",
+          "Ken",
+          "I need an account that is not mine. One week. It is for reselling, mine is a problem right now, it is completely fine.",
+          "uncertain",
+        ),
+        "He is looking at Ilyas when he says it. Not at you.",
       ],
       choices: [{ id: "on", label: "Keep listening", next: "pivot", tone: "neutral" }],
     },
@@ -44,10 +48,20 @@ export const QUICK_MONEY_SCENARIO: Scenario = {
       slug: "4:13pm",
       isPivot: true,
       lines: [
-        "Ken: bro it is literally nothing. I will give you a cut.",
-        "Jas laughs and says Ilyas is scared. Ilyas says he is not scared.",
-        "He starts typing his details into Ken's phone. It will take him about forty seconds.",
-        "He glances up at you.",
+        says("ken", "Ken", "Bro, it is literally nothing. I will cut you in.", "amused"),
+        {
+          kind: "exchange",
+          turns: [
+            { characterId: "rina", speaker: "Jas", text: "He is scared.", expression: "amused" },
+            {
+              characterId: "ilyas",
+              speaker: "Ilyas",
+              text: "I am not scared.",
+              expression: "pressured",
+            },
+          ],
+        },
+        "He starts typing into Ken's phone. Forty seconds, maybe. Then he glances up at you.",
       ],
       choices: [
         {
