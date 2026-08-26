@@ -17,12 +17,13 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/cn";
-import { ACCENT_BG_SOFT, ACCENT_TEXT } from "@/lib/accent";
-import { Button } from "@/components/ui/button";
+import { ACCENT_TEXT } from "@/lib/accent";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Chip, ProgressBar, ProvenanceTag } from "@/components/ui/primitives";
 import { PageHeader } from "@/components/layout/app-shell";
 import { useCampaign } from "./use-campaign";
 import { SidekickLine } from "./sidekick";
+import { ChapterNode, NODE_LABEL, type NodeState } from "./chapter-node";
 import { FollowUpList } from "./follow-up-list";
 import { InstallInvite } from "@/features/pwa/install-invite";
 import { useCampaignWarmup } from "./use-campaign-warmup";
@@ -57,6 +58,31 @@ export function CampaignDetail({ campaign }: { campaign: Campaign }) {
   const remaining = chaptersRemainingForFinale(campaign, progress);
   const next = nextRecommendedChapter(campaign, progress);
 
+  /*
+   * Deterministic, from state the app already has. No recommender, no
+   * personalisation: finish the Campaign, then the finale, then the next
+   * chapter on your route.
+   */
+  const continueTarget = progress.finaleCompleted
+    ? null
+    : finaleReady
+      ? {
+          eyebrow: "Up next",
+          title: "The finale",
+          hint: "How it ends is one decision.",
+          href: `/campaigns/${campaign.slug}/finale`,
+          cta: "Play the finale",
+        }
+      : next
+        ? {
+            eyebrow: `Chapter ${next.chapterNumber}, up next`,
+            title: next.title,
+            hint: next.shortDescription,
+            href: `/campaigns/${campaign.slug}/chapter/${next.slug}`,
+            cta: progress.completedChapterIds.length === 0 ? "Start" : "Continue",
+          }
+        : null;
+
   return (
     <div className="space-y-7">
       <PageHeader
@@ -72,6 +98,32 @@ export function CampaignDetail({ campaign }: { campaign: Campaign }) {
           About {campaign.estimatedMinutes} min
         </span>
       </div>
+
+      {/*
+        The one thing this screen exists to answer.
+
+        The testers said they could not tell where they were in the Campaign,
+        and the reason was that the answer was only derivable: four identical
+        chapter cards, a progress bar, and a sentence about the finale. The next
+        step is now lifted out of the list entirely and given the largest
+        control on the screen, with the chapter's actual name on it, so nobody
+        has to work it out by reading four rows.
+      */}
+      {continueTarget ? (
+        <section className="sq-card border-quest-500/30 bg-quest-500/8 p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-quest-300">
+            {continueTarget.eyebrow}
+          </p>
+          <h2 className="mt-1.5 text-balance-tight font-display text-2xl leading-tight font-extrabold text-chalk">
+            {continueTarget.title}
+          </h2>
+          <p className="mt-1.5 text-sm leading-snug text-mist">{continueTarget.hint}</p>
+          <ButtonLink href={continueTarget.href} variant="volt" size="lg" full className="mt-4">
+            {continueTarget.cta}
+            <ArrowRight aria-hidden className="size-4" />
+          </ButtonLink>
+        </section>
+      ) : null}
 
       {/* Progress */}
       <section className="sq-card p-5">
@@ -122,10 +174,15 @@ export function CampaignDetail({ campaign }: { campaign: Campaign }) {
         </button>
       </section>
 
+      {/*
+        Echo used to name the next chapter here, which the Continue control now
+        does far more loudly. What is left is the thing the control cannot say:
+        that a busy station is not a blocker. Echo signals rather than narrating
+        what is already on screen.
+      */}
       {next && !progress.finaleCompleted ? (
-        <SidekickLine mood="thinking">
-          Next on {route.label}: {next.title}. If that station is busy, take any other one. Three of
-          four is enough.
+        <SidekickLine mood="neutral">
+          Station busy? Take any other one. Three of four opens the finale.
         </SidekickLine>
       ) : null}
 
@@ -147,32 +204,31 @@ export function CampaignDetail({ campaign }: { campaign: Campaign }) {
             const complete = progress.completedChapterIds.includes(chapter.id);
             const unlocked = progress.unlockedChapterIds.includes(chapter.id);
             const isNext = next?.id === chapter.id;
+            const state: NodeState = complete
+              ? "done"
+              : isNext
+                ? "current"
+                : unlocked
+                  ? "available"
+                  : "locked";
 
             return (
               <li key={chapter.id} className="relative">
-                <span
-                  aria-hidden
-                  className={cn(
-                    "absolute top-5 -left-7 grid size-6 place-items-center rounded-full border-2 border-ink-900",
-                    complete
-                      ? "bg-volt-500 text-ink-900"
-                      : isNext
-                        ? cn(ACCENT_BG_SOFT[chapter.accent], "ring-2", "ring-white/20")
-                        : "bg-ink-700",
-                  )}
-                >
-                  {complete ? (
-                    <Check aria-hidden className="size-3.5" strokeWidth={3} />
-                  ) : (
-                    <span className="text-[0.6rem] font-bold text-mist">{index + 1}</span>
-                  )}
-                </span>
+                <ChapterNode state={state} index={index + 1} className="absolute top-5 -left-7" />
 
                 <Link
                   href={`/campaigns/${campaign.slug}/chapter/${chapter.slug}`}
                   className={cn(
                     "sq-card sq-pressable block p-4 hover:border-white/16",
-                    complete && "opacity-80",
+                    /*
+                      The current chapter is the only row allowed to shout. A
+                      done row recedes and a locked row is quieter still, so
+                      the eye lands on the one that is actually next without
+                      having to compare four dots.
+                    */
+                    state === "current" && "border-quest-500/40 bg-quest-500/8",
+                    state === "done" && "opacity-70",
+                    state === "locked" && "opacity-60",
                   )}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -194,13 +250,15 @@ export function CampaignDetail({ campaign }: { campaign: Campaign }) {
                   <div className="mt-2.5 flex items-center gap-3 text-xs font-semibold text-faint">
                     <span>{chapter.estimatedMinutes} min</span>
                     <span className={ACCENT_TEXT[chapter.accent]}>{chapter.xp} XP</span>
-                    {complete ? (
-                      <span className="text-volt-300">Done</span>
-                    ) : unlocked ? (
-                      <span className="text-quest-300">Unlocked</span>
-                    ) : (
-                      <span>Scan at the station</span>
-                    )}
+                    {/* The state in words, so it never depends on the dot. */}
+                    <span
+                      className={cn(
+                        state === "done" && "text-volt-300",
+                        state === "current" && "text-quest-300",
+                      )}
+                    >
+                      {NODE_LABEL[state]}
+                    </span>
                   </div>
                 </Link>
               </li>
