@@ -171,7 +171,7 @@ describe("station codes", () => {
   it("forgives how a code gets typed", () => {
     // These are read aloud by a facilitator and typed with one thumb.
     for (const input of ["a7", " A7 ", "a-7", "A 7"]) {
-      expect(findChapterByStationCode(campaign, input)?.slug, input).toBe("quick-money");
+      expect(findChapterByStationCode(campaign, input)?.slug, input).toBe("the-favour");
     }
   });
 

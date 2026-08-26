@@ -21,7 +21,7 @@ test.describe("app shell", () => {
     await page.getByRole("button", { name: "Tampines", exact: true }).click();
     await page.getByRole("button", { name: "Enter SIDEQUEST" }).click();
 
-    await expect(page.getByRole("heading", { name: "Safety Pulse" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "ONE BAD MINUTE" })).toBeVisible();
 
     const profile = await readProfile(page);
     expect(profile.onboardedAt).toBeTruthy();
@@ -35,10 +35,10 @@ test.describe("app shell", () => {
     await seedProfile(page);
 
     for (const [path, heading] of [
-      ["/", "Safety Pulse"],
+      ["/", "ONE BAD MINUTE"],
       ["/pulse", "Pulse"],
       ["/missions", "Missions"],
-      ["/safe", "Safe"],
+      ["/safe", "What do you need?"],
       ["/you", "Safety Passport"],
       ["/radio", "Radio"],
       ["/rewards", "Rewards"],
@@ -135,16 +135,16 @@ test.describe("Safe", () => {
     await seedProfile(page);
     await page.goto("/safe");
 
-    await expect(page.getByRole("link", { name: /Police emergency/ })).toHaveAttribute(
+    await expect(page.getByRole("link", { name: /Emergency/ })).toHaveAttribute(
       "href",
       "tel:999",
     );
-    await expect(page.getByRole("link", { name: /ScamShield Helpline/ })).toHaveAttribute(
+    await expect(page.getByRole("link", { name: /Scam help/ })).toHaveAttribute(
       "href",
       "tel:1799",
     );
 
-    const scamShield = page.getByRole("link", { name: /^ScamShield\b/ }).nth(1);
+    const scamShield = page.getByRole("link", { name: /ScamShield/ });
     await expect(scamShield).toHaveAttribute("href", "https://www.scamshield.gov.sg");
     await expect(scamShield).toHaveAttribute("target", "_blank");
     await expect(scamShield).toHaveAttribute("rel", /noopener/);

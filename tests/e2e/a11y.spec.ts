@@ -29,7 +29,7 @@ const ROUTES = [
   "/campaigns/one-bad-minute",
   "/campaigns/one-bad-minute/stations",
   "/campaigns/one-bad-minute/impact",
-  "/campaigns/one-bad-minute/chapter/quick-money",
+  "/campaigns/one-bad-minute/chapter/the-favour",
 ];
 
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];

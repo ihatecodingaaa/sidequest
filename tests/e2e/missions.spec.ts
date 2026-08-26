@@ -8,10 +8,11 @@ test.describe("information to action", () => {
     await seedProfile(page);
     await page.goto("/");
 
-    // The signature interaction, straight off Home.
-    await page.getByRole("link", { name: "Try the related quest" }).first().click();
-    await expect(page).toHaveURL(/\/missions\/mission-job-scam$/);
-    await expect(page.getByRole("heading", { name: "$400 a day, work from home" })).toBeVisible();
+    // The signature interaction, straight off Home. The featured story is a
+    // peer pressure piece and it hands off to REWIND.
+    await page.getByRole("link", { name: /^Play REWIND/ }).click();
+    await expect(page).toHaveURL(/\/missions\/mission-rewind$/);
+    await expect(page.getByRole("heading", { name: "REWIND" })).toBeVisible();
 
     // And the same journey from the Pulse detail page.
     await page.goto("/pulse/pulse-job-scams");
@@ -76,13 +77,14 @@ test.describe("Quick Quest", () => {
     await seedProfile(page, { xp: 415, completedMissionIds: ["mission-otp"] });
 
     await page.goto("/");
-    // Scoped to the main column: the desktop rail renders the same figures.
+    // Home shows a compact level chip; the full readout lives on You.
     const main = page.locator("#main");
     await expect(main.getByText("415", { exact: true }).first()).toBeVisible();
-    await expect(main.getByText("Responder")).toBeVisible();
+    await expect(main.getByText("Lv 3")).toBeVisible();
 
     await page.goto("/you");
     await expect(page.getByRole("heading", { name: "Safety Passport" })).toBeVisible();
+    await expect(page.locator("#main").getByText("Responder")).toBeVisible();
     await expect(page.getByText("Would you send the OTP?")).toBeVisible();
   });
 });

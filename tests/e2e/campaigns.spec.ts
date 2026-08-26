@@ -70,12 +70,13 @@ test.describe("campaign discovery", () => {
     await seedProfile(page);
 
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "At an event" })).toBeVisible();
+    // The campaign is the hero on Home, not a section among several.
+    await expect(page.getByRole("heading", { name: "ONE BAD MINUTE" })).toBeVisible();
     await page.getByRole("link", { name: /ONE BAD MINUTE/ }).first().click();
     await expect(page).toHaveURL(new RegExp(`${SLUG}$`));
 
     await page.goto("/missions");
-    await expect(page.getByRole("heading", { name: "Campaigns" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "ONE BAD MINUTE" })).toBeVisible();
   });
 
   test("mode selection persists", async ({ page }) => {
@@ -102,11 +103,11 @@ test.describe("QR entry", () => {
     await seedProfile(page);
 
     // Exactly what a printed QR resolves to.
-    await page.goto(`${CAMPAIGN}/chapter/quick-money`);
+    await page.goto(`${CAMPAIGN}/chapter/the-favour`);
 
     await expect(page.getByText("Chapter unlocked")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Move away from the station" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Quick money" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "The favour" })).toBeVisible();
 
     // The scan is what unlocks it, before anything is played.
     const progress = await readCampaign(page);
@@ -139,7 +140,7 @@ test.describe("QR entry", () => {
 
   test("every station deep link resolves", async ({ page }) => {
     await seedProfile(page);
-    for (const slug of ["quick-money", "everyone-would", "design-the-moment", "crew-shift"]) {
+    for (const slug of ["the-favour", "everyone-would", "design-the-moment", "crew-shift"]) {
       await page.goto(`${CAMPAIGN}/chapter/${slug}`);
       await expect(page.getByText("Chapter unlocked"), slug).toBeVisible();
     }
