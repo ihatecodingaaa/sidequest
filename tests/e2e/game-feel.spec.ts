@@ -380,6 +380,16 @@ test.describe("hero missions carry their own world", () => {
     await page.goto("/missions");
 
     const worlds = page.locator("[data-mission-world]");
+
+    /*
+     * `count()` resolves immediately and does not auto-wait, so calling it
+     * straight after a navigation reports zero for art that is about to
+     * render and the loop below then asserts nothing at all. Under the full
+     * suite that is the difference between a passing test and a real one.
+     * Waiting for the first world to attach is what makes the count truthful.
+     * The same trap is documented on the bottom-bar geometry test.
+     */
+    await expect(worlds.first()).toBeAttached();
     expect(await worlds.count()).toBeGreaterThan(0);
 
     for (const handle of await worlds.all()) {
