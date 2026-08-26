@@ -7,9 +7,11 @@ import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/primitives";
 import { MissionShell } from "@/features/missions/engine/mission-shell";
-import { MissionComplete } from "@/features/missions/engine/mission-complete";
+import {
+  useMissionHost,
+  type MissionHost,
+} from "@/features/missions/engine/mission-host";
 import { NORM_QUESTIONS, NORM_SAMPLE_NOTE, type NormQuestion } from "@/data/norm-mirror";
-import { useAppStore } from "@/store/app-store";
 import type { AwardResult } from "@/lib/xp";
 import type { Mission } from "@/types/mission";
 
@@ -31,8 +33,19 @@ interface Answer {
  * Every aggregate on screen is labelled "Demo aggregate" and the note under it
  * says plainly that these are placeholders, not survey results.
  */
-export function NormMirrorPlayer({ mission }: { mission: Mission }) {
-  const completeMission = useAppStore((state) => state.completeMission);
+export function NormMirrorPlayer({
+  mission,
+  questions = NORM_QUESTIONS,
+  host: providedHost,
+  onResult,
+}: {
+  mission: Mission;
+  /** Campaign chapters supply their own set. Defaults to the standalone one. */
+  questions?: NormQuestion[];
+  host?: MissionHost;
+  onResult?: (result: { overestimates: number; questionCount: number }) => void;
+}) {
+  const host = useMissionHost(mission, providedHost);
 
   const [step, setStep] = useState<Step>("intro");
   const [index, setIndex] = useState(0);
@@ -40,9 +53,9 @@ export function NormMirrorPlayer({ mission }: { mission: Mission }) {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [result, setResult] = useState<AwardResult | null>(null);
 
-  const question = NORM_QUESTIONS[index];
-  const total = NORM_QUESTIONS.length;
-  const exitHref = `/missions/${mission.id}`;
+  const question = questions[index];
+  const total = questions.length;
+  const exitHref = host.exitHref;
 
   const progress =
     step === "intro"
@@ -71,8 +84,17 @@ export function NormMirrorPlayer({ mission }: { mission: Mission }) {
     }
   };
 
+  /** A gap of 12 points or more counts as an overestimate. Shared so the
+   *  summary screen and the Campaign result can never disagree. */
+  const countOverestimates = () =>
+    answers.filter((answer) => {
+      const source = questions.find((entry) => entry.id === answer.questionId);
+      return source ? answer.prediction - source.demoAggregate >= 12 : false;
+    }).length;
+
   const finish = () => {
-    setResult(completeMission(mission.id));
+    onResult?.({ overestimates: countOverestimates(), questionCount: total });
+    setResult(host.complete());
     setStep("complete");
   };
 
@@ -248,10 +270,7 @@ export function NormMirrorPlayer({ mission }: { mission: Mission }) {
   /* ----------------------------------------------------------- Summary */
 
   if (step === "summary") {
-    const overestimates = answers.filter((answer) => {
-      const source = NORM_QUESTIONS.find((entry) => entry.id === answer.questionId);
-      return source ? answer.prediction - source.demoAggregate >= 12 : false;
-    }).length;
+    const overestimates = countOverestimates();
 
     return (
       <MissionShell
@@ -283,7 +302,7 @@ export function NormMirrorPlayer({ mission }: { mission: Mission }) {
 
           <ul className="mt-6 space-y-3">
             {answers.map((answer) => {
-              const source = NORM_QUESTIONS.find((entry) => entry.id === answer.questionId);
+              const source = questions.find((entry) => entry.id === answer.questionId);
               if (!source) return null;
               const delta = answer.prediction - source.demoAggregate;
               return (
@@ -320,11 +339,10 @@ export function NormMirrorPlayer({ mission }: { mission: Mission }) {
   if (step === "complete" && result) {
     return (
       <MissionShell title="Norm Mirror" accent="volt" progress={1} exitHref={exitHref}>
-        <MissionComplete
-          mission={mission}
-          result={result}
-          summary="You compared what you assumed about your peers with what the aggregate said."
-        />
+        {host.renderComplete(
+          result,
+          "You compared what you assumed about your peers with what the aggregate said.",
+        )}
       </MissionShell>
     );
   }

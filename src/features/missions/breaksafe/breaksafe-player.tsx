@@ -7,7 +7,10 @@ import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/primitives";
 import { MissionShell } from "@/features/missions/engine/mission-shell";
-import { MissionComplete } from "@/features/missions/engine/mission-complete";
+import {
+  useMissionHost,
+  type MissionHost,
+} from "@/features/missions/engine/mission-host";
 import { CheckoutMock } from "./checkout-mock";
 import {
   BREAKSAFE_REVEAL,
@@ -19,7 +22,6 @@ import {
   type CheckoutHotspot,
   type PatchOption,
 } from "@/data/breaksafe";
-import { useAppStore } from "@/store/app-store";
 import type { AwardResult } from "@/lib/xp";
 import type { Mission } from "@/types/mission";
 
@@ -33,8 +35,16 @@ type Step = "intro" | "observe" | "patch" | "reveal" | "complete";
  * and selectable on purpose, because refusing it once you have read its scores
  * is a stronger lesson than never being offered it.
  */
-export function BreaksafePlayer({ mission }: { mission: Mission }) {
-  const completeMission = useAppStore((state) => state.completeMission);
+export function BreaksafePlayer({
+  mission,
+  host: providedHost,
+  onResult,
+}: {
+  mission: Mission;
+  host?: MissionHost;
+  onResult?: (result: { patchIds: string[]; avoidedProfiling: boolean }) => void;
+}) {
+  const host = useMissionHost(mission, providedHost);
 
   const [step, setStep] = useState<Step>("intro");
   const [found, setFound] = useState<string[]>([]);
@@ -42,7 +52,7 @@ export function BreaksafePlayer({ mission }: { mission: Mission }) {
   const [patches, setPatches] = useState<string[]>([]);
   const [result, setResult] = useState<AwardResult | null>(null);
 
-  const exitHref = `/missions/${mission.id}`;
+  const exitHref = host.exitHref;
 
   // Only genuine design problems count towards the requirement. The two decoys
   // are tappable on purpose and explain why they are not the answer.
@@ -64,7 +74,8 @@ export function BreaksafePlayer({ mission }: { mission: Mission }) {
   };
 
   const finish = () => {
-    setResult(completeMission(mission.id));
+    onResult?.({ patchIds: patches, avoidedProfiling: chosePrivacyRespectingSet });
+    setResult(host.complete());
     setStep("complete");
   };
 
@@ -397,11 +408,10 @@ export function BreaksafePlayer({ mission }: { mission: Mission }) {
   if (step === "complete" && result) {
     return (
       <MissionShell title="BREAKSAFE" accent="quest" progress={1} exitHref={exitHref}>
-        <MissionComplete
-          mission={mission}
-          result={result}
-          summary="You diagnosed a system, then changed it without profiling anybody."
-        />
+        {host.renderComplete(
+          result,
+          "You diagnosed a system, then changed it without profiling anybody.",
+        )}
       </MissionShell>
     );
   }

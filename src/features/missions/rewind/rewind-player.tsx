@@ -7,10 +7,12 @@ import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/primitives";
 import { MissionShell } from "@/features/missions/engine/mission-shell";
-import { MissionComplete } from "@/features/missions/engine/mission-complete";
+import {
+  useMissionHost,
+  type MissionHost,
+} from "@/features/missions/engine/mission-host";
 import { BeatView } from "@/features/missions/engine/scenario-player";
 import { usePrefersReducedMotion } from "@/hooks/use-profile";
-import { useAppStore } from "@/store/app-store";
 import type { AwardResult } from "@/lib/xp";
 import type { Mission } from "@/types/mission";
 import type { Scenario, ScenarioChoice, ScenarioOutcome } from "@/types/scenario";
@@ -37,8 +39,23 @@ type Phase =
  * The option taken on the first run is disabled on the second so the comparison
  * is always between two genuinely different responses.
  */
-export function RewindPlayer({ mission, scenario }: { mission: Mission; scenario: Scenario }) {
-  const completeMission = useAppStore((state) => state.completeMission);
+export function RewindPlayer({
+  mission,
+  scenario,
+  host: providedHost,
+  onResult,
+}: {
+  mission: Mission;
+  scenario: Scenario;
+  /** Supplied by a Campaign chapter. Absent means the standalone route. */
+  host?: MissionHost;
+  /** Lets a Campaign record which pivot options were taken. */
+  onResult?: (result: {
+    firstChoiceId: string | null;
+    secondChoiceId: string | null;
+  }) => void;
+}) {
+  const host = useMissionHost(mission, providedHost);
   const reduced = usePrefersReducedMotion();
 
   const beatMap = useMemo(
@@ -91,7 +108,11 @@ export function RewindPlayer({ mission, scenario }: { mission: Mission; scenario
   };
 
   const finish = () => {
-    setResult(completeMission(mission.id));
+    onResult?.({
+      firstChoiceId: firstPivotChoice?.id ?? null,
+      secondChoiceId: secondPivotChoice?.id ?? null,
+    });
+    setResult(host.complete());
     setPhase("complete");
   };
 
@@ -118,7 +139,7 @@ export function RewindPlayer({ mission, scenario }: { mission: Mission; scenario
     }
   };
 
-  const exitHref = `/missions/${mission.id}`;
+  const exitHref = host.exitHref;
 
   /* ------------------------------------------------------------- Intro */
 
@@ -340,11 +361,10 @@ export function RewindPlayer({ mission, scenario }: { mission: Mission; scenario
   if (phase === "complete" && result) {
     return (
       <MissionShell title="REWIND" accent="coral" progress={1} exitHref={exitHref}>
-        <MissionComplete
-          mission={mission}
-          result={result}
-          summary="You played the moment twice and found the version that costs nobody anything."
-        />
+        {host.renderComplete(
+          result,
+          "You played the moment twice and found the version that costs nobody anything.",
+        )}
       </MissionShell>
     );
   }

@@ -7,8 +7,7 @@ import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/primitives";
 import { MissionShell } from "./mission-shell";
-import { MissionComplete } from "./mission-complete";
-import { useAppStore } from "@/store/app-store";
+import { useMissionHost, type MissionHost } from "./mission-host";
 import type { AwardResult } from "@/lib/xp";
 import type { Mission } from "@/types/mission";
 import type { Scenario, ScenarioBeat, ScenarioChoice } from "@/types/scenario";
@@ -30,11 +29,14 @@ const TONE_RING: Record<NonNullable<ScenarioChoice["tone"]>, string> = {
 export function ScenarioPlayer({
   mission,
   scenario,
+  host: providedHost,
 }: {
   mission: Mission;
   scenario: Scenario;
+  /** Supplied by a Campaign chapter. Absent means the standalone route. */
+  host?: MissionHost;
 }) {
-  const completeMission = useAppStore((state) => state.completeMission);
+  const host = useMissionHost(mission, providedHost);
 
   const [phase, setPhase] = useState<Phase>("intro");
   const [beatId, setBeatId] = useState(scenario.startBeatId);
@@ -67,7 +69,7 @@ export function ScenarioPlayer({
   };
 
   const finish = () => {
-    setResult(completeMission(mission.id));
+    setResult(host.complete());
     setPhase("complete");
   };
 
@@ -87,7 +89,7 @@ export function ScenarioPlayer({
         title={mission.title}
         accent={mission.accent}
         progress={progress}
-        exitHref={`/missions/${mission.id}`}
+        exitHref={host.exitHref}
         footer={
           <Button variant="volt" size="lg" full onClick={() => setPhase("playing")}>
             Start
@@ -129,7 +131,7 @@ export function ScenarioPlayer({
         title={mission.title}
         accent={mission.accent}
         progress={progress}
-        exitHref={`/missions/${mission.id}`}
+        exitHref={host.exitHref}
         footer={
           <div className="flex gap-2.5">
             <Button variant="secondary" size="lg" onClick={restart}>
@@ -177,7 +179,7 @@ export function ScenarioPlayer({
         title={mission.title}
         accent={mission.accent}
         progress={progress}
-        exitHref={`/missions/${mission.id}`}
+        exitHref={host.exitHref}
         footer={
           <Button variant="volt" size="lg" full onClick={finish}>
             Finish mission
@@ -214,9 +216,9 @@ export function ScenarioPlayer({
         title={mission.title}
         accent={mission.accent}
         progress={1}
-        exitHref={`/missions/${mission.id}`}
+        exitHref={host.exitHref}
       >
-        <MissionComplete mission={mission} result={result} />
+        {host.renderComplete(result)}
       </MissionShell>
     );
   }
@@ -225,7 +227,7 @@ export function ScenarioPlayer({
 
   if (!beat) {
     return (
-      <MissionShell title={mission.title} exitHref={`/missions/${mission.id}`}>
+      <MissionShell title={mission.title} exitHref={host.exitHref}>
         <p className="py-10 text-center text-sm text-muted">
           This scenario branch is missing. Head back and try again.
         </p>
@@ -238,7 +240,7 @@ export function ScenarioPlayer({
       title={mission.title}
       accent={mission.accent}
       progress={progress}
-      exitHref={`/missions/${mission.id}`}
+      exitHref={host.exitHref}
     >
       <BeatView beat={beat} reaction={reaction} onChoose={choose} />
     </MissionShell>

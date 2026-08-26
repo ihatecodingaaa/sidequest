@@ -10,6 +10,15 @@ import { getMission } from "@/data/missions";
 import { getReward } from "@/data/rewards";
 import { DEFAULT_CREW_ID } from "@/data/crews";
 import { sanitiseText } from "@/lib/format";
+import type {
+  Campaign,
+  CampaignFollowUp,
+  CampaignMode,
+  CampaignProgress,
+  ChapterResult,
+} from "@/types/campaign";
+import * as campaignSlice from "./campaign-slice";
+import { readOrCreateSeed } from "@/lib/campaign";
 
 export const STORAGE_KEY = "sidequest.profile.v1";
 
@@ -27,6 +36,7 @@ export const EMPTY_PROFILE: UserProfile = {
   submissions: [],
   rewardClaims: [],
   onboardedAt: null,
+  campaigns: {},
 };
 
 /**
@@ -82,6 +92,25 @@ interface AppState {
 
   loadDemoProgress: () => void;
   resetDemo: () => void;
+
+  /* ----------------------------------------------------------- Campaigns */
+
+  startCampaign: (campaign: Campaign, mode: CampaignMode) => void;
+  setCampaignMode: (campaignId: string, mode: CampaignMode) => void;
+  getCampaignProgress: (campaignId: string) => CampaignProgress | undefined;
+  unlockChapter: (campaignId: string, chapterId: string) => void;
+  completeChapter: (
+    campaign: Campaign,
+    chapterId: string,
+    result: ChapterResult,
+  ) => AwardResult;
+  completeFinale: (campaign: Campaign, optionId: string) => AwardResult;
+  completeFollowUp: (campaign: Campaign, followUp: CampaignFollowUp) => AwardResult;
+
+  resetCampaign: (campaignId: string) => void;
+  reassignCampaignRoute: (campaign: Campaign) => void;
+  unlockAllChapters: (campaign: Campaign) => void;
+  advanceCampaignClock: (campaignId: string, hours: number) => void;
 }
 
 function makeId(prefix: string): string {
@@ -233,6 +262,80 @@ export const useAppStore = create<AppState>()(
         })),
 
       resetDemo: () => set({ profile: EMPTY_PROFILE }),
+
+      /* --------------------------------------------------------- Campaigns */
+
+      startCampaign: (campaign, mode) =>
+        set((state) => ({
+          profile: campaignSlice.startCampaign(
+            state.profile,
+            campaign,
+            mode,
+            readOrCreateSeed(),
+          ),
+        })),
+
+      setCampaignMode: (campaignId, mode) =>
+        set((state) => ({
+          profile: campaignSlice.setCampaignMode(state.profile, campaignId, mode),
+        })),
+
+      getCampaignProgress: (campaignId) =>
+        campaignSlice.getProgress(get().profile, campaignId),
+
+      unlockChapter: (campaignId, chapterId) =>
+        set((state) => ({
+          profile: campaignSlice.unlockChapter(state.profile, campaignId, chapterId),
+        })),
+
+      completeChapter: (campaign, chapterId, result) => {
+        const mutation = campaignSlice.completeChapter(
+          get().profile,
+          campaign,
+          chapterId,
+          result,
+        );
+        set({ profile: mutation.profile });
+        return mutation.result;
+      },
+
+      completeFinale: (campaign, optionId) => {
+        const mutation = campaignSlice.completeFinale(get().profile, campaign, optionId);
+        set({ profile: mutation.profile });
+        return mutation.result;
+      },
+
+      completeFollowUp: (campaign, followUp) => {
+        const mutation = campaignSlice.completeFollowUp(get().profile, campaign, followUp);
+        set({ profile: mutation.profile });
+        return mutation.result;
+      },
+
+      resetCampaign: (campaignId) =>
+        set((state) => ({
+          profile: campaignSlice.resetCampaign(state.profile, campaignId),
+        })),
+
+      reassignCampaignRoute: (campaign) =>
+        set((state) => ({
+          // A fresh seed on purpose: the point of this control is to show a
+          // different route without clearing the participant's progress.
+          profile: campaignSlice.reassignRoute(
+            state.profile,
+            campaign,
+            Math.random().toString(36).slice(2, 12),
+          ),
+        })),
+
+      unlockAllChapters: (campaign) =>
+        set((state) => ({
+          profile: campaignSlice.unlockAllChapters(state.profile, campaign),
+        })),
+
+      advanceCampaignClock: (campaignId, hours) =>
+        set((state) => ({
+          profile: campaignSlice.advanceDemoClock(state.profile, campaignId, hours),
+        })),
     }),
     {
       name: STORAGE_KEY,

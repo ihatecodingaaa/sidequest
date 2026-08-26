@@ -1,4 +1,5 @@
 import type { AgeBand, Interest, SkillId } from "./core";
+import type { CampaignProgress } from "./campaign";
 
 export interface SafetySkill {
   id: SkillId;
@@ -38,4 +39,7 @@ export interface UserProfile {
   submissions: PartnerSubmission[];
   rewardClaims: RewardClaim[];
   onboardedAt: string | null;
+  /** Campaign progress, keyed by campaign id. Optional so older persisted
+   *  profiles rehydrate without a migration step. */
+  campaigns?: Record<string, CampaignProgress>;
 }
