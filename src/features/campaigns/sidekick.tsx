@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/cn";
 import { resolveEchoStyle, type EchoStyle } from "@/data/echo-styles";
+import { EchoMascot, type EchoExpression } from "@/components/echo/echo-mascot";
 import { useProfile } from "@/hooks/use-profile";
 
 /**
@@ -25,18 +26,22 @@ const MOOD_STROKE: Record<SidekickMood, string> = {
   concerned: "text-coral-300",
 };
 
-/** The inner mark changes shape by mood. No faces, no eyes, no cartoon. */
-const MOOD_PATH: Record<SidekickMood, string> = {
-  // A steady line.
-  neutral: "M9 16h14",
-  // A rising step, mid-thought.
-  thinking: "M9 19l4-4 3 3 5-6",
-  // A check.
-  pleased: "M10 16.5l3.5 3.5L22 12",
-  // A pause bar.
-  concerned: "M13 11v10M19 11v10",
+
+/** Moods map onto the mascot's expression set. */
+const MOOD_EXPRESSION: Record<SidekickMood, EchoExpression> = {
+  neutral: "neutral",
+  thinking: "thinking",
+  pleased: "pleased",
+  concerned: "concerned",
 };
 
+/**
+ * Echo, at any size.
+ *
+ * This used to draw a ring with a stroke through it. It now renders the mascot,
+ * keeping the same `mood` API so every existing caller was upgraded without
+ * being touched. The style comes from the collection when one is equipped.
+ */
 export function Sidekick({
   mood = "neutral",
   className,
@@ -46,52 +51,15 @@ export function Sidekick({
   mood?: SidekickMood;
   className?: string;
   size?: number;
-  /**
-   * A collected Echo style. Cosmetic: it changes the ring and nothing else.
-   * When omitted, mood picks the colour as it always did, so every existing
-   * caller keeps its behaviour.
-   */
   style?: EchoStyle;
 }) {
   return (
-    <svg
-      viewBox="0 0 32 32"
-      width={size}
-      height={size}
-      aria-hidden
-      className={cn("shrink-0", style ? style.ring : MOOD_STROKE[mood], className)}
-    >
-      {style?.halo ? (
-        <circle
-          cx="16"
-          cy="16"
-          r="15"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.2"
-          strokeDasharray="3 4"
-          className={style.halo}
-        />
-      ) : null}
-      <circle
-        cx="16"
-        cy="16"
-        r="13"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        opacity="0.35"
-      />
-      <circle cx="16" cy="16" r="13" fill="currentColor" opacity="0.08" />
-      <path
-        d={MOOD_PATH[mood]}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <EchoMascot
+      expression={MOOD_EXPRESSION[mood]}
+      style={style?.id ?? "core"}
+      size={size}
+      className={cn(style ? style.ring : MOOD_STROKE[mood], className)}
+    />
   );
 }
 
