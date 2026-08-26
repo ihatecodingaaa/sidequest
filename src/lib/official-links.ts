@@ -144,3 +144,76 @@ export const QUICK_LINKS = {
    */
   meListen: "https://www.melisten.sg",
 } as const;
+
+/* ------------------------------------------------------------ Safe paths */
+
+export interface SafePath {
+  id: string;
+  /** The question a stressed person is actually asking. */
+  label: string;
+  /** One short line. Never a sentence a person has to parse under stress. */
+  hint: string;
+  tone: "emergency" | "urgent" | "neutral";
+  /** The single action this path leads with. */
+  primary: OfficialResource;
+  /** Optional second option, shown smaller. */
+  secondary?: OfficialResource;
+}
+
+function resource(id: string): OfficialResource {
+  const found = getOfficialResource(id);
+  if (!found) throw new Error(`Unknown official resource: ${id}`);
+  return found;
+}
+
+/**
+ * The Safe screen answers one question: what do you need help with.
+ *
+ * Four paths, not eight cards. Under acute stress people read less and choose
+ * from fewer options, so the list is categorised rather than flat, and each
+ * path carries a fragment rather than a sentence. Reading destinations
+ * (advisories, NCPC) are deliberately not in this list: they are things to
+ * browse, not things to do when something is wrong, and Pulse already links to
+ * them.
+ *
+ * Ordering is by urgency, not by frequency of use. The one path somebody might
+ * need in the next ten seconds is first.
+ */
+export const SAFE_PATHS: readonly SafePath[] = [
+  {
+    id: "emergency",
+    label: "Emergency",
+    hint: "Someone is in danger, or a crime is happening now",
+    tone: "emergency",
+    primary: resource("police-emergency"),
+  },
+  {
+    id: "scam",
+    label: "Scam help",
+    hint: "A message, call or link you are not sure about",
+    tone: "urgent",
+    primary: resource("scam-helpline"),
+    secondary: resource("scamshield"),
+  },
+  {
+    id: "report",
+    label: "Report something",
+    hint: "Share information about a crime with the Police",
+    tone: "neutral",
+    primary: resource("i-witness"),
+  },
+  {
+    id: "services",
+    label: "Police services",
+    hint: "Not urgent. Reports, cases and everything else",
+    tone: "neutral",
+    primary: resource("police-eservices"),
+    secondary: resource("police-hotline"),
+  },
+] as const;
+
+/** Reading, not help. Kept out of the four paths on purpose. */
+export const SAFE_READING: readonly OfficialResource[] = [
+  resource("spf-advisories"),
+  resource("ncpc"),
+] as const;
