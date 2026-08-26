@@ -8,6 +8,7 @@ import { cn } from "@/lib/cn";
 import { ACCENT_TEXT } from "@/lib/accent";
 import { DISCOVERY_LINKS, PULSE_ITEMS } from "@/data/pulse";
 import type { DiscoveryLink } from "@/types/content";
+import { PULSE_MOTIF, StoryMotif } from "@/components/story/story-motif";
 import { getMission } from "@/data/missions";
 import { PageHeader } from "@/components/layout/app-shell";
 import { ExternalLink, ProvenanceTag } from "@/components/ui/primitives";
@@ -145,6 +146,13 @@ export function PulseFeed() {
                       href={`/pulse/${item.id}`}
                       className="flex min-h-20 items-center gap-3 px-4 py-3.5 transition-colors hover:bg-white/4"
                     >
+                      {PULSE_MOTIF[item.id] ? (
+                        <StoryMotif
+                          motif={PULSE_MOTIF[item.id]}
+                          accent="pulse"
+                          className="size-12 shrink-0"
+                        />
+                      ) : null}
                       <span className="min-w-0 flex-1">
                         <span className="block text-[0.95rem] leading-snug font-bold text-chalk">
                           {item.title}
@@ -257,6 +265,20 @@ function LeadStory({
       </div>
 
       <Link href={`/pulse/${item.id}`} className="block">
+        {/*
+          The lead story gets artwork about *its own subject*: the object or
+          system the story is about, never a scene and never a stock mood shot.
+          A story with no motif gets nothing, which is the correct outcome of
+          "no visual without a job" rather than a gap to fill.
+        */}
+        {PULSE_MOTIF[item.id] ? (
+          <StoryMotif
+            motif={PULSE_MOTIF[item.id]}
+            accent="pulse"
+            className="mt-2 mb-4 h-28 w-full"
+          />
+        ) : null}
+
         <h2 className="mt-1 text-balance-tight font-display text-[1.6rem] leading-[1.12] font-extrabold tracking-tight text-chalk lg:text-3xl">
           {item.title}
         </h2>
