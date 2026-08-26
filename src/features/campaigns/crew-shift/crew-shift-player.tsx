@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowRight, Check, EyeOff, Minus, Plus, Timer, Users } from "lucide-react";
+import { ArrowRight, Check, EyeOff, MessagesSquare, Minus, Plus, Timer, Users } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { MissionShell } from "@/features/missions/engine/mission-shell";
 import { StoryView } from "@/features/campaigns/story-view";
 import { SidekickLine } from "@/features/campaigns/sidekick";
+import { ShiftReveal, TallyBars, type TallyRow } from "@/components/reveal/shift-reveal";
+import { WhatChanged } from "@/components/reveal/what-changed";
 import { usePrefersReducedMotion } from "@/hooks/use-profile";
 import {
   MAX_CREW_PLAYERS,
@@ -22,10 +24,9 @@ type Step =
   | "situation"
   | "handoff"
   | "private"
-  | "locked"
   | "reveal"
   | "discuss"
-  | "final"
+  | "tiebreak"
   | "shift"
   | "complete";
 
@@ -33,6 +34,8 @@ export interface CrewShiftOutcome {
   playerCount: number;
   shifted: boolean;
   finalOptionId: string;
+  /** How many seats answered differently the second time. Never which seats. */
+  movedCount: number;
 }
 
 /**
@@ -66,48 +69,93 @@ export function CrewShiftPlayer({
   const [step, setStep] = useState<Step>("setup");
   const [playerCount, setPlayerCount] = useState(3);
   const [currentPlayer, setCurrentPlayer] = useState(1);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+  /** Round 1 runs before the discussion, round 2 after it. */
+  const [voteRound, setVoteRound] = useState<1 | 2>(1);
+  const [firstAnswers, setFirstAnswers] = useState<Record<number, string>>({});
+  const [secondAnswers, setSecondAnswers] = useState<Record<number, string>>({});
   const [pending, setPending] = useState<string | null>(null);
   const [finalOptionId, setFinalOptionId] = useState<string | null>(null);
   const [result, setResult] = useState<AwardResult | null>(null);
 
   const isSolo = playerCount === 1;
 
+  /** Counts per option, in the order the options are declared. Never re-sorted. */
+  const tallyFor = (source: Record<number, string>): TallyRow[] =>
+    round.options.map((option) => ({
+      id: option.id,
+      label: option.label,
+      note: option.tradeoff,
+      count: Object.values(source).filter((value) => value === option.id).length,
+    }));
+
+  /**
+   * Winning options for a round. Returns every option tied at the top, because
+   * a two-two split is a real result the crew has to resolve out loud, not
+   * something to resolve silently by declaration order.
+   */
+  const leadersOf = (source: Record<number, string>): string[] => {
+    const rows = tallyFor(source);
+    const best = Math.max(0, ...rows.map((row) => row.count));
+    if (best === 0) return [];
+    return rows.filter((row) => row.count === best).map((row) => row.id);
+  };
+
+  /** Seats that answered differently the second time. The count only, never the seat. */
+  const movedCount = (): number => {
+    let moved = 0;
+    for (let seat = 1; seat <= playerCount; seat += 1) {
+      const before = firstAnswers[seat];
+      const after = secondAnswers[seat];
+      if (before && after && before !== after) moved += 1;
+    }
+    return moved;
+  };
+
+  const finish = (optionId: string, second: Record<number, string>) => {
+    let moved = 0;
+    for (let seat = 1; seat <= playerCount; seat += 1) {
+      if (firstAnswers[seat] && second[seat] && firstAnswers[seat] !== second[seat]) moved += 1;
+    }
+    setFinalOptionId(optionId);
+    onResult?.({ playerCount, shifted: moved > 0, finalOptionId: optionId, movedCount: moved });
+    setStep("shift");
+  };
+
   const lockAnswer = () => {
     if (!pending) return;
-    setAnswers((current) => ({ ...current, [currentPlayer]: pending }));
+    const answer = pending;
     setPending(null);
+
+    if (voteRound === 1) {
+      setFirstAnswers((current) => ({ ...current, [currentPlayer]: answer }));
+      if (currentPlayer < playerCount) {
+        setCurrentPlayer(currentPlayer + 1);
+        setStep("handoff");
+      } else {
+        setStep("reveal");
+      }
+      return;
+    }
+
+    const next = { ...secondAnswers, [currentPlayer]: answer };
+    setSecondAnswers(next);
     if (currentPlayer < playerCount) {
       setCurrentPlayer(currentPlayer + 1);
       setStep("handoff");
-    } else {
-      setStep("reveal");
+      return;
     }
+
+    const leaders = leadersOf(next);
+    if (leaders.length === 1) finish(leaders[0], next);
+    else setStep("tiebreak");
   };
 
-  /** The most common private answer. Ties resolve to the first option listed. */
-  const majorityOptionId = (): string | null => {
-    const tally = new Map<string, number>();
-    for (const optionId of Object.values(answers)) {
-      tally.set(optionId, (tally.get(optionId) ?? 0) + 1);
-    }
-    let best: string | null = null;
-    let bestCount = 0;
-    for (const option of round.options) {
-      const count = tally.get(option.id) ?? 0;
-      if (count > bestCount) {
-        best = option.id;
-        bestCount = count;
-      }
-    }
-    return best;
-  };
-
-  const finish = (optionId: string) => {
-    const shifted = !isSolo && majorityOptionId() !== optionId;
-    setFinalOptionId(optionId);
-    onResult?.({ playerCount, shifted, finalOptionId: optionId });
-    setStep("shift");
+  /** Moves from the discussion into the second private round. */
+  const startSecondRound = () => {
+    setVoteRound(2);
+    setCurrentPlayer(1);
+    setPending(null);
+    setStep(playerCount > 1 ? "handoff" : "private");
   };
 
   const grant = () => {
@@ -230,7 +278,9 @@ export function CrewShiftPlayer({
             Player {currentPlayer}
           </h1>
           <p className="mx-auto mt-3 max-w-xs text-base text-mist">
-            Pass the phone. Do not let anyone else see the screen.
+            {voteRound === 1
+              ? "Pass the phone. Do not let anyone else see the screen."
+              : "Second time round. Same rule: nobody else sees the screen."}
           </p>
         </div>
       </div>,
@@ -252,12 +302,22 @@ export function CrewShiftPlayer({
       <div className="animate-rise py-2">
         <p className="inline-flex items-center gap-1.5 rounded-full border border-pulse-500/30 bg-pulse-500/10 px-3 py-1 text-xs font-semibold text-pulse-300">
           <EyeOff aria-hidden className="size-3.5" />
-          {isSolo ? "Your answer" : `Player ${currentPlayer}, private`}
+          {isSolo
+            ? voteRound === 1
+              ? "Your answer"
+              : "Your answer, again"
+            : `Player ${currentPlayer}, ${voteRound === 1 ? "private" : "second answer"}`}
         </p>
 
         <h1 className="mt-4 text-balance-tight font-display text-2xl leading-tight font-extrabold text-chalk">
-          {round.prompt}
+          {voteRound === 1 ? round.prompt : round.secondRoundPrompt}
         </h1>
+
+        {voteRound === 2 ? (
+          <p className="mt-2 text-sm text-muted">
+            Changing your mind is not losing. Neither is keeping it.
+          </p>
+        ) : null}
 
         <div className="mt-6 space-y-2.5">
           {round.options.map((option) => {
@@ -309,11 +369,8 @@ export function CrewShiftPlayer({
   /* ------------------------------------------------------------- Reveal */
 
   if (step === "reveal") {
-    const tally = round.options.map((option) => ({
-      option,
-      count: Object.values(answers).filter((value) => value === option.id).length,
-    }));
-    const chosen = tally.filter((entry) => entry.count > 0);
+    const rows = tallyFor(firstAnswers);
+    const chosen = rows.filter((row) => row.count > 0);
     const unanimous = chosen.length === 1;
 
     return shell(
@@ -327,46 +384,16 @@ export function CrewShiftPlayer({
         </h1>
         <p className="mt-2 text-sm text-mist">
           {isSolo
-            ? "Nothing to compare against, so here is where you landed."
+            ? "Nothing to compare against yet. Answer again after you have thought about it."
             : "No score, and nobody is wrong. This is just where the group actually is."}
         </p>
 
-        <ul className="mt-6 space-y-2.5">
-          {tally.map(({ option, count }) => (
-            <li
-              key={option.id}
-              className={cn(
-                "rounded-2xl border p-4 transition-colors",
-                count > 0 ? "border-pulse-500/30 bg-pulse-500/8" : "border-white/8 bg-white/3",
-              )}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <p
-                  className={cn(
-                    "text-sm font-semibold",
-                    count > 0 ? "text-chalk" : "text-faint",
-                  )}
-                >
-                  {option.label}
-                </p>
-                <span
-                  className={cn(
-                    "shrink-0 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums",
-                    count > 0 ? "bg-pulse-500/20 text-pulse-300" : "bg-white/6 text-faint",
-                  )}
-                >
-                  {count}
-                </span>
-              </div>
-              {count > 0 ? (
-                <p className="mt-1.5 text-xs leading-relaxed text-muted">{option.tradeoff}</p>
-              ) : null}
-            </li>
-          ))}
-        </ul>
+        <div className="mt-6">
+          <TallyBars rows={rows} total={playerCount} accent="pulse" showNotes />
+        </div>
       </div>,
       {
-        progress: 0.6,
+        progress: 0.55,
         footer: (
           <Button variant="volt" size="lg" full onClick={() => setStep("discuss")}>
             {isSolo ? "Continue" : "Talk about it"}
@@ -385,32 +412,43 @@ export function CrewShiftPlayer({
         round={round}
         reduced={reduced}
         solo={isSolo}
-        onDone={() => setStep("final")}
+        onDone={startSecondRound}
       />,
-      { progress: 0.72 },
+      { progress: 0.65 },
     );
   }
 
-  /* -------------------------------------------------------------- Final */
+  /* ----------------------------------------------------------- Tiebreak */
 
-  if (step === "final") {
+  /*
+   * A genuine split. Rather than resolving it by declaration order behind the
+   * scenes, the crew has to resolve it out loud, which is the most honest
+   * thing this mechanic can do with a tie.
+   */
+  if (step === "tiebreak") {
+    const tied = leadersOf(secondAnswers);
+    const tiedOptions = round.options.filter((option) => tied.includes(option.id));
+
     return shell(
       <div className="animate-rise py-2">
-        <p className="inline-flex items-center gap-1.5 rounded-full border border-volt-500/30 bg-volt-500/10 px-3 py-1 text-xs font-semibold text-volt-300">
+        <p className="inline-flex items-center gap-1.5 rounded-full border border-gold-500/30 bg-gold-500/10 px-3 py-1 text-xs font-semibold text-gold-400">
           <Users aria-hidden className="size-3.5" />
-          {isSolo ? "Final answer" : "One decision, together"}
+          Still split
         </p>
 
         <h1 className="mt-4 text-balance-tight font-display text-2xl leading-tight font-extrabold text-chalk">
           {round.finalPrompt}
         </h1>
+        <p className="mt-2 text-sm text-mist">
+          You came out level. Settle it between you, then tap it once.
+        </p>
 
         <div className="mt-6 space-y-2.5">
-          {round.options.map((option) => (
+          {tiedOptions.map((option) => (
             <button
               key={option.id}
               type="button"
-              onClick={() => finish(option.id)}
+              onClick={() => finish(option.id, secondAnswers)}
               className="sq-pressable flex min-h-14 w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/4 px-4 py-3 text-left text-[0.95rem] leading-snug font-medium text-chalk hover:border-volt-500/40 hover:bg-white/7"
             >
               <span className="flex-1">{option.label}</span>
@@ -419,7 +457,7 @@ export function CrewShiftPlayer({
           ))}
         </div>
       </div>,
-      { progress: 0.85 },
+      { progress: 0.9 },
     );
   }
 
@@ -427,48 +465,58 @@ export function CrewShiftPlayer({
 
   if (step === "shift" && finalOptionId) {
     const outcome = round.outcomes[finalOptionId];
-    const majority = majorityOptionId();
-    const shifted = !isSolo && majority !== finalOptionId;
-    const majorityOption = round.options.find((option) => option.id === majority);
+    const moved = movedCount();
+    const beforeRows = tallyFor(firstAnswers);
+    const afterRows = tallyFor(secondAnswers);
+    const totalsChanged = beforeRows.some(
+      (row, index) => row.count !== afterRows[index].count,
+    );
 
     return shell(
       <div className="animate-rise py-2">
-        <div className="sq-card p-5">
+        <h1 className="font-display text-2xl leading-tight font-extrabold tracking-tight text-chalk">
+          {shiftHeadline(isSolo, moved, totalsChanged)}
+        </h1>
+
+        <ShiftReveal
+          className="mt-6"
+          accent="volt"
+          beforeLabel={isSolo ? "Before you thought about it" : "Before discussion"}
+          afterLabel={isSolo ? "After" : "After discussion"}
+          connector={<MessagesSquare aria-hidden className="size-4" />}
+          before={<TallyBars rows={beforeRows} total={playerCount} accent="pulse" />}
+          after={
+            <TallyBars
+              rows={afterRows}
+              total={playerCount}
+              accent="volt"
+              animate={!reduced}
+            />
+          }
+          summary={
+            isSolo
+              ? round.soloNote
+              : moved > 0
+                ? round.shiftedNote
+                : round.heldNote
+          }
+        />
+
+        {!isSolo ? (
+          <p className="mt-3 text-sm text-muted">{movedLine(moved, playerCount)}</p>
+        ) : null}
+
+        <div className="sq-card mt-7 p-5">
           <p className="font-display text-xl leading-tight font-extrabold text-pulse-300">
             {outcome.headline}
           </p>
           <p className="mt-3 text-sm leading-relaxed text-mist">{outcome.body}</p>
         </div>
 
-        {!isSolo ? (
-          <div
-            className={cn(
-              "animate-pop mt-5 rounded-2xl border p-4",
-              shifted ? "border-volt-500/30 bg-volt-500/8" : "border-white/10 bg-white/4",
-            )}
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-faint">
-              {shifted ? "The group shifted" : "The group held"}
-            </p>
-            {shifted && majorityOption ? (
-              <p className="mt-2 text-sm text-muted">
-                Most of you started at: {majorityOption.label}
-              </p>
-            ) : null}
-            <p className="mt-2 text-sm leading-relaxed text-mist">
-              {shifted ? round.shiftedNote : round.heldNote}
-            </p>
-          </div>
-        ) : (
-          <div className="mt-5 rounded-2xl border border-white/10 bg-white/4 p-4">
-            <p className="text-sm leading-relaxed text-mist">{round.soloNote}</p>
-          </div>
-        )}
+        <WhatChanged factorIds={outcome.protectiveFactorIds} />
 
-        <SidekickLine mood={shifted ? "thinking" : "pleased"} className="mt-5">
-          {shifted
-            ? "That is peer influence, working in the direction you chose. Usually it goes the other way and nobody notices."
-            : "Holding a position after an argument is a different thing from holding it before one."}
+        <SidekickLine mood={moved > 0 ? "thinking" : "pleased"} className="mt-6">
+          {echoLine(isSolo, moved, totalsChanged)}
         </SidekickLine>
       </div>,
       {
@@ -497,6 +545,42 @@ export function CrewShiftPlayer({
   }
 
   return null;
+}
+
+/* -------------------------------------------------------------- Copy */
+
+/*
+ * Every line below is chosen from state the app actually captured: how many
+ * seats answered differently, and whether the totals moved. Nothing here knows
+ * who changed, who spoke, or who convinced anyone, because none of that is
+ * recorded and inferring it would be both unsupported and a way of pointing at
+ * a person. The four cases are exhaustive, so there is no fallback that could
+ * quietly become a fifth, vaguer claim.
+ */
+
+function shiftHeadline(solo: boolean, moved: number, totalsChanged: boolean): string {
+  if (solo) return moved > 0 ? "You changed your mind" : "You stayed where you were";
+  if (moved === 0) return "Your crew held its position";
+  if (totalsChanged) return "Your crew shifted";
+  return "Same split, different people";
+}
+
+function movedLine(moved: number, playerCount: number): string {
+  if (moved === 0) return `All ${playerCount} of you answered the same way twice.`;
+  if (moved === 1) return "One answer changed between the two rounds.";
+  return `${moved} answers changed between the two rounds.`;
+}
+
+function echoLine(solo: boolean, moved: number, totalsChanged: boolean): string {
+  if (solo) {
+    return moved > 0
+      ? "You argued yourself round. That is harder alone than it is in a group."
+      : "Same answer twice, with thinking in between. That is not the same as never having questioned it.";
+  }
+  if (moved === 0) return "Nobody moved. Strong consensus, or a short argument.";
+  if (totalsChanged)
+    return "That is peer influence. Usually it runs the other way and nobody notices it happening.";
+  return "The totals look identical and they are not. People swapped places.";
 }
 
 /* -------------------------------------------------------- Discussion */

@@ -1,4 +1,5 @@
 import type { StorySegment } from "@/types/campaign";
+import type { ProtectiveFactorId } from "@/types/protective";
 
 /**
  * CREW SHIFT, the Campaign-only peer mechanic.
@@ -8,9 +9,18 @@ import type { StorySegment } from "@/types/campaign";
  * window to argue about it and commit to one decision together.
  *
  * The behavioural point is that the mechanic makes peer influence visible.
- * There is no right answer and there is no score. What gets shown at the end
- * is simply whether the group ended up somewhere different from where its
- * members started, which is the thing worth noticing.
+ * There is no right answer and there is no score.
+ *
+ * Everyone answers privately twice: once before the discussion and once after
+ * it. Two private rounds are what make the peer effect measurable rather than
+ * asserted, and the second round doubles as the crew's decision, which removes
+ * the older design's flaw of letting whoever happened to be holding the phone
+ * choose on everyone's behalf.
+ *
+ * Gardner and Steinberg (2005) found peer effects on risky decision making are
+ * strongest in exactly this age band, and found them from peer *presence*
+ * rather than persuasion. That is what the two distributions show: the group
+ * moved, and nobody had to argue anyone into it.
  */
 
 export interface CrewShiftOption {
@@ -31,9 +41,14 @@ export interface CrewShiftRound {
   discussionPrompts: string[];
   discussionSeconds: number;
   finalPrompt: string;
+  /** Shown above the second private round, after the discussion. */
+  secondRoundPrompt: string;
   /** Deterministic closing note per chosen option. Never a score. */
-  outcomes: Record<string, { headline: string; body: string }>;
-  /** Shown when the group decision differs from the majority of private ones. */
+  outcomes: Record<
+    string,
+    { headline: string; body: string; protectiveFactorIds?: ProtectiveFactorId[] }
+  >;
+  /** Shown when the second round's distribution differs from the first. */
   shiftedNote: string;
   /** Shown when it does not. */
   heldNote: string;
@@ -88,32 +103,37 @@ export const CREW_SHIFT_ROUNDS: Record<string, CrewShiftRound> = {
     ],
     discussionSeconds: 45,
     finalPrompt: "One decision, from all of you.",
+    secondRoundPrompt: "Same question, now that you have talked. Answer for yourself.",
     outcomes: {
       private: {
         headline: "One person, one conversation",
         body:
           "The quietest option and usually the most effective, because it lets him change his mind without an audience. It only works if the group agrees who is doing it before they walk back inside.",
+        protectiveFactorIds: ["private-challenge", "face-saving-exit", "shared-responsibility"],
       },
       together: {
         headline: "The whole group, at once",
         body:
           "It is much harder to wave off four people than one. It is also the version most likely to make him defend a position he has not fully committed to yet. Worth it if the alternative is nobody saying anything.",
+        protectiveFactorIds: ["norm-corrected", "shared-responsibility"],
       },
       adult: {
         headline: "Bringing in someone who can help",
         body:
           "The only option on this list that comes with actual assistance: freezing an account, dealing with a bank, handling what has already happened. It costs something in the friendship, and it is often still the right call.",
+        protectiveFactorIds: ["adult-brought-in", "delay-inserted"],
       },
       watch: {
         headline: "Staying close, saying nothing",
         body:
           "Honest about how these moments usually go. The group stays comfortable and the situation keeps moving. Worth asking what exactly you are waiting to see.",
+        protectiveFactorIds: ["stayed-close"],
       },
     },
     shiftedNote:
-      "The group did not land where most of you started. That is what discussion does, and it is why crews decide differently from individuals.",
+      "You did not land where you started. That is what talking does, and it is why crews decide differently from individuals.",
     heldNote:
-      "The group held its position after talking it through. Agreeing after an argument is worth more than agreeing before one.",
+      "Everyone answered the same way twice. Holding a position after an argument is worth more than holding it before one.",
     soloNote:
       "Played solo, so there was nobody to shift you. Run this one with friends when you can. The disagreement is the part that does the work.",
   },

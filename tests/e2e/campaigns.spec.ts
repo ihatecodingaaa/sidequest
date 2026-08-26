@@ -12,7 +12,14 @@ async function readCampaign(page: Page) {
   return campaigns?.[CAMPAIGN_ID];
 }
 
-/** Plays the Crew Shift chapter solo, which is the shortest full chapter. */
+/**
+ * Plays the Crew Shift chapter solo, which is the shortest full chapter.
+ *
+ * Crew Shift now runs two private rounds, one either side of the discussion.
+ * The second round is what produces the "after" distribution, and it also
+ * decides the outcome: the older design let whoever was holding the phone pick
+ * for the whole group.
+ */
 async function playCrewShiftSolo(page: Page) {
   await page.getByRole("button", { name: "Start chapter 4" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
@@ -23,11 +30,17 @@ async function playCrewShiftSolo(page: Page) {
 
   await page.getByRole("button", { name: "Start" }).click();
   await page.getByRole("button", { name: "Your call" }).click();
+
+  // Round one, before thinking about it.
   await page.getByRole("button", { name: /One person talks to him alone/ }).click();
   await page.getByRole("button", { name: "Lock answer" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("button", { name: "Decide" }).click();
+
+  // Round two, after. A different answer, so the reveal has a shift to show.
   await page.getByRole("button", { name: /Tell someone older/ }).click();
+  await page.getByRole("button", { name: "Lock answer" }).click();
+
   await page.getByRole("button", { name: "Finish chapter" }).click();
 }
 
@@ -202,9 +215,19 @@ test.describe("Crew Shift", () => {
 
     // The timer is skippable, never punitive.
     await page.getByRole("button", { name: /Skip ahead and decide|Decide/ }).click();
-    await page.getByRole("button", { name: /Tell someone older/ }).click();
 
-    await expect(page.getByText(/The group shifted|The group held/)).toBeVisible();
+    // Second private round. Everyone lands on the same option this time, which
+    // gives a clear majority and therefore no tiebreak.
+    for (let player = 1; player <= 3; player += 1) {
+      await page.getByRole("button", { name: `I am player ${player}` }).click();
+      await expect(page.getByText(`Player ${player}, second answer`)).toBeVisible();
+      await page.getByRole("button", { name: /Tell someone older/ }).click();
+      await page.getByRole("button", { name: "Lock answer" }).click();
+    }
+
+    await expect(
+      page.getByRole("heading", { name: /Your crew shifted|Your crew held its position/ }),
+    ).toBeVisible();
     await page.getByRole("button", { name: "Finish chapter" }).click();
     await expect(page.getByRole("heading", { name: "Chapter 4 complete" })).toBeVisible();
 

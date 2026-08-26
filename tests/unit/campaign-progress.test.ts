@@ -127,12 +127,14 @@ describe("chapter XP", () => {
       playerCount: 2,
       shifted: false,
       finalOptionId: "watch",
+      movedCount: 0,
     });
     store().completeChapter(campaign, "obm-c4", {
       mechanic: "crew-shift",
       playerCount: 4,
       shifted: true,
       finalOptionId: "private",
+      movedCount: 2,
     });
 
     const result = store().getCampaignProgress(campaign.id)!.chapterResults["obm-c4"];
@@ -141,6 +143,7 @@ describe("chapter XP", () => {
       playerCount: 4,
       shifted: true,
       finalOptionId: "private",
+      movedCount: 2,
     });
   });
 

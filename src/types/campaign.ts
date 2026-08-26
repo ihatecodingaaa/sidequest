@@ -167,7 +167,14 @@ export type ChapterResult =
   | { mechanic: "rewind"; firstChoiceId: string | null; secondChoiceId: string | null }
   | { mechanic: "norm-mirror"; overestimates: number; questionCount: number }
   | { mechanic: "breaksafe"; patchIds: string[]; avoidedProfiling: boolean }
-  | { mechanic: "crew-shift"; playerCount: number; shifted: boolean; finalOptionId: string }
+  | {
+      mechanic: "crew-shift";
+      playerCount: number;
+      shifted: boolean;
+      finalOptionId: string;
+      /** Seats that answered differently in the second round. Never which seats. */
+      movedCount: number;
+    }
   | { mechanic: "story" };
 
 export interface CampaignProgress {
