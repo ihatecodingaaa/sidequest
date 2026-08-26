@@ -100,6 +100,7 @@ no backend. Research in `docs/SIGNATURE_EXPERIENCE_RESEARCH.md`.
 | Campaign warm-up | `router.prefetch` for the four chapters and the finale once the Campaign screen mounts. Skipped under `saveData`. |
 | Onboarding skip | "Skip, I will pick later" now appears from the interests step rather than only the last one. Shortest honest path is welcome, age band, skip. |
 | Offline copy | Says progress is saved on this device, which is true because there is no backend. |
+| Flaky test fixed | The bottom-bar geometry test read tab positions with `evaluateAll`, which does not auto-wait, so it flaked about six runs in seven. It predates this pass and was found by verifying each commit separately rather than only the tip. |
 
 ## Verification
 
