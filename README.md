@@ -11,9 +11,10 @@ leads directly into doing something about it. SIDEQUEST is that layer:
 
 **See, understand, play, act, create, impact.**
 
-The signature interaction is on the home screen. A safety story does not end
-when you close it. It ends with **Try the related quest**, which drops you into
-a two minute scenario about the exact risk you just read about.
+The signature interaction is that a story does not end when you close it. Every
+Pulse story finishes with a **Play** button that drops you into a two minute
+scenario about the exact situation you just read about. Reading and doing are
+the same tap.
 
 ---
 
@@ -25,7 +26,14 @@ a two minute scenario about the exact risk you just read about.
 | **Missions**| What can I do about it?    | Quick, Crew, Field, Build, Service and Boss quests                     |
 | **Safe**    | I need help now.           | Direct handoff to official Singapore services                          |
 
-Plus **Home** (your day at a glance) and **You** (the Safety Passport).
+Plus **Home** (one thing to do next) and **You** (the Safety Passport).
+
+Five destinations, in this order: Home, Pulse, **Safe**, Missions, You. Safe is
+the elevated centre tab. It carries the brand mark and a label, it sits in the
+same place on every screen, and it never pulses or demands attention. It is a
+destination, not an action: tapping it opens a screen and does nothing else. It
+is also the one route that works before onboarding, because a safety hub that a
+setup flow can block is not a safety hub.
 
 ## The three signature missions
 
@@ -71,6 +79,7 @@ typed fixture data plus localStorage.
 | `npm run verify`    | Lint, typecheck, unit tests and build in one go     |
 | `npm run icons`     | Regenerate the PWA icon set                         |
 | `npm run shots`     | Screenshot every screen at phone width for QA       |
+| `npm run shots:audit` | Screenshot every screen at 390, 430, 768 and 1440, and report overflow |
 
 Before running `npm run e2e` for the first time: `npx playwright install chromium`.
 
@@ -144,6 +153,8 @@ Zustand, Zod, Lucide, Vitest, Playwright.
 | `docs/PILOT_PLAN.md`     | A realistic post-hackathon pilot                        |
 | `docs/SOURCES.md`        | Authoritative sources behind the factual content        |
 | `docs/SESSION_STATE.md`  | Current build status, tests, known issues, next actions |
+| `docs/UX_RESEARCH.md`    | Interface research, sources, and the decisions each one drove |
+| `docs/UX_AUDIT.md`       | Consumer UX problem inventory, severity, and Track B alignment |
 | `CLAUDE.md`              | Engineering rules for anyone working in this repo       |
 
 ## What SIDEQUEST deliberately does not do

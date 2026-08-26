@@ -43,6 +43,11 @@ next-env.d.ts
 # local visual QA output
 /.shots
 
+# Before/after UX screenshots. Around 100 MB of full-page PNGs, regenerable
+# with `npm run shots:audit`. The measurements taken from them live in
+# docs/UX_AUDIT.md, which is what actually needs to be in version control.
+/artifacts
+
 # playwright
 /test-results
 /playwright-report

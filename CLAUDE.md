@@ -12,9 +12,14 @@ path from a Pulse story into a mission, it is the wrong change.
 
 ## Non-negotiables
 
-**Data honesty.** Anything seeded, synthetic or unconfirmed wears a
-`ProvenanceTag`. Norm Mirror percentages are placeholders and every reveal says
-so. Never label seeded content "live".
+**Data honesty.** Anything seeded, synthetic or unconfirmed is labelled. The
+rule is per claim and per screen, not per card: a `ProvenanceTag` must appear
+on every detail view, every mission, every reward that names a potential
+partner, every Norm Mirror reveal and the Campaign impact page, and a dense
+feed declares provenance once at the top rather than on all eight rows. That is
+a deliberate anti-fatigue decision, not permission to remove labels. Norm
+Mirror percentages are placeholders and every reveal says so. Never label
+seeded content "live".
 
 **No fake partnerships.** SPF, NCPC, Mediacorp, CNA, FairPrice, banks, schools
 and hackathon sponsors are named only as sources or as *potential* partners.
@@ -36,6 +41,33 @@ source of truth, and every entry must be checked against the live site.
 **Location.** Never store coordinates, never build a location history. A
 neighbourhood name is the finest granularity, and it is optional. The app must
 work fully with location denied.
+
+## Navigation and Safe
+
+- Safe is the elevated centre tab. It is a **destination, never an action**:
+  tapping it opens a screen and must never dial, report, share location or
+  notify anyone. Apple's guidance on tab bars is the reason, and an e2e test
+  pins it.
+- Safe never moves, never changes label, and is never hidden behind overflow.
+  Its whole value is that its position does not have to be remembered.
+- Safe is exempt from the onboarding gate. A first-time visitor under stress
+  must reach it without answering setup questions.
+- Safe must not depend on profile, XP, campaign, crew or network state.
+- Nothing in the bottom bar animates at rest. Permanent motion on a safety
+  affordance produces the alarm fatigue it is meant to avoid.
+- Every tab keeps a text label. The label carries the meaning; the icon does
+  not rescue an unclear one.
+- Exactly one element on Safe is red. If everything is urgent, nothing is.
+
+## Track B alignment
+
+The submission is Delta Challenge Track B, **Crime Prevention**, not scam
+education. The consumer journey must lead with youth crime prevention: peer
+pressure, shop theft, identity and account misuse, impulsive choices, peer
+redirection. Scam content is legitimate where it is a youth offending pathway
+(money mule recruitment) but it is secondary, and it must never be what Home,
+the featured story or the demo opens with. ScamShield and the scam helpline
+belong under Safe as utility, not in discovery.
 
 ## Campaigns
 

@@ -46,7 +46,16 @@ notice when adults perform youth.
 
 ## 4. Pillars and navigation
 
-Five destinations: **Home**, **Pulse**, **Missions**, **Safe**, **You**.
+Five destinations, in this order: **Home**, **Pulse**, **Safe**, **Missions**,
+**You**.
+
+Safe sits in the centre as an elevated, branded tab. That placement buys
+recognition and muscle memory rather than speed, since the centre of a
+five-item bar is actually the harder spot for a thumb arcing from a bottom
+corner. It is compensated for with a taller target. Safe remains a destination
+and never an action: tapping it opens a screen and nothing else happens, and it
+is exempt from onboarding so a first-time visitor can reach it. The reasoning
+and its sources are in `docs/UX_RESEARCH.md`.
 
 **Pulse** is the everyday utility layer: safety stories in plain language,
 outbound discovery to CNA and official sources, radio discovery through

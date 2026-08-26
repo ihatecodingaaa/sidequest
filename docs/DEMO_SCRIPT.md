@@ -17,6 +17,8 @@ the part judges have not seen from anybody else.
    second screen, or print the four signs. Print them from the address the
    judge's phone will use, not from localhost.
 6. Know the four station codes without looking them up: **A7, B4, C9, D2**.
+7. Safe is the shield in the centre of the bottom bar. Do not describe it as a
+   button: it opens a screen and nothing else happens, and that is the point.
 
 The whole app is offline-capable once loaded, but the outbound links (CNA,
 ScamShield, police.gov.sg, meLISTEN) need a connection. If the venue wifi is
@@ -35,39 +37,35 @@ adaptation visible without a slide.
 
 Pick **16 to 18**, keep the default interests, pick **Tampines**.
 
-## Moment 2: Home, 30 seconds
+## Moment 2: Home, 25 seconds
 
-Home loads with the Safety Pulse, the three signature missions, a two minute
-quest, a Field Quest near you, your crew, radio and a reward.
+Home leads with one thing. The Campaign hero, the three signature missions, your
+crew, one story worth knowing, and radio. That is the whole screen.
 
-> "This is the whole product in one screen. Most prevention information ends
-> when someone closes it. Watch what happens here instead."
+> "One thing to do, not a menu of everything the app can do."
 
-Point at the level card.
+Point at the bottom bar without tapping it yet.
 
-> "Progress tracks what you can do, not how much you have read."
+> "And that shield in the middle is Safe. Same place on every screen, so nobody
+> has to remember where it is. We will come back to it."
 
 ## Moment 3: information to action, 45 seconds
 
-Tap the Safety Pulse hero: **Job offers that pay too well, land too fast**.
+Under **Worth knowing**, the story is "The quiet cost of going along with it".
 
-Point out the **Prototype content** label.
+> "Most young people who get into trouble did not plan anything. They were in a
+> group, said nothing, and the moment passed."
 
-> "Everything seeded in this build is labelled. We never dress up our own
-> writing as a live feed, and we never republish anyone's article."
+Tap **Play REWIND**.
 
-Tap **Try the related quest**.
+> "That is the whole thesis. The story does not end when you close it. It
+> becomes the decision."
 
-> "That is the whole thesis. The advisory does not end. It becomes the
-> decision."
+Play REWIND far enough to reach the pivot and the rewind, then let it run to the
+comparison screen.
 
-Tap **Start mission** and play two or three beats of **$400 a day, work from
-home**. Choose *Keep going, it is paying*, then *Stop here and leave the group*.
-
-Read one takeaway aloud, then finish the mission.
-
-> "Sixty XP, and it also builds Scam Awareness and Decision Making in the
-> Safety Passport."
+> "Same night, same people, one different sentence. The options that worked were
+> the quiet ones. We never ask anyone to confront anybody."
 
 ## Moment 4: BREAKSAFE, 60 seconds
 
@@ -195,7 +193,28 @@ Open `/campaigns/one-bad-minute/impact` for about fifteen seconds.
 > how often a group changed its mind after arguing, and how many came back a
 > week later."
 
-## Moment 7: Safety Passport and rewards, 30 seconds
+## Moment 7: Safe, 20 seconds
+
+Short. The point is discoverability, not hotlines.
+
+Tap the shield in the centre of the bar.
+
+> "SIDEQUEST is not trying to replace the Police or ScamShield. If somebody
+> actually needs help, Safe is always in the same place. One tap."
+
+Let the four paths sit on screen for a beat.
+
+> "Emergency. Scam help. Report something. Police services. One red thing on the
+> screen, because if everything is urgent nothing is."
+
+Do not tap any of them. Point out the line at the bottom.
+
+> "We take no reports and store nothing about an incident. Every one of these
+> opens the agency that owns the job."
+
+Then go straight back to the fun part. Twenty seconds, no longer.
+
+## Moment 8: Safety Passport and rewards, 30 seconds
 
 Tap **You**.
 
@@ -208,16 +227,6 @@ Tap **Rewards**.
 > deliberate: if the fastest route to a voucher is clicking through content,
 > the whole thing becomes a farm. Everything commercial here is a concept, and
 > the prototype issues no code and no monetary value."
-
-## Moment 8: Safe, 20 seconds
-
-Tap **Safe**.
-
-> "The last thing we would ever do is rebuild these. SIDEQUEST does not take
-> crime reports, does not store incident information, and does not rank
-> neighbourhoods. It hands you to the people whose job it is."
-
-Scroll to **What SIDEQUEST deliberately does not do**.
 
 ## Moment 9: close, 15 seconds
 

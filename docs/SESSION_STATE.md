@@ -4,7 +4,7 @@ Kept current so another session can pick this up cold. Update after every major
 stage.
 
 **Last updated:** 26 August 2026
-**Status:** Campaigns complete and verified. Feature complete overall.
+**Status:** Consumer UX pass complete and verified. Feature complete overall.
 **Repository:** https://github.com/ihatecodingaaa/sidequest
 **Deployment:** not yet deployed to Vercel. CLI installed, not authenticated.
 
@@ -19,18 +19,18 @@ The full judge journey runs end to end, repeatedly, with a one-tap reset.
 | Area | State |
 | ---- | ----- |
 | Onboarding | Four steps: welcome, age band and name, interests, area. All optional except age band, which defaults. |
-| Home | Greeting, level and XP, Safety Pulse hero with **Try the related quest**, the three signature missions, the Campaign card, a Quick Quest, a Field Quest near you, crew, radio, reward teaser, thesis. |
-| Pulse | Eight seeded stories, category filters, save, outbound discovery to CNA and official sources, detail pages with signals, actions, primary source and a route into the mission. |
+| Home | One hero (continue or start the Campaign), then the three signature missions, crew, one story worth knowing with its mission handoff, and radio. Level and XP live in a compact chip. |
+| Pulse | One lead story with its mission handoff, then a compact list of seven. Filters, save, outbound discovery below the product's own content. Detail pages carry signals, actions, primary source and the route into the mission. |
 | Radio | Six stations, all linking out to meLISTEN. No streaming. |
-| Missions | Catalogue of 11, "Start here" for the signature three, a Campaigns section, filters, detail pages with the behavioural mechanism stated. |
+| Missions | Campaign hero, "Start here" for the signature three, then short scenarios as compact rows and bigger commitments as cards. Five filters. Detail pages state the behavioural mechanism. |
 | REWIND | Full branching scenario, five pivot options, rewind mechanic, second run with the first choice locked out, side-by-side comparison, debrief. |
 | Norm Mirror | Four situations, predict then choose then reveal, labelled demo aggregates, summary of the gap. |
 | BREAKSAFE | Interactive mock terminal, seven hotspots, six patch options scored on five axes, before and after rebuild, the reveal. |
 | Field Quest | Brief, camera QR scanning where supported, manual code always visible, task checklist, completion. |
 | Partner Challenge | Full brief, validated submission form, persistence into the Safety Passport. |
 | Partner studio | `/partner`. Six mission templates, a draft form and a preview. Explicitly a walkthrough. |
-| Safe | Two urgent cards, six official services, and a plain statement of what SIDEQUEST does not do. |
-| You | Level ring, stats, seven-skill Safety Passport, Campaign participation, contributions, completed missions, shortcuts, claims. |
+| Safe | Four categorised paths: Emergency, Scam help, Report something, Police services. Urgency ordered, one red element, reading links separated below. No profile, campaign or network dependency, and exempt from onboarding. |
+| You | Level ring, three counts with no denominators, the capabilities you are actually building with tier labels, untouched areas collapsed to one line, Campaign participation, contributions, completed missions, shortcuts, claims. |
 | Rewards | Six rewards, honesty labelling, claim flow that never spends XP. |
 | Crew | Seeded crew, weekly challenge, leaderboard, join by code. |
 | Settings | Name, age band, interests, area, demo controls, data disclosure. |
@@ -46,7 +46,7 @@ The full judge journey runs end to end, repeatedly, with a one-tap reset.
 | Route distribution | Four routes, one per starting station, assigned from a stable per-browser seed. Guidance, never a lock. |
 | Three of four | Finale opens on any three chapters. Full completion adds a bonus on the same code path. |
 | Station codes | A7, B4, C9, D2. Permanent control on the Campaign screen, punctuation and case forgiving. |
-| Chapter 1 | Quick money. Runs on REWIND with a new scenario. |
+| Chapter 1 | The favour. Runs on REWIND. Ken asks Ilyas for his account in front of the group: peer pressure as the mechanism, not a background detail. |
 | Chapter 2 | Everyone would do it. Runs on Norm Mirror with a new three-question set. |
 | Chapter 3 | Design the moment. Runs on BREAKSAFE. |
 | Chapter 4 | Crew Shift. New mechanic: pass the phone, private answers, reveal, timed discussion, group decision, shift report. Solo supported. |
@@ -57,21 +57,52 @@ The full judge journey runs end to end, repeatedly, with a one-tap reset.
 | Demo controls | Unlock all, reassign route, skip a day, skip a week, reset Campaign. Collapsed by default. |
 | Sidekick | Echo. Pure SVG, four moods, no external assets. |
 
+## Consumer UX pass
+
+Ran after Campaigns. No features were added; the work was hierarchy, navigation,
+language and Track B alignment. Research in `docs/UX_RESEARCH.md`, problem
+inventory in `docs/UX_AUDIT.md`. Before and after screenshots at 390, 430,
+768 and 1440 were captured to `artifacts/`, which is gitignored: about 100 MB
+of full-page PNGs, regenerable with `npm run shots:audit`.
+
+| Change | Effect |
+| ------ | ------ |
+| Safe moved to the elevated centre tab | Same position on every route, branded mark, 78x64 target, label kept. A destination, never an action. |
+| Safe redesigned | Eight flat cards to four categorised paths, urgency ordered, one red element, no profile or network dependency. 3878px to 2392px tall. |
+| Safe exempted from onboarding | It was previously unreachable on a device that had never opened the app. |
+| Home rebuilt around one hero | Eleven equal cards to one hero plus three subordinate groups. 6554px to 3340px tall. |
+| Pulse rebuilt | Eight identical threat-chipped cards to one lead story plus a compact list. 5508px to 3348px. |
+| Missions differentiated | Short scenarios are rows, bigger commitments are cards. Denominator and glossary removed. |
+| You de-assessed | Seven progress bars with point counts to four capabilities with tiers; untouched areas collapse to one line. |
+| Institutional language removed | Pillar eyebrows, "3 of 11 completed", the mission glossary and the thesis card are gone. |
+| Provenance density | Per claim and per screen instead of per card. Rule written into `CLAUDE.md`. |
+| Track B alignment | Home, the featured story and the feed now lead with peer pressure rather than scams; Campaign chapter one reframed from scam victim to peer favour. |
+
+Two findings were surfaced rather than acted on, both recorded in the audit:
+renaming the "Pulse" tab (H8, a brand decision for the product owner) and light
+mode (deferred feature scope).
+
 ## Verification
 
 Baseline before this stage, then after.
 
-| Check | Before | After |
-| ----- | ------ | ----- |
-| `npm run lint` | clean | clean |
-| `npm run typecheck` | clean | clean |
-| `npm run test` | 65 passed | **129 passed** |
-| `npx playwright test` | 79 passed, 1 skipped | **135 passed, 1 skipped** |
-| `npm run build` | passes | passes |
+| Check | Start of project | After Campaigns | After UX pass |
+| ----- | ---------------- | --------------- | ------------- |
+| `npm run lint` | clean | clean | clean |
+| `npm run typecheck` | clean | clean | clean |
+| `npm run test` | 65 | 129 | **129** |
+| `npx playwright test` | 79 (+1 skip) | 135 (+1 skip) | **149 (+7 skip)** |
+| `npm run build` | passes | passes | passes |
+| chunks | 1.3 MB | 1.61 MB | **1.63 MB** |
 
-No existing test was weakened or removed. The `MissionHost` refactor is
-transparent: a player with no host behaves exactly as before, which is why the
-79 pre-existing e2e tests passed unchanged immediately after it.
+The seven skips are the new bottom-bar geometry tests, which are phone-only by
+design and skip on the desktop project. Six existing assertions were updated
+because they encoded copy and structure this pass intentionally changed; each is
+commented in the test with the reason. Nothing was deleted to get green.
+
+Earlier in the project the `MissionHost` refactor was verified the same way: a
+player with no host behaves exactly as before, which is why the 79 pre-existing
+e2e tests passed unchanged immediately after it.
 
 E2E runs on `mobile` (Pixel 7) and `desktop` (1440x900). Campaign coverage adds:
 listing and detail, entry points from Home and Missions, mode persistence, QR
@@ -128,6 +159,16 @@ Deliberate, and mostly stated in the product itself.
 - Runtime AI anywhere.
 - Downloadable share card for Campaign completion.
 - Haptics on chapter unlock. Support is inconsistent and the value was unclear.
+
+## Design documentation
+
+- `docs/UX_RESEARCH.md`: principles, sources and the decisions each one drove,
+  including two corrections to reasoning the pass started with.
+- `docs/UX_AUDIT.md`: the problem inventory with severity, and a Track B
+  alignment section.
+- `npm run shots:audit`: renders every screen at 390, 430, 768 and 1440 into
+  `artifacts/`, and reports horizontal overflow and content hidden under the
+  bottom bar. Not committed; the numbers drawn from it are in the audit.
 
 ## Next actions
 
