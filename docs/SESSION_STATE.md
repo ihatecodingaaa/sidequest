@@ -163,6 +163,20 @@ Deliberately not done, with reasons in the research doc: background music and
 sound effects (design settled, unbuilt), new missions (the P2 gate was not met),
 scene backdrops, and a horizontal campaign map.
 
+### Perceptibility follow-up
+
+A rendered audit at 390, 430, 768 and 1440 found four things the pass had built
+correctly and then placed where nobody would meet them. Code review would not
+have caught any of them, because none of them are defects in the components.
+
+| Finding | Measurement | Fix |
+| ------- | ----------- | --- |
+| The collection was still unfindable | Its heading sat 739px down an 1812px page, behind the level ring, three stat tiles, seven capability rows and two disclaimers | Moved above the Safety Passport. The passport still owns more of the screen; the collection now owns the first look. |
+| Home had no mascot at all | Echo appeared only after a mission was already underway, so the busiest screen in the product gave no evidence a companion existed | Echo greets you at 64px, wearing the equipped variant, linking into the collection |
+| Echo was the smallest thing on screen | 36px in the callout, below the surrounding iconography | 52px, enough for the visor and expression to carry |
+| The Start pill sat across a face | The hero cast is anchored bottom right and the control is in flow, so they collided at every phone width | Left edge of the cluster masked out, which also pushes the eye to Ken |
+| Chapter intros were mostly empty | Roughly 750px of black between the last line and the footer, which reads as a failed load rather than restraint | A scene band: the four leads and the timestamp, decorative, so the reading load the tap audit lowered stays lowered |
+
 ## Verification
 
 Baseline before this stage, then after.

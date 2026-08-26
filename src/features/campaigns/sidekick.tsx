@@ -85,8 +85,15 @@ export function SidekickLine({
   const style = ready ? resolveEchoStyle(profile) : undefined;
 
   return (
+    /*
+     * 36px put Echo below the size of the surrounding iconography, so the one
+     * character in the product read as the smallest thing on the screen. 52px
+     * is still subordinate to the line it introduces, and it is enough for the
+     * visor and the expression to carry, which is what makes it a speaker
+     * rather than a bullet point.
+     */
     <div className={cn("flex items-start gap-3", className)}>
-      <Sidekick mood={mood} size={36} style={style} />
+      <Sidekick mood={mood} size={52} style={style} />
       <div className="min-w-0 flex-1 rounded-2xl rounded-tl-sm border border-white/10 bg-white/5 px-3.5 py-2.5">
         <p className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-faint">Echo</p>
         <p className="mt-1 text-sm leading-relaxed text-mist">{children}</p>

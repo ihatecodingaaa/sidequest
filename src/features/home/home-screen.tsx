@@ -15,6 +15,8 @@ import { completedPhysicalCount, physicalChapters } from "@/lib/campaign";
 import { Wordmark } from "@/components/layout/wordmark";
 import { SignatureStrip } from "@/components/mission/signature-strip";
 import { CharacterPortrait } from "@/components/story/character-portrait";
+import { EchoMascot } from "@/components/echo/echo-mascot";
+import { resolveEchoStyle } from "@/data/echo-styles";
 import { cn } from "@/lib/cn";
 import { ExternalLink, ProvenanceTag } from "@/components/ui/primitives";
 import type { CampaignProgress } from "@/types/campaign";
@@ -56,6 +58,7 @@ export function HomeScreen() {
   // The greeting reads the visitor's clock, which the server does not have.
   const greeting = mounted ? greetingFor() : "Welcome";
   const name = ready && profile.displayName ? `, ${profile.displayName}` : "";
+  const echoStyle = resolveEchoStyle(profile);
 
   return (
     <div className="space-y-8">
@@ -72,10 +75,37 @@ export function HomeScreen() {
         </Link>
       </header>
 
-      <h1 className="font-display text-[1.75rem] leading-tight font-extrabold tracking-tight text-chalk lg:text-4xl">
-        {greeting}
-        {name}
-      </h1>
+      {/*
+        Echo greets you, at a size where it is a character rather than a bullet.
+
+        Home carried no mascot at all before this, which meant the first screen
+        of the product gave a new user no evidence that a companion or a
+        collection existed. Everything Echo did happened after you had already
+        committed to a mission. A mascot that only appears once you are deep in
+        a flow cannot do the job a mascot is for.
+
+        It links to You because tapping your companion to see your companions
+        is the affordance people already expect, and it gives the collection a
+        route in from the busiest screen instead of relying on the tab bar.
+      */}
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="font-display text-[1.75rem] leading-tight font-extrabold tracking-tight text-chalk lg:text-4xl">
+          {greeting}
+          {name}
+        </h1>
+        <Link
+          href="/you"
+          aria-label={`Your Echo: ${echoStyle.name}. Open your collection.`}
+          className="sq-pressable -m-2 shrink-0 rounded-full p-2"
+        >
+          <EchoMascot
+            style={echoStyle.id}
+            expression="pleased"
+            size={64}
+            className={echoStyle.ring}
+          />
+        </Link>
+      </div>
 
       {campaign ? <CampaignHero progress={progress} /> : null}
 
@@ -221,7 +251,22 @@ function CampaignHero({ progress }: { progress: CampaignProgress | undefined }) 
         what the artwork should be. They sit at low opacity behind the copy, so
         they set a scene without competing with the words or the control.
       */}
-      <div aria-hidden className="absolute -right-1 bottom-0 flex items-end opacity-[0.42]">
+      {/*
+        The cluster is masked away on its left edge. Without it the Start pill
+        landed directly across the first two faces, which reads as a layout
+        accident rather than a composition: a control sitting on someone's
+        head. Fading the far side out means the pill always has plain colour
+        under it however long the label gets, and the eye is pushed toward Ken
+        on the right, who is the one the chapter is actually about.
+      */}
+      <div
+        aria-hidden
+        className="absolute -right-1 bottom-0 flex items-end opacity-[0.42]"
+        style={{
+          maskImage: "linear-gradient(to right, transparent 4%, #000 46%)",
+          WebkitMaskImage: "linear-gradient(to right, transparent 4%, #000 46%)",
+        }}
+      >
         {(["you", "rina", "ilyas", "ken"] as const).map((id, index) => (
           <CharacterPortrait
             key={id}

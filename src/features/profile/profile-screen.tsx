@@ -95,6 +95,23 @@ export function ProfileScreen() {
       </div>
 
       {/*
+        Echo sits above the passport, and the reason is measurement rather than
+        taste. Below it, the collection heading landed 739px down an 1812px
+        page: past the level ring, three stat tiles, seven capability rows and
+        two disclaimers. Nobody scrolled that far to discover a feature they
+        did not know existed, which is why the previous pass shipped a
+        collection that users never found.
+
+        The older ordering argued that what you can do outranks what your
+        companion looks like. That is still true of importance, and the
+        passport still carries more of the screen. It is not true of
+        discovery: a capability record is something you go looking for once
+        you have earned it, and a collection is the thing that has to be seen
+        before you know there is anything to earn.
+      */}
+      <EchoCollection />
+
+      {/*
         Safety Passport.
 
         Capability, not assessment. The previous version rendered seven
@@ -158,13 +175,6 @@ export function ProfileScreen() {
           A SIDEQUEST record, not a SkillsFuture credential. It carries no formal recognition.
         </p>
       </section>
-
-      {/*
-        Echo lives on You because this is where "what have I done" is answered,
-        and a collection is a record of that. It is deliberately below the
-        passport: what you can do outranks what your companion looks like.
-      */}
-      <EchoCollection />
 
       <CampaignContributions />
 

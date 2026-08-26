@@ -15,6 +15,7 @@ import { BreaksafePlayer } from "@/features/missions/breaksafe/breaksafe-player"
 import { CrewShiftPlayer } from "./crew-shift/crew-shift-player";
 import { StoryView, useSegment } from "./story-view";
 import { storyBeatLabel } from "@/components/story/story-beat";
+import { CharacterPortrait } from "@/components/story/character-portrait";
 import { SidekickLine } from "./sidekick";
 import { ChapterComplete } from "./chapter-complete";
 import { useCampaign } from "./use-campaign";
@@ -161,6 +162,49 @@ export function ChapterRunner({
           >
             See the whole Campaign first
           </Link>
+
+          {/*
+            The scene, as a picture rather than a paragraph.
+
+            Stripping this screen back was the right call and the tap audit
+            backs it: it used to be the heaviest reading step in the chapter.
+            What the reduction left behind was roughly 750px of empty black
+            between the last line of text and the footer, which does not read
+            as restraint on a phone. It reads as a screen that failed to load.
+
+            So the space gets filled with the one thing that costs no reading:
+            who is in this, and when it happens. Four faces and a timestamp
+            establish the chapter as a scene with people in it before a single
+            story line has been shown, and the whole band is decorative, so
+            assistive technology still hears the same short screen it did
+            before.
+          */}
+          {chapter.intro?.slug ? (
+            <div className="mt-10">
+              <div className="relative overflow-hidden rounded-3xl border border-white/8 bg-white/[0.03] px-5 py-10">
+                <div
+                  aria-hidden
+                  className="absolute inset-0 bg-[radial-gradient(120%_120%_at_50%_0%,rgba(255,255,255,0.06)_0%,transparent_62%)]"
+                />
+                <div aria-hidden className="relative flex items-end justify-center">
+                  {(["you", "rina", "ilyas", "ken"] as const).map((id, index) => (
+                    <CharacterPortrait
+                      key={id}
+                      characterId={id}
+                      expression={index === 3 ? "uncertain" : "neutral"}
+                      className={cn(
+                        "size-[4.5rem] -ml-3.5 first:ml-0 drop-shadow-[0_6px_14px_rgba(0,0,0,0.45)]",
+                        index === 3 && "size-24",
+                      )}
+                    />
+                  ))}
+                </div>
+                <p className="relative mt-5 text-center text-[0.7rem] font-bold uppercase tracking-[0.18em] text-faint">
+                  {chapter.intro.slug}
+                </p>
+              </div>
+            </div>
+          ) : null}
         </div>
       </MissionShell>
     );
