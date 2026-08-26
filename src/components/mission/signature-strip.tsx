@@ -51,7 +51,7 @@ export function SignatureStrip({ className }: { className?: string }) {
                   <MissionArt
                     art={MISSION_ART[mission.id]}
                     accent={mission.accent}
-                    className="size-12 shrink-0"
+                    className="size-16 shrink-0"
                   />
                 ) : (
                   <span

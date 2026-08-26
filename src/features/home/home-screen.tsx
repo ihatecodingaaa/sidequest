@@ -14,6 +14,8 @@ import { CAMPAIGNS } from "@/data/campaigns";
 import { completedPhysicalCount, physicalChapters } from "@/lib/campaign";
 import { Wordmark } from "@/components/layout/wordmark";
 import { SignatureStrip } from "@/components/mission/signature-strip";
+import { CharacterPortrait } from "@/components/story/character-portrait";
+import { cn } from "@/lib/cn";
 import { ExternalLink, ProvenanceTag } from "@/components/ui/primitives";
 import type { CampaignProgress } from "@/types/campaign";
 
@@ -210,6 +212,25 @@ function CampaignHero({ progress }: { progress: CampaignProgress | undefined }) 
         className="absolute inset-0 bg-[radial-gradient(120%_100%_at_10%_0%,rgba(255,95,95,0.3)_0%,transparent_58%),radial-gradient(100%_90%_at_100%_100%,rgba(110,86,248,0.34)_0%,transparent_62%)]"
       />
       <div aria-hidden className="sq-grid-lines absolute inset-0 opacity-30" />
+
+      {/*
+        The cast, faint, behind the type.
+        
+        The hero was a colour field and a headline, which is atmosphere without
+        a subject. ONE BAD MINUTE is about four friends, so the four of them are
+        what the artwork should be. They sit at low opacity behind the copy, so
+        they set a scene without competing with the words or the control.
+      */}
+      <div aria-hidden className="absolute -right-1 bottom-0 flex items-end opacity-[0.42]">
+        {(["you", "rina", "ilyas", "ken"] as const).map((id, index) => (
+          <CharacterPortrait
+            key={id}
+            characterId={id}
+            expression={index === 3 ? "amused" : "uncertain"}
+            className={cn("size-20 -ml-5", index === 3 && "size-24")}
+          />
+        ))}
+      </div>
 
       <div className="relative p-5 pt-6">
         <p className="text-[0.7rem] font-bold uppercase tracking-[0.16em] text-coral-300">

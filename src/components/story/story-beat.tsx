@@ -254,7 +254,7 @@ function Speech({
       <CharacterPortrait
         characterId={turn.characterId}
         expression={turn.expression}
-        className="mt-0.5 size-10"
+        className="mt-0.5 size-11"
       />
       <div className="min-w-0 flex-1">
         <p className="text-xs font-bold uppercase tracking-[0.08em] text-quest-300">
