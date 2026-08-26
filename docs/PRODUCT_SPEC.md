@@ -69,6 +69,26 @@ through meLISTEN, and a route into a mission from most items. Outbound
 discovery is grouped by who publishes it, official services separately from
 news reporting, so every row is labelled by the group it sits in.
 
+### Echo, and the collection
+
+Echo is SIDEQUEST's mascot: a shield-bodied character with a visor face, six
+expressions, and five collectible crest variants. It appears where it has a
+reason to (Campaign screens, story interstitials, completion screens, You) and
+**never on Safe**.
+
+The collection is five variants, each earned by something the player actually
+did, displayed as a grid of tiles rather than a settings list. Locked tiles
+state what unlocks them before it is earned. Nothing is random, bought, timed
+or scarce, and a style is cosmetic only: it changes Echo's crest and colour and
+nothing about XP, missions or progress.
+
+A new variant is announced on the completion screen where it is earned and can
+be worn there. An unlock discovered later on another screen is a database
+write, not a reward.
+
+Full system in `docs/VISUAL_ART_DIRECTION.md`, reasoning in
+`docs/VISUAL_DELIGHT_RESEARCH.md`.
+
 ### The reveal grammar
 
 All four signature mechanics end by comparing two states, and since the

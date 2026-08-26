@@ -259,9 +259,18 @@ Do not tap any of them. Point out the line at the bottom.
 
 Then go straight back to the fun part. Twenty seconds, no longer.
 
-## Moment 8: Safety Passport and rewards, 30 seconds
+## Moment 8: Safety Passport, Echo and rewards, 30 seconds
 
 Tap **You**.
+
+Point at the **Echo grid** first. It is the fastest way to show that this is a
+product somebody would come back to.
+
+> "Five Echos. Every one of them is earned by doing something specific, and it
+> says which before you do it. Nothing random, nothing bought, nothing that
+> expires. The locked ones are visible on purpose."
+
+Then the passport.
 
 > "The capabilities they are actually building. Not badges, and not a score.
 > What this person can do, which is the thing a school or a partner would want

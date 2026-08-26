@@ -125,6 +125,26 @@ work fully with location denied.
   purely cosmetic. No randomness, no scarcity, no purchase, no expiry.
 - Safe gets none of this: no Echo, no collection, no marks, no sound, no motion.
 
+## Echo and delight
+
+- Echo is a mascot, not an icon: shield body, visor face, six expressions, five
+  crest variants. It reads at 28px and at 120px from one drawing.
+- **Delight is load-bearing at a moment; clutter is present at rest.** At most
+  one character presence and one hero artwork per screen. Artwork concentrates
+  at completion, unlock, chapter start and story beats.
+- The tonal test before adding charm anywhere: if this screen appeared in a
+  story about something serious happening to a friend, would the character
+  still be appropriate? If not, pull it back.
+- No big pleading eyes, no blush, no sparkles, no bounce loop, no limbs, no
+  emoji, no exclamation marks, no confetti after a harmful outcome.
+- Completion screens are **reward-first**: what happened, what you unlocked,
+  XP, what next, then the passport detail behind a disclosure. Never open with
+  four numbers about the player.
+- An unlock is announced where it happens and equippable on the spot. An unlock
+  discovered later on another screen is a database write, not a reward.
+- Echo, collectibles, motifs, playful motion and sound never appear on Safe or
+  Settings.
+
 ## Track B alignment
 
 The submission is Delta Challenge Track B, **Crime Prevention**, not scam

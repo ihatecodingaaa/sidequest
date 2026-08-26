@@ -192,9 +192,11 @@ test.describe("Echo collection", () => {
     await seedProfile(page, { completedMissionIds: [] });
     await page.goto("/you");
 
-    await expect(page.getByText("1 of 5 unlocked. Looks only.")).toBeVisible();
+    // The collection is a grid of tiles now rather than a settings list, so it
+    // reports its own count and each tile carries its state in its label.
+    await expect(page.getByText("1/5")).toBeVisible();
     // A locked entry says what unlocks it, before you do it.
-    await expect(page.getByText("Finish REWIND")).toBeVisible();
+    await expect(page.getByText("Finish REWIND.")).toBeVisible();
     await expect(page.getByRole("button", { name: /Echo Signal/ })).toBeDisabled();
   });
 
@@ -202,7 +204,7 @@ test.describe("Echo collection", () => {
     await seedProfile(page, { completedMissionIds: ["mission-rewind"] });
     await page.goto("/you");
 
-    await expect(page.getByText("2 of 5 unlocked. Looks only.")).toBeVisible();
+    await expect(page.getByText("2/5")).toBeVisible();
     await expect(page.getByRole("button", { name: /Echo Signal/ })).toBeEnabled();
   });
 
@@ -246,5 +248,101 @@ test.describe("Echo collection", () => {
     await expect(page.getByRole("heading", { name: /SIDEQUEST/ }).first()).toBeVisible();
     const profile = await readProfile(page);
     expect(profile.echoStyleId ?? "core").toBe("core");
+  });
+});
+
+/* ------------------------------------------------------ Mascot and reward */
+
+test.describe("Echo is visible as a character", () => {
+  test("appears on the campaign screen, wearing the equipped style", async ({ page }) => {
+    await seedProfile(page, { completedMissionIds: ["mission-rewind"], echoStyleId: "signal" });
+    await page.goto(CAMPAIGN);
+
+    /*
+     * The mascot is decorative wherever it speaks, because the line beside it
+     * says the thing. What is asserted here is that it is actually rendered:
+     * the previous version of this feature worked and was invisible, which is
+     * the failure this pass exists to fix.
+     */
+    const echo = page.locator("#main svg").first();
+    await expect(echo).toBeVisible();
+    const box = await echo.boundingBox();
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(28);
+  });
+
+  test("never appears on Safe", async ({ page }) => {
+    await seedProfile(page, { completedMissionIds: ["mission-rewind"] });
+    await page.goto("/safe");
+
+    // Safe is exempt from every part of the delight layer, permanently.
+    await expect(page.getByText(/Echo/)).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "What do you need?" })).toBeVisible();
+  });
+});
+
+test.describe("completion is reward-first", () => {
+  /** Plays REWIND end to end. It is the mission that grants Echo Signal. */
+  async function finishRewind(page: Parameters<typeof seedProfile>[0]) {
+    await page.goto("/play/mission-rewind");
+    await page.getByRole("button", { name: "Start" }).click();
+    await playScene(page);
+    await page.getByRole("button", { name: "Keep watching" }).click();
+    await playScene(page);
+    await page.getByRole("button", { name: /Say nothing and look away/ }).click();
+    await playScene(page);
+    await page.getByRole("button", { name: "Two weeks later" }).click();
+    await page.getByRole("button", { name: /Rewind to the decision/ }).click();
+    await playScene(page);
+    await page.getByRole("button", { name: /say something only he can hear/ }).click();
+    await playScene(page);
+    await page.getByRole("button", { name: "Leave it there" }).click();
+    await page.getByRole("button", { name: "Compare the two runs" }).click();
+    await page.getByRole("button", { name: "What this trains" }).click();
+    await page.getByRole("button", { name: "Finish mission" }).click();
+  }
+
+  test("announces a new Echo and lets it be worn on the spot", async ({ page }) => {
+    await seedProfile(page, { xp: 0, completedMissionIds: [] });
+    await finishRewind(page);
+
+    await expect(page.getByText("New Echo unlocked")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Echo Signal" })).toBeVisible();
+
+    // Equipping happens here. Sending somebody elsewhere to wear the thing they
+    // just earned is how the moment gets lost.
+    await page.getByRole("button", { name: "Wear it" }).click();
+    await expect(page.getByRole("button", { name: /Wearing it/ })).toBeVisible();
+    expect((await readProfile(page)).echoStyleId).toBe("signal");
+  });
+
+  test("puts the reward before the passport detail", async ({ page }) => {
+    await seedProfile(page, { xp: 0, completedMissionIds: [] });
+    await finishRewind(page);
+
+    /*
+     * Order is the point. The screen used to spend four of its first five
+     * elements on numbers about the player, which is a report rather than a
+     * reward. The passport data is still here and still useful; it is just no
+     * longer second.
+     */
+    const unlockY = (await page.getByText("New Echo unlocked").boundingBox())?.y ?? 0;
+    const passport = page.getByRole("button", { name: /What this added to your passport/ });
+    const passportY = (await passport.boundingBox())?.y ?? 0;
+
+    expect(unlockY).toBeGreaterThan(0);
+    expect(passportY).toBeGreaterThan(unlockY);
+
+    // Collapsed by default, and still reachable.
+    await expect(passport).toHaveAttribute("aria-expanded", "false");
+    await passport.click();
+    await expect(page.getByText("Decision Making")).toBeVisible();
+  });
+
+  test("does not re-announce an unlock on a replay", async ({ page }) => {
+    await seedProfile(page, { xp: 200, completedMissionIds: ["mission-rewind"] });
+    await finishRewind(page);
+
+    await expect(page.getByText("Already counted. Replays do not add XP.")).toBeVisible();
+    await expect(page.getByText("New Echo unlocked")).toHaveCount(0);
   });
 });

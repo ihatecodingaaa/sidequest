@@ -4,7 +4,7 @@ Kept current so another session can pick this up cold. Update after every major
 stage.
 
 **Last updated:** 26 August 2026
-**Status:** Game feel pass complete and verified. Feature complete overall.
+**Status:** Visual delight pass complete and verified. Feature complete overall.
 **Repository:** https://github.com/ihatecodingaaa/sidequest
 **Deployment:** not yet deployed to Vercel. CLI installed, not authenticated.
 
@@ -140,18 +140,41 @@ lyrics is settled by the evidence, instrumental was a scope call), interface
 sound effects, and the four Digital Street Smarts missions (P2, gated behind
 this pass being complete).
 
+## Visual delight pass
+
+Ran after the game feel pass, on the same kind of evidence: a reviewer looked at
+the built product and said the collectible layer was "technically present but
+not emotionally or visually obvious". That is a different failure from broken,
+and it needed a different fix. Research in `docs/VISUAL_DELIGHT_RESEARCH.md`,
+system in `docs/VISUAL_ART_DIRECTION.md`.
+
+| Change | Effect |
+| ------ | ------ |
+| Echo is a mascot | Shield body, visor face, six expressions, five crest variants. Reads at 28px and 120px from one 64 unit drawing. It was a ring with a stroke through it. |
+| The collection is visible | A grid of character tiles with the equipped one worn and locked ones showing as slots with their condition. It was five list rows below a passport. |
+| Unlocks are a moment | A new Echo is announced on the completion screen at 104px and equippable there. Previously it was recorded and discovered later somewhere else. |
+| Completion is reward-first | What happened, the unlock, XP, what next, then passport detail behind a disclosure. It used to spend four of its first five elements on numbers about the player. |
+| The cast is visible | Portraits rebuilt in three layers (field, hair silhouette, face plane), which is what gives them contrast at portrait size. Ken, Jas and Ilyas are now distinguishable at a glance in dialogue. |
+| Home has people in it | The four leads sit behind the hero type at low opacity. The hero was a colour field and a headline, which is atmosphere without a subject. |
+| The campaign is a journey | A two-layer spine that fills as you progress, and a finale that looks like a destination rather than a fifth row. |
+| Updates has editorial art | Original motifs of the object or system each story is about. This was the largest thing the previous pass left undone. |
+
+Deliberately not done, with reasons in the research doc: background music and
+sound effects (design settled, unbuilt), new missions (the P2 gate was not met),
+scene backdrops, and a horizontal campaign map.
+
 ## Verification
 
 Baseline before this stage, then after.
 
-| Check | Start | Campaigns | UX pass | Signature pass | Game feel pass |
-| ----- | ----- | --------- | ------- | -------------- | -------------- |
-| `npm run lint` | clean | clean | clean | clean | clean |
-| `npm run typecheck` | clean | clean | clean | clean | clean |
-| `npm run test` | 65 | 129 | 129 | 143 | **143** |
-| `npx playwright test` | 79 (+1) | 135 (+1) | 149 (+7) | 177 (+7) | **207 (+7)** |
-| `npm run build` | passes | passes | passes | passes | passes |
-| client JS | ~1.3 MB | ~1.6 MB | 1559 KB | 1574 KB | **1611 KB** |
+| Check | Start | Campaigns | UX pass | Signature | Game feel | Delight |
+| ----- | ----- | --------- | ------- | --------- | --------- | ------- |
+| `npm run lint` | clean | clean | clean | clean | clean | clean |
+| `npm run typecheck` | clean | clean | clean | clean | clean | clean |
+| `npm run test` | 65 | 129 | 129 | 143 | 143 | **143** |
+| `npx playwright test` | 79 (+1) | 135 (+1) | 149 (+7) | 177 (+7) | 207 (+7) | **217 (+7)** |
+| `npm run build` | passes | passes | passes | passes | passes | passes |
+| client JS | ~1.3 MB | ~1.6 MB | 1559 KB | 1574 KB | 1611 KB | **1637 KB** |
 
 The seven skips are the new bottom-bar geometry tests, which are phone-only by
 design and skip on the desktop project. Six existing assertions were updated
@@ -177,9 +200,9 @@ Accessibility: axe at WCAG AA across 17 routes including five Campaign routes,
 plus accessible names, touch target sizes, skip link and reduced motion. All
 pass.
 
-Bundle: 1611 KB of JavaScript across 34 chunks, uncompressed, for the whole
-product, up 37 KB across the game feel pass and 52 KB across the two passes
-together. No dependency has been added in either: the increase is components
+Bundle: 1637 KB of JavaScript across 36 chunks, uncompressed, for the whole
+product, up 26 KB across the visual delight pass and 78 KB across the last
+three passes together. No dependency has been added in either: the increase is components
 and inline SVG. Every visual in the product is drawn in code, so there is no
 image payload at all and nothing new to fetch at a roadshow. Measure it with:
 
