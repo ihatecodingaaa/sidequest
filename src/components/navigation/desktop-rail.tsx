@@ -11,7 +11,7 @@ import { useProfile } from "@/hooks/use-profile";
 import { getLevelProgress } from "@/lib/xp";
 import { formatXp } from "@/lib/format";
 import { ProgressBar } from "@/components/ui/primitives";
-import { Wordmark } from "@/components/layout/wordmark";
+import { Mark, Wordmark } from "@/components/layout/wordmark";
 
 /**
  * Desktop navigation.
@@ -50,10 +50,27 @@ export function DesktopRail() {
                   <span
                     className={cn(
                       "grid size-9 place-items-center rounded-xl transition-colors",
-                      active ? cn("bg-white/8", ACCENT_TEXT[item.accent]) : "text-faint group-hover:text-mist",
+                      item.isPrimary
+                        ? active
+                          ? "bg-quest-500 text-white"
+                          : "bg-quest-600 text-white"
+                        : active
+                          ? cn("bg-white/8", ACCENT_TEXT[item.accent])
+                          : "text-faint group-hover:text-mist",
                     )}
                   >
-                    <Icon aria-hidden className="size-[1.15rem]" strokeWidth={active ? 2.3 : 1.9} />
+                    {item.isPrimary ? (
+                      <Mark
+                        className="size-[1.15rem] text-white"
+                        style={
+                          {
+                            "--sq-mark-knockout": active ? "#6e56f8" : "#573fdb",
+                          } as React.CSSProperties
+                        }
+                      />
+                    ) : (
+                      <Icon aria-hidden className="size-[1.15rem]" strokeWidth={active ? 2.3 : 1.9} />
+                    )}
                   </span>
                   <span className="min-w-0">
                     <span

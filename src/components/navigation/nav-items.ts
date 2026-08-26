@@ -1,4 +1,4 @@
-import { House, Newspaper, Swords, ShieldCheck, User, type LucideIcon } from "lucide-react";
+import { House, Newspaper, ShieldCheck, Swords, User, type LucideIcon } from "lucide-react";
 
 import type { Accent } from "@/lib/accent";
 
@@ -9,16 +9,39 @@ export interface NavItem {
   accent: Accent;
   /** Extra routes that should light this tab up. */
   matches?: string[];
+  /** Shown in the desktop rail. Answers "what is this for". */
   description: string;
+  /**
+   * Marks the elevated centre destination. It is still a tab: it navigates,
+   * it takes aria-current, and it carries a label like its neighbours. The
+   * emphasis is about recognisability, not about behaving differently.
+   */
+  isPrimary?: boolean;
 }
 
+/**
+ * Five destinations, and the order matters.
+ *
+ * Safe sits in the centre so its position never changes and never has to be
+ * remembered. That placement buys recognition and muscle memory rather than
+ * speed: the centre of a five-item bar is actually the harder spot for a thumb
+ * arcing from a bottom corner, which is why the Safe target is made taller
+ * than its neighbours rather than merely wider.
+ *
+ * Each label answers a question the user is actually asking:
+ *   Home     what is happening for me
+ *   Pulse    what should I know
+ *   Safe     I need help
+ *   Missions what can I do
+ *   You      my progress
+ */
 export const NAV_ITEMS: NavItem[] = [
   {
     href: "/",
     label: "Home",
     icon: House,
     accent: "quest",
-    description: "Your day at a glance",
+    description: "What is happening for you",
   },
   {
     href: "/pulse",
@@ -26,22 +49,23 @@ export const NAV_ITEMS: NavItem[] = [
     icon: Newspaper,
     accent: "pulse",
     matches: ["/pulse", "/radio"],
-    description: "What is happening",
-  },
-  {
-    href: "/missions",
-    label: "Missions",
-    icon: Swords,
-    accent: "quest",
-    matches: ["/missions", "/play"],
-    description: "Do something",
+    description: "What is worth knowing",
   },
   {
     href: "/safe",
     label: "Safe",
     icon: ShieldCheck,
+    accent: "quest",
+    description: "Official help, one tap away",
+    isPrimary: true,
+  },
+  {
+    href: "/missions",
+    label: "Missions",
+    icon: Swords,
     accent: "coral",
-    description: "Official help, fast",
+    matches: ["/missions", "/play", "/campaigns"],
+    description: "Stories and challenges",
   },
   {
     href: "/you",
@@ -49,7 +73,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: User,
     accent: "volt",
     matches: ["/you", "/rewards", "/crew", "/settings"],
-    description: "Progress and passport",
+    description: "Your progress and passport",
   },
 ];
 
