@@ -182,7 +182,8 @@ export function followUpLockLabel(hours: number): string {
   if (hours <= 0) return "Ready";
   if (hours < 1) return "Unlocks shortly";
   if (hours < 24) return `Unlocks in ${Math.ceil(hours)}h`;
-  const days = Math.ceil(hours / 24);
+  // Floor, not ceil: 25 hours away is tomorrow, not two days.
+  const days = Math.max(1, Math.floor(hours / 24));
   return days === 1 ? "Unlocks tomorrow" : `Unlocks in ${days} days`;
 }
 
