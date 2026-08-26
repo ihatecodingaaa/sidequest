@@ -184,7 +184,7 @@ export const ONE_BAD_MINUTE: Campaign = {
       chapterNumber: 4,
       chapterType: "station",
       title: "Crew Shift",
-      shortDescription: "Everyone answers privately. Then the group decides once.",
+      shortDescription: "Everyone answers privately, talks, then answers again.",
       config: { mechanic: "crew-shift", roundId: "who-tells-ilyas" },
       accent: "pulse",
       brief: "Pass the phone. Nobody sees anyone else's answer until all of them are in.",

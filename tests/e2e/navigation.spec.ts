@@ -49,9 +49,17 @@ test.describe("bottom navigation", () => {
     await seedProfile(page);
     await page.goto("/");
 
-    const boxes = await page
-      .getByRole("navigation", { name: "Primary" })
-      .getByRole("link")
+    /*
+     * `evaluateAll` does not auto-wait. Without this assertion the geometry is
+     * read from whatever exists at that instant, which on a slow render is an
+     * empty array, and the test then fails on `boxes[2]` being undefined
+     * rather than on anything about the layout. It flaked roughly six runs in
+     * seven before the wait was added.
+     */
+    const tabs = page.getByRole("navigation", { name: "Primary" }).getByRole("link");
+    await expect(tabs).toHaveCount(5);
+
+    const boxes = await tabs
       .evaluateAll((nodes) =>
         nodes.map((node) => {
           const rect = node.getBoundingClientRect();
