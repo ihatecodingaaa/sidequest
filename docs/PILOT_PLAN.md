@@ -53,6 +53,34 @@ Norm Mirror questions administered to the cohort first so the aggregate shown
 in the app is that cohort's own real data rather than a placeholder. That is
 the single highest-value change the pilot makes to the product.
 
+## 3b. The Campaign pathway
+
+Campaigns give the pilot a second, more practical entry point than asking a
+school for curriculum time.
+
+**What it looks like.** One session, one hall or one corridor, four printed
+station signs, one or two facilitators, and roughly twenty minutes per
+participant. Nothing to install, no accounts, and no setup on anybody's
+phone. A cohort of 120 can pass through a drop-in format across a lunch
+period.
+
+**Why it fits a pilot better than a lesson.** It is repeatable without
+curriculum negotiation, it produces a natural comparison group (people who
+did three chapters against people who did four), and it generates the
+follow-up completion rate, which is the closest thing to a retention measure
+any of this can currently produce.
+
+**The single most valuable change the pilot makes to the product.** Running
+the Norm Mirror questions with the cohort *before* the event, then dropping
+their own answers into the chapter. A social norms intervention works only if
+the audience believes the number, and a local number from their own year
+group is the only version that earns that. Everything currently in the build
+is an invented placeholder and is labelled as one.
+
+**What would have to be agreed first.** The venue, consent for under-18
+participants, and a decision about whether the Crew Shift station is
+facilitated or left to self-organise. See `docs/CAMPAIGN_DEPLOYMENT.md`.
+
 ## 4. Evaluation
 
 Behavioural, modest, and honest about what it can prove.
@@ -75,6 +103,9 @@ What we would look for:
 | Named strategies, free text                | Do participants produce a plan or a slogan          |
 | Completion and return rate                 | Whether the thing is actually used unprompted       |
 | Build Quest submission quality             | Whether participation reaches creation              |
+| Campaign chapters completed, 3 against 4   | Whether the resilience rule costs engagement        |
+| Crew Shift movement rate                   | Whether group discussion moved the decision         |
+| Follow-up completion at 1 day and 1 week   | Retention past the event                            |
 
 What we would **not** claim: that this reduces crime. An eight week pilot with
 two hundred students cannot show that, and saying otherwise would discredit

@@ -37,6 +37,21 @@ source of truth, and every entry must be checked against the live site.
 neighbourhood name is the finest granularity, and it is optional. The app must
 work fully with location denied.
 
+## Campaigns
+
+- Campaign routes live outside the `(app)` group so a QR scan is never blocked
+  by onboarding. A chapter must run on a completely cold device.
+- Campaign chapters drive the existing mission players through `MissionHost`.
+  Never copy mission logic into a Campaign component.
+- Campaign XP goes through `awardMission` and the per-campaign grant ledger.
+  One grant key, one payment, ever.
+- The finale opens on any three of four chapters. That rule is deployment
+  resilience, not difficulty tuning, and it should not be tightened.
+- Station codes are a permanent control on the Campaign screen, never an error
+  state. QR must never be a single point of failure.
+- Impact figures are invented and labelled as demo data. Never present them as
+  participant evidence.
+
 ## Engineering
 
 - Mobile first. 390px is the design target. 44px minimum touch targets, safe

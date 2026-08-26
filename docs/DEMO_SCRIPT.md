@@ -1,6 +1,10 @@
 # Demo script
 
-Target: three to four minutes. Practise it twice before judging.
+Target: about five minutes with the Campaign section, three to four without it.
+Practise it twice before judging.
+
+If you only have three minutes, cut Moments 5 and 7 and keep Campaigns. It is
+the part judges have not seen from anybody else.
 
 ## Before you start
 
@@ -9,6 +13,10 @@ Target: three to four minutes. Practise it twice before judging.
 3. Put the phone or browser on **Do Not Disturb**. A notification banner over
    the bottom nav during a demo is avoidable.
 4. Have `/?demo=reset` ready to paste as a one-tap reset between judges.
+5. For the Campaign section, open `/campaigns/one-bad-minute/stations` on a
+   second screen, or print the four signs. Print them from the address the
+   judge's phone will use, not from localhost.
+6. Know the four station codes without looking them up: **A7, B4, C9, D2**.
 
 The whole app is offline-capable once loaded, but the outbound links (CNA,
 ScamShield, police.gov.sg, meLISTEN) need a connection. If the venue wifi is
@@ -106,7 +114,88 @@ Point at the label.
 If time allows, open **Partner studio** at `/partner` for ten seconds to show
 that the mission formats are templates an organisation could author themselves.
 
-## Moment 6: Safety Passport and rewards, 30 seconds
+## Moment 6: Campaigns, 90 seconds
+
+This is the strongest thing in the build. Give it the time.
+
+> "Everything so far is somebody using SIDEQUEST on their own. Now imagine it
+> at a school activation or an NCPC roadshow."
+
+**Have the station signs ready.** Before the session, open
+`/campaigns/one-bad-minute/stations` on a laptop, or print the four signs. If
+you can, hand the judge a phone and let them scan Chapter 4 from the screen.
+
+### The scan
+
+Judge scans with their **normal camera**. No app, no scanner, no setup.
+
+The chapter opens on:
+
+> **CHAPTER UNLOCKED**
+> **Move away from the station.** It is saved to your phone now.
+
+> "That instruction is the whole congestion strategy. The station is busy for
+> the two seconds a scan takes, not the four minutes the chapter takes."
+
+### One chapter
+
+Play **Crew Shift** if there are two or more people watching, because it is
+the only mechanic that needs them. Set the player count, let each person answer
+privately, then show the reveal.
+
+> "Nobody saw anyone else's answer until all of them were in. Then they get
+> forty-five seconds to argue, and one decision together. At the end it tells
+> them whether the group moved. That is peer influence, made visible to the
+> people who are in it."
+
+If you are short of time, or alone, run **BREAKSAFE** at Chapter 3 instead:
+the judge already understands it from Moment 4, so it needs no setup.
+
+### The map
+
+Go back to the Campaign screen.
+
+> "Every phone gets one of four routes, each starting at a different station.
+> Eighty people do not queue in one place."
+
+Point at the locked finale.
+
+> "And any three of the four opens the finale. A torn sign or a crowded table
+> cannot end somebody's experience."
+
+Point at the station code field.
+
+> "If a camera will not focus, a facilitator reads out a code. QR is never a
+> single point of failure."
+
+### The finale
+
+Open **Demo controls** and use them to get there quickly, then play the finale
+and finish the Campaign.
+
+### The part that matters most
+
+On the Campaign screen, point at **After the event**.
+
+> "Aftermath. Unlocks tomorrow."
+
+Then use **Demo controls, Skip forward a day** and open it.
+
+> "Most roadshows end when someone walks away. Here the roadshow is episode
+> one. There is another chapter a week later that has no story attached to it,
+> which is the real test of whether any of it transferred."
+
+### What a pilot could measure
+
+Open `/campaigns/one-bad-minute/impact` for about fifteen seconds.
+
+> "These numbers are demo data and the page says so twice. The point is the
+> shape: most activations can report how many people showed up. This can report
+> the gap between what people assumed their friends would do and what they said,
+> how often a group changed its mind after arguing, and how many came back a
+> week later."
+
+## Moment 7: Safety Passport and rewards, 30 seconds
 
 Tap **You**.
 
@@ -120,7 +209,7 @@ Tap **Rewards**.
 > the whole thing becomes a farm. Everything commercial here is a concept, and
 > the prototype issues no code and no monetary value."
 
-## Moment 7: Safe, 20 seconds
+## Moment 8: Safe, 20 seconds
 
 Tap **Safe**.
 
@@ -130,7 +219,7 @@ Tap **Safe**.
 
 Scroll to **What SIDEQUEST deliberately does not do**.
 
-## Moment 8: close, 15 seconds
+## Moment 9: close, 15 seconds
 
 > "We are not building another place for youths to learn about crime
 > prevention. We are building a reason for them to participate in it."
@@ -148,6 +237,10 @@ Scroll to **What SIDEQUEST deliberately does not do**.
 | State looks wrong or stuck   | Settings, Reset demo. Or open `/?demo=reset`.                              |
 | You need a populated profile | Settings, Load demo progress. Or open `/?demo=1`.                          |
 | A judge wants to explore     | Hand it over. Every route is reachable and nothing can be broken from the UI. |
+| A QR will not scan           | Read out the station code: A7, B4, C9, D2. The field is on the Campaign screen. |
+| Campaign state looks wrong   | Campaign screen, Demo controls, Reset this Campaign. Two taps.               |
+| No second person for Crew Shift | Solo mode is supported and the screen says why it is better with people.  |
+| Campaign feels too long      | Switch to Quick mode, or play one chapter and jump the rest with demo controls. |
 | Phone dies                   | The same URL runs on a laptop with a proper desktop layout.                |
 
 ## Between judges

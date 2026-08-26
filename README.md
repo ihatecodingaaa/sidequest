@@ -136,6 +136,9 @@ Zustand, Zod, Lucide, Vitest, Playwright.
 | File                     | What is in it                                          |
 | ------------------------ | ------------------------------------------------------ |
 | `docs/PRODUCT_SPEC.md`   | Thesis, audience, pillars, missions, behavioural design |
+| `docs/CAMPAIGNS_SPEC.md` | The Campaign subsystem: model, chapters, routes, follow-ups |
+| `docs/CAMPAIGN_DEPLOYMENT.md` | Running a Campaign at a real school or roadshow      |
+| `docs/CAMPAIGN_BEHAVIOUR.md` | Mechanism, hypothesis and limits, chapter by chapter  |
 | `docs/DEMO_SCRIPT.md`    | The judging walkthrough and its recovery steps          |
 | `docs/DATA_SAFETY.md`    | Privacy, profiling, partnership and demo data policy    |
 | `docs/PILOT_PLAN.md`     | A realistic post-hackathon pilot                        |
