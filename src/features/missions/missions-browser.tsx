@@ -10,7 +10,10 @@ import {
   MISSION_TYPE_LABELS,
 } from "@/data/missions";
 import { MissionCard } from "@/components/mission/mission-card";
+import Link from "next/link";
+
 import { SignatureStrip } from "@/components/mission/signature-strip";
+import { CAMPAIGNS } from "@/data/campaigns";
 import { SectionHeader } from "@/components/ui/primitives";
 import { PageHeader } from "@/components/layout/app-shell";
 import { useProfile } from "@/hooks/use-profile";
@@ -81,6 +84,29 @@ export function MissionsBrowser() {
         />
         <SignatureStrip />
       </section>
+
+      {CAMPAIGNS.length ? (
+        <section className="mb-8">
+          <SectionHeader
+            title="Campaigns"
+            subtitle="Longer, story-driven experiences built for real places."
+          />
+          <Link
+            href={`/campaigns/${CAMPAIGNS[0].slug}`}
+            className="sq-card sq-pressable block p-4 hover:border-white/16"
+          >
+            <p className="font-display text-lg font-bold text-chalk">{CAMPAIGNS[0].title}</p>
+            <p className="mt-1 text-sm text-muted">{CAMPAIGNS[0].subtitle}</p>
+            <p className="mt-2.5 text-xs font-semibold text-coral-300">
+              {CAMPAIGNS[0].chapters.length} chapters
+              <span aria-hidden className="mx-1.5 text-faint">
+                &middot;
+              </span>
+              about {CAMPAIGNS[0].estimatedMinutes} min
+            </p>
+          </Link>
+        </section>
+      ) : null}
 
       <h2 className="mb-3 text-lg font-bold tracking-tight text-chalk">Everything else</h2>
 

@@ -33,6 +33,7 @@ import {
 import { Wordmark } from "@/components/layout/wordmark";
 import { MissionCard } from "@/components/mission/mission-card";
 import { SignatureStrip } from "@/components/mission/signature-strip";
+import { CampaignHomeCard } from "@/features/campaigns/campaign-home-card";
 import { offsetLabel } from "@/features/pulse/offset-label";
 
 const QUICK_QUEST_ID = "mission-otp";
@@ -179,6 +180,18 @@ export function HomeScreen() {
           href="/missions"
         />
         <SignatureStrip />
+      </section>
+
+      {/* ------------------------------------------------------ Campaign */}
+      <section aria-labelledby="campaign">
+        <SectionHeader
+          id="campaign"
+          title="At an event"
+          subtitle="Scan a code, play on your phone, and it keeps going after you leave."
+          action="All Campaigns"
+          href="/campaigns"
+        />
+        <CampaignHomeCard />
       </section>
 
       {/* -------------------------------------------------- Quick Quest */}

@@ -15,6 +15,7 @@ import { PageHeader } from "@/components/layout/app-shell";
 import { ProgressBar, SectionHeader, StatTile } from "@/components/ui/primitives";
 import { useProfile } from "@/hooks/use-profile";
 import { LevelRing } from "./level-ring";
+import { CampaignContributions } from "@/features/campaigns/campaign-contributions";
 
 export function ProfileScreen() {
   const { profile, ready } = useProfile();
@@ -153,6 +154,8 @@ export function ProfileScreen() {
           issued by an appropriate body in future.
         </p>
       </section>
+
+      <CampaignContributions />
 
       {/* Contributions */}
       {ready && profile.submissions.length ? (
