@@ -1,3 +1,4 @@
+import type { EchoStyleId } from "@/data/echo-styles";
 import type { AgeBand, Interest, SkillId } from "./core";
 import type { CampaignProgress } from "./campaign";
 
@@ -42,4 +43,10 @@ export interface UserProfile {
   /** Campaign progress, keyed by campaign id. Optional so older persisted
    *  profiles rehydrate without a migration step. */
   campaigns?: Record<string, CampaignProgress>;
+  /**
+   * Chosen Echo style. Cosmetic only, and optional for the same rehydration
+   * reason. Which styles are *available* is derived from progress rather than
+   * stored, so this can never claim something that was not earned.
+   */
+  echoStyleId?: EchoStyleId;
 }

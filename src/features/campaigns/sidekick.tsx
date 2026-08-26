@@ -1,4 +1,8 @@
+"use client";
+
 import { cn } from "@/lib/cn";
+import { resolveEchoStyle, type EchoStyle } from "@/data/echo-styles";
+import { useProfile } from "@/hooks/use-profile";
 
 /**
  * ECHO, the Campaign guide.
@@ -37,10 +41,17 @@ export function Sidekick({
   mood = "neutral",
   className,
   size = 40,
+  style,
 }: {
   mood?: SidekickMood;
   className?: string;
   size?: number;
+  /**
+   * A collected Echo style. Cosmetic: it changes the ring and nothing else.
+   * When omitted, mood picks the colour as it always did, so every existing
+   * caller keeps its behaviour.
+   */
+  style?: EchoStyle;
 }) {
   return (
     <svg
@@ -48,8 +59,20 @@ export function Sidekick({
       width={size}
       height={size}
       aria-hidden
-      className={cn("shrink-0", MOOD_STROKE[mood], className)}
+      className={cn("shrink-0", style ? style.ring : MOOD_STROKE[mood], className)}
     >
+      {style?.halo ? (
+        <circle
+          cx="16"
+          cy="16"
+          r="15"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.2"
+          strokeDasharray="3 4"
+          className={style.halo}
+        />
+      ) : null}
       <circle
         cx="16"
         cy="16"
@@ -85,9 +108,17 @@ export function SidekickLine({
   children: React.ReactNode;
   className?: string;
 }) {
+  /*
+   * Echo wears the collected style wherever Echo speaks, which is the point of
+   * collecting one. Until the profile has hydrated it falls back to Core, so
+   * the server render and the first client paint agree.
+   */
+  const { profile, ready } = useProfile();
+  const style = ready ? resolveEchoStyle(profile) : undefined;
+
   return (
     <div className={cn("flex items-start gap-3", className)}>
-      <Sidekick mood={mood} size={36} />
+      <Sidekick mood={mood} size={36} style={style} />
       <div className="min-w-0 flex-1 rounded-2xl rounded-tl-sm border border-white/10 bg-white/5 px-3.5 py-2.5">
         <p className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-faint">Echo</p>
         <p className="mt-1 text-sm leading-relaxed text-mist">{children}</p>

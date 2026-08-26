@@ -16,6 +16,7 @@ import { ProgressBar, SectionHeader, StatTile } from "@/components/ui/primitives
 import { useProfile } from "@/hooks/use-profile";
 import { LevelRing } from "./level-ring";
 import { CampaignContributions } from "@/features/campaigns/campaign-contributions";
+import { EchoCollection } from "@/features/profile/echo-collection";
 
 export function ProfileScreen() {
   const { profile, ready } = useProfile();
@@ -157,6 +158,13 @@ export function ProfileScreen() {
           A SIDEQUEST record, not a SkillsFuture credential. It carries no formal recognition.
         </p>
       </section>
+
+      {/*
+        Echo lives on You because this is where "what have I done" is answered,
+        and a collection is a record of that. It is deliberately below the
+        passport: what you can do outranks what your companion looks like.
+      */}
+      <EchoCollection />
 
       <CampaignContributions />
 

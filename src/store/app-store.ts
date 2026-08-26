@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { unlockedEchoStyles, type EchoStyleId } from "@/data/echo-styles";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { AgeBand, Interest, SkillId } from "@/types/core";
@@ -80,6 +81,8 @@ interface AppState {
 
   toggleSavedPulse: (pulseId: string) => void;
   setNeighbourhood: (area: string | null) => void;
+  /** Cosmetic only. Refuses a style the profile has not earned. */
+  setEchoStyle: (styleId: EchoStyleId) => void;
   setInterests: (interests: Interest[]) => void;
   setAgeBand: (ageBand: AgeBand) => void;
   setDisplayName: (name: string) => void;
@@ -199,6 +202,19 @@ export const useAppStore = create<AppState>()(
 
       setNeighbourhood: (area) =>
         set((state) => ({ profile: { ...state.profile, neighbourhood: area } })),
+
+      /*
+       * The guard is the point. Availability is derived from progress, so the
+       * only way a locked style could ever be selected is a bug or a hand-edited
+       * localStorage, and in both cases the right answer is to ignore it rather
+       * than to persist a claim the profile did not earn.
+       */
+      setEchoStyle: (styleId) =>
+        set((state) =>
+          unlockedEchoStyles(state.profile).has(styleId)
+            ? { profile: { ...state.profile, echoStyleId: styleId } }
+            : state,
+        ),
 
       setInterests: (interests) =>
         set((state) => ({ profile: { ...state.profile, interests } })),
