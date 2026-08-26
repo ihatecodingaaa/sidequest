@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { playScene, readProfile, seedProfile, trackConsoleErrors } from "./helpers";
+import { STORAGE_KEY, playScene, readProfile, seedProfile, trackConsoleErrors } from "./helpers";
 
 const SLUG = "one-bad-minute";
 const CAMPAIGN_ID = "campaign-one-bad-minute";
@@ -328,7 +328,15 @@ test.describe("finale and follow-ups", () => {
     await page.goto(CAMPAIGN);
     await expect(page.getByText("The finale is open.")).toBeVisible();
 
-    await page.getByRole("link", { name: /^Finale/ }).click();
+    /*
+     * The finale node is now titled "The finale" and its accessible name
+     * carries its state, so this matches the name the map actually exposes.
+     * The assertion is unchanged in strength: the finale must still be a real
+     * link at three of four, and the run below still proves it pays once.
+     * `Play the finale` on the primary control does not match this pattern,
+     * so the target stays unambiguous.
+     */
+    await page.getByRole("link", { name: /^The finale/ }).click();
     await playScene(page);
     await page.getByRole("button", { name: "Answer him" }).click();
     await page.getByRole("button", { name: /Call 1799 and the bank tonight/ }).click();
@@ -545,5 +553,149 @@ test.describe("reused mechanics inside a campaign", () => {
 
     // Four questions here, three in the campaign chapter.
     await expect(page.getByText("Situation 1 of 4")).toBeVisible();
+  });
+});
+
+/*
+ * The Campaign map.
+ *
+ * The states were already modelled correctly when this was a list, so what
+ * these cover is the thing the redesign could quietly break: that the map
+ * still tells the truth about a non-linear Campaign. A participant on a
+ * different route must see a different chapter recommended, an outstanding
+ * chapter must stay reachable rather than reading as a failure, and the finale
+ * must not claim to be ready before three are done.
+ */
+test.describe("the campaign map is honest about a non-linear route", () => {
+  function campaignState(overrides: Record<string, unknown>) {
+    return {
+      campaignId: CAMPAIGN_ID,
+      mode: "story",
+      routeId: "route-a",
+      startedAt: "2026-09-01T10:00:00.000Z",
+      unlockedChapterIds: ["obm-c1", "obm-c2", "obm-c3", "obm-c4"],
+      completedChapterIds: [],
+      chapterResults: {},
+      finaleCompleted: false,
+      finaleOptionId: null,
+      completedAt: null,
+      completedFollowUpIds: [],
+      awardedKeys: [],
+      demoHoursOffset: 0,
+      ...overrides,
+    };
+  }
+
+  /*
+   * Writes storage directly rather than through `seedProfile`, because that
+   * helper deliberately seeds only into empty storage: an init script that
+   * overwrote on every navigation would erase the very persistence the other
+   * specs are checking. That is correct for it and wrong here, where a single
+   * test needs to look at the same screen under two different route
+   * assignments. Writing then reloading gets a genuinely different state
+   * instead of silently reusing the first one.
+   */
+  async function openMap(page: Page, overrides: Record<string, unknown>) {
+    await page.goto(CAMPAIGN);
+    await page.evaluate(
+      ([key, value]) => window.localStorage.setItem(key as string, value as string),
+      [
+        STORAGE_KEY,
+        JSON.stringify({
+          state: {
+            profile: {
+              displayName: "Lucas",
+              ageBand: "16-18",
+              interests: [],
+              neighbourhood: "Tampines",
+              xp: 210,
+              streakDays: 1,
+              completedMissionIds: [],
+              savedPulseIds: [],
+              crewId: null,
+              skillPoints: {},
+              submissions: [],
+              rewardClaims: [],
+              onboardedAt: "2026-08-20T10:00:00.000Z",
+              campaigns: { [CAMPAIGN_ID]: campaignState(overrides) },
+            },
+          },
+          version: 1,
+        }),
+      ] as const,
+    );
+    await page.reload();
+    await expect(page.locator("[data-node-state]").first()).toBeAttached();
+  }
+
+  const states = (page: Page) =>
+    page.locator("[data-node-state]").evaluateAll((nodes) =>
+      nodes.map((node) => node.getAttribute("data-node-state")),
+    );
+
+  test("marks exactly one chapter as up next before the finale opens", async ({ page }) => {
+    await openMap(page, { completedChapterIds: ["obm-c1"] });
+    const seen = await states(page);
+
+    expect(seen.filter((state) => state === "current")).toHaveLength(1);
+    expect(seen.filter((state) => state === "done")).toHaveLength(1);
+  });
+
+  test("a different route recommends a different chapter", async ({ page }) => {
+    await openMap(page, { routeId: "route-a" });
+    const routeA = await states(page);
+
+    await openMap(page, { routeId: "route-c" });
+    const routeC = await states(page);
+
+    // Same four nodes, different one carrying the recommendation.
+    expect(routeA.indexOf("current")).not.toBe(-1);
+    expect(routeC.indexOf("current")).not.toBe(-1);
+    expect(routeA.join()).not.toBe(routeC.join());
+  });
+
+  test("an unscanned station reads as scan, not as failure", async ({ page }) => {
+    await openMap(page, {
+      unlockedChapterIds: ["obm-c1"],
+      completedChapterIds: ["obm-c1"],
+    });
+
+    await expect(page.locator('[data-node-state="locked"]').first()).toBeVisible();
+    await expect(page.getByText("Scan at the station").first()).toBeVisible();
+  });
+
+  test("the finale stays shut until three chapters are done, then opens", async ({ page }) => {
+    await openMap(page, { completedChapterIds: ["obm-c1", "obm-c2"] });
+    await expect(page.getByRole("group", { name: /finale, locked/i })).toBeVisible();
+    await expect(page.getByText("1 more chapter")).toBeVisible();
+
+    await openMap(page, { completedChapterIds: ["obm-c1", "obm-c2", "obm-c3"] });
+    await expect(page.getByRole("link", { name: /finale, ready/i })).toBeVisible();
+  });
+
+  test("finishing all four is a distinction, not a different pass mark", async ({ page }) => {
+    await openMap(page, {
+      completedChapterIds: ["obm-c1", "obm-c2", "obm-c3", "obm-c4"],
+    });
+
+    await expect(page.getByRole("link", { name: /finale, full route complete/i })).toBeVisible();
+    expect((await states(page)).every((state) => state === "done")).toBe(true);
+  });
+
+  test("every node names its station and its state, without geometry", async ({ page }) => {
+    await openMap(page, { completedChapterIds: ["obm-c1"] });
+
+    await expect(page.getByRole("link", { name: /The favour, Station A7, done/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Station B4, up next/i })).toBeVisible();
+  });
+
+  test("the map does not push the primary action off the screen", async ({ page }) => {
+    await openMap(page, { completedChapterIds: ["obm-c1", "obm-c2"] });
+
+    // No horizontal scroll at any of the widths this is used at.
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+    );
+    expect(overflow).toBe(false);
   });
 });

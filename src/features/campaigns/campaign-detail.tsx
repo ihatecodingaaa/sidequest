@@ -7,35 +7,29 @@ import {
   ArrowRight,
   BookOpen,
   Check,
-  Flag,
   KeyRound,
-  Lock,
   MapPin,
   QrCode,
   Rocket,
-  Zap,
 } from "lucide-react";
 
 import { cn } from "@/lib/cn";
-import { ACCENT_TEXT } from "@/lib/accent";
 import { Button, ButtonLink } from "@/components/ui/button";
-import { Chip, ProgressBar, ProvenanceTag } from "@/components/ui/primitives";
+import { Chip, ProvenanceTag } from "@/components/ui/primitives";
 import { PageHeader } from "@/components/layout/app-shell";
 import { useCampaign } from "./use-campaign";
 import { SidekickLine } from "./sidekick";
-import { ChapterNode, NODE_LABEL, type NodeState } from "./chapter-node";
+import { CampaignMap } from "./campaign-map";
 import { FollowUpList } from "./follow-up-list";
 import { InstallInvite } from "@/features/pwa/install-invite";
 import { useCampaignWarmup } from "./use-campaign-warmup";
 import { CampaignDemoControls } from "./campaign-demo-controls";
 import {
-  campaignFraction,
   chaptersRemainingForFinale,
   completedPhysicalCount,
   findChapterByStationCode,
   getRoute,
   isFinaleUnlocked,
-  isFullyCompleted,
   nextRecommendedChapter,
   physicalChapters,
 } from "@/lib/campaign";
@@ -54,7 +48,6 @@ export function CampaignDetail({ campaign }: { campaign: Campaign }) {
   const stations = physicalChapters(campaign);
   const done = completedPhysicalCount(campaign, progress);
   const finaleReady = isFinaleUnlocked(campaign, progress);
-  const allDone = isFullyCompleted(campaign, progress);
   const remaining = chaptersRemainingForFinale(campaign, progress);
   const next = nextRecommendedChapter(campaign, progress);
 
@@ -125,54 +118,75 @@ export function CampaignDetail({ campaign }: { campaign: Campaign }) {
         </section>
       ) : null}
 
-      {/* Progress */}
-      <section className="sq-card p-5">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-faint">
-              {route.label}
-            </p>
-            <p className="mt-0.5 font-display text-xl font-extrabold text-chalk">
-              {done} of {stations.length} chapters
-            </p>
-          </div>
-          <span
-            className={cn(
-              "rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide",
-              progress.mode === "story"
-                ? "bg-quest-500/15 text-quest-300"
-                : "bg-volt-500/15 text-volt-300",
-            )}
-          >
-            {progress.mode === "story" ? "Story mode" : "Quick mode"}
-          </span>
-        </div>
 
-        <ProgressBar
-          className="mt-4"
-          accent={campaign.accent}
-          value={campaignFraction(campaign, progress)}
-          label="Campaign progress"
+      {/* The map */}
+      <section aria-labelledby="chapters">
+        <h2 id="chapters" className="mb-3 text-lg font-bold tracking-tight text-chalk">
+          Chapters
+        </h2>
+
+        {/*
+          The spine went. It threaded four full width cards down a single
+          column, and a single column reads as a sequence whatever is drawn to
+          the left of it. This Campaign is not a sequence: any three of four
+          stations open the finale, routes differ between participants, and a
+          busy station is meant to be walked past. The map draws no edge
+          between one chapter and the next for exactly that reason.
+        */}
+        <CampaignMap
+          campaign={campaign}
+          progress={progress}
+          chapters={stations}
+          nextChapter={next ?? null}
+          finaleReady={finaleReady}
+          remaining={remaining}
         />
+      </section>
 
-        <p className="mt-2.5 text-sm text-muted">
-          {progress.finaleCompleted
-            ? "Campaign complete."
-            : finaleReady
-              ? "The finale is open."
-              : remaining === 1
-                ? "One more chapter opens the finale."
-                : `${remaining} more chapters open the finale.`}
-        </p>
+      {/*
+        Route and mode, as one line.
 
+        This was a card with a heading, a count, a progress bar and a sentence
+        about how many chapters were left. All of that is now in the map: the
+        finale node states what is still needed and the four tiles state what
+        is done. Keeping the card meant the map itself started below the fold
+        on a 390px phone, which defeated the point of drawing one.
+      */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+        <span className="font-semibold text-mist">{route.label}</span>
+        <span aria-hidden className="text-faint">&middot;</span>
+        <span className="font-semibold text-chalk tabular-nums">
+          {done} of {stations.length} chapters
+        </span>
+        <span
+          className={cn(
+            "rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide",
+            progress.mode === "story"
+              ? "bg-quest-500/15 text-quest-300"
+              : "bg-volt-500/15 text-volt-300",
+          )}
+        >
+          {progress.mode === "story" ? "Story mode" : "Quick mode"}
+        </span>
         <button
           type="button"
           onClick={() => changeMode(progress.mode === "story" ? "quick" : "story")}
-          className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-quest-300 hover:text-quest-400"
+          className="ml-auto inline-flex min-h-11 items-center text-sm font-semibold text-quest-300 hover:text-quest-400"
         >
           {progress.mode === "story" ? "Switch to Quick mode" : "Switch to Story mode"}
         </button>
-      </section>
+      </div>
+
+
+      <p className="text-sm text-muted">
+        {progress.finaleCompleted
+          ? "Campaign complete."
+          : finaleReady
+            ? "The finale is open."
+            : remaining === 1
+              ? "One more chapter opens the finale."
+              : `${remaining} more chapters open the finale.`}
+      </p>
 
       {/*
         Echo used to name the next chapter here, which the Continue control now
@@ -185,149 +199,6 @@ export function CampaignDetail({ campaign }: { campaign: Campaign }) {
           Station busy? Take any other one. Three of four opens the finale.
         </SidekickLine>
       ) : null}
-
-      {/* The map */}
-      <section aria-labelledby="chapters">
-        <h2 id="chapters" className="mb-3 text-lg font-bold tracking-tight text-chalk">
-          Chapters
-        </h2>
-
-        {/*
-          The spine carries state rather than sitting behind it. A list says
-          "item 2 of 4"; a path says "that is behind you, this is where you are,
-          that is ahead". Two layers: a dim track for the whole journey and a
-          lit segment for the distance already travelled.
-        */}
-        <ol className="relative space-y-2.5 pl-7">
-          <span
-            aria-hidden
-            className="absolute top-3 bottom-10 left-[0.65rem] w-[3px] rounded-full bg-white/8"
-          />
-          <span
-            aria-hidden
-            className="absolute top-3 left-[0.65rem] w-[3px] rounded-full bg-gradient-to-b from-volt-500 to-quest-500 transition-[height] duration-700 ease-out"
-            style={{ height: `${Math.max(0, Math.min(1, done / stations.length)) * 82}%` }}
-          />
-          {route.orderedChapterIds.map((chapterId, index) => {
-            const chapter = campaign.chapters.find((entry) => entry.id === chapterId);
-            if (!chapter) return null;
-
-            const complete = progress.completedChapterIds.includes(chapter.id);
-            const unlocked = progress.unlockedChapterIds.includes(chapter.id);
-            const isNext = next?.id === chapter.id;
-            const state: NodeState = complete
-              ? "done"
-              : isNext
-                ? "current"
-                : unlocked
-                  ? "available"
-                  : "locked";
-
-            return (
-              <li key={chapter.id} className="relative">
-                <ChapterNode state={state} index={index + 1} className="absolute top-5 -left-7" />
-
-                <Link
-                  href={`/campaigns/${campaign.slug}/chapter/${chapter.slug}`}
-                  className={cn(
-                    "sq-card sq-pressable block p-4 hover:border-white/16",
-                    /*
-                      The current chapter is the only row allowed to shout. A
-                      done row recedes and a locked row is quieter still, so
-                      the eye lands on the one that is actually next without
-                      having to compare four dots.
-                    */
-                    state === "current" && "border-quest-500/40 bg-quest-500/8",
-                    state === "done" && "opacity-70",
-                    state === "locked" && "opacity-60",
-                  )}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-display text-base leading-tight font-bold text-chalk">
-                        {chapter.title}
-                      </p>
-                      <p className="mt-0.5 text-sm leading-snug text-muted">
-                        {chapter.shortDescription}
-                      </p>
-                    </div>
-                    {chapter.stationCode ? (
-                      <span className="shrink-0 rounded-lg bg-white/6 px-2 py-1 font-mono text-xs font-bold text-mist">
-                        {chapter.stationCode}
-                      </span>
-                    ) : null}
-                  </div>
-
-                  <div className="mt-2.5 flex items-center gap-3 text-xs font-semibold text-faint">
-                    <span>{chapter.estimatedMinutes} min</span>
-                    <span className={ACCENT_TEXT[chapter.accent]}>{chapter.xp} XP</span>
-                    {/* The state in words, so it never depends on the dot. */}
-                    <span
-                      className={cn(
-                        state === "done" && "text-volt-300",
-                        state === "current" && "text-quest-300",
-                      )}
-                    >
-                      {NODE_LABEL[state]}
-                    </span>
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
-
-          {/* Finale */}
-          <li className="relative pt-1">
-            <span
-              aria-hidden
-              className={cn(
-                "absolute top-6 -left-7 grid size-6 place-items-center rounded-full border-2 border-ink-900",
-                progress.finaleCompleted
-                  ? "bg-volt-500 text-ink-900"
-                  : finaleReady
-                    ? "bg-coral-500 text-ink-900"
-                    : "bg-ink-700",
-              )}
-            >
-              {progress.finaleCompleted ? (
-                <Check aria-hidden className="size-3.5" strokeWidth={3} />
-              ) : finaleReady ? (
-                <Flag aria-hidden className="size-3" />
-              ) : (
-                <Lock aria-hidden className="size-3 text-faint" />
-              )}
-            </span>
-
-            {finaleReady ? (
-              <Link
-                href={`/campaigns/${campaign.slug}/finale`}
-                className="sq-card sq-pressable block border-coral-500/40 bg-gradient-to-br from-coral-500/16 to-quest-500/10 p-5"
-              >
-                <p className="font-display text-lg font-extrabold text-chalk">
-                  {progress.finaleCompleted ? "Finale, replay" : "Finale"}
-                </p>
-                <p className="mt-0.5 text-sm text-mist">
-                  {progress.finaleCompleted
-                    ? "You have finished this Campaign."
-                    : "How it ends is one decision."}
-                </p>
-                <span className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-coral-300">
-                  <Zap aria-hidden className="size-3.5" />
-                  {campaign.finale.xp} XP
-                  {!allDone ? null : ` plus ${campaign.fullCompletionBonusXp} bonus`}
-                </span>
-              </Link>
-            ) : (
-              <div className="sq-card p-4 opacity-70">
-                <p className="font-display text-base font-bold text-chalk">Finale</p>
-                <p className="mt-0.5 text-sm text-muted">
-                  Opens after any {campaign.minimumChaptersForFinale} chapters.
-                </p>
-              </div>
-            )}
-          </li>
-        </ol>
-      </section>
 
       <StationCodeEntry campaign={campaign} />
 
