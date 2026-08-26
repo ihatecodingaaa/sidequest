@@ -219,11 +219,21 @@ export function Onboarding() {
           )}
         </div>
 
-        {step === 3 ? (
+        {/*
+          Everything after the age band is personalisation, and personalisation
+          should never stand between a first-time visitor and the product. The
+          skip used to appear on the last step only, which meant seeing SIDEQUEST
+          still cost four screens. From the interests step onward it is always
+          available, so the shortest honest path is welcome, age band, skip.
+
+          It is not on the age band step because that is the one answer the app
+          actually uses, and it already has a sensible default.
+        */}
+        {step >= 2 ? (
           <button
             type="button"
             onClick={() => {
-              setNeighbourhood(null);
+              if (step === 3) setNeighbourhood(null);
               finish();
             }}
             className="mx-auto mt-3 flex min-h-11 items-center gap-1.5 px-3 text-sm font-medium text-muted hover:text-chalk"

@@ -13,8 +13,8 @@ export default function OfflinePage() {
         <WifiOff aria-hidden className="mx-auto mt-6 size-8 text-faint" />
         <h1 className="mt-4 font-display text-2xl font-extrabold text-chalk">You are offline</h1>
         <p className="mt-2 text-sm text-mist">
-          Missions you have already opened still work. Anything that links out to an official
-          service needs a connection.
+          Your progress is saved on this device, so nothing is lost. Missions you have already
+          opened still work. Anything that links out to an official service needs a connection.
         </p>
         <ButtonLink href="/" className="mt-6" size="lg">
           Back to Home
