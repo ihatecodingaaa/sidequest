@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-import { readProfile, seedProfile, trackConsoleErrors } from "./helpers";
+import { playScene, readProfile, seedProfile, trackConsoleErrors } from "./helpers";
 
 /**
  * The signature experience upgrades.
@@ -26,13 +26,16 @@ async function playCrewShift(
   second: (seat: number) => RegExp,
 ) {
   await page.getByRole("button", { name: "Start chapter 4" }).click();
-  await page.getByRole("button", { name: "Continue" }).click();
+  // The situation is a played scene now, so press through it first.
+  await playScene(page);
 
   // Setup starts at three.
   for (let i = 3; i < count; i += 1) await page.getByRole("button", { name: "More players" }).click();
   for (let i = 3; i > count; i -= 1) await page.getByRole("button", { name: "Fewer players" }).click();
 
   await page.getByRole("button", { name: "Start" }).click();
+  // The situation plays out before the first private answer.
+  await playScene(page);
   await page.getByRole("button", { name: count > 1 ? "Pass to player 1" : "Your call" }).click();
 
   for (let seat = 1; seat <= count; seat += 1) {

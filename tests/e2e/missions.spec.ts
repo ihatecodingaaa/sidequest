@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { readProfile, seedProfile, trackConsoleErrors } from "./helpers";
+import { playScene, readProfile, seedProfile, trackConsoleErrors } from "./helpers";
 
 test.describe("information to action", () => {
   test("a Pulse story leads into its mission and back out to the source", async ({ page }) => {
@@ -48,6 +48,7 @@ test.describe("Quick Quest", () => {
     await page.goto("/play/mission-otp");
 
     await page.getByRole("button", { name: "Start" }).click();
+    await playScene(page);
     await page.getByRole("button", { name: /Hang up$/ }).click();
 
     await expect(page.getByText("Nothing happened, which was the point")).toBeVisible();
@@ -64,6 +65,7 @@ test.describe("Quick Quest", () => {
     // Replaying must not add XP again.
     await page.goto("/play/mission-otp");
     await page.getByRole("button", { name: "Start" }).click();
+    await playScene(page);
     await page.getByRole("button", { name: /Hang up$/ }).click();
     await page.getByRole("button", { name: "What this means" }).click();
     await page.getByRole("button", { name: "Finish mission" }).click();
@@ -96,10 +98,14 @@ test.describe("REWIND", () => {
     await page.goto("/play/mission-rewind");
 
     await page.getByRole("button", { name: "Start" }).click();
+    // Each scene plays out an idea at a time before its choices appear.
+    await playScene(page);
     await page.getByRole("button", { name: "Keep watching" }).click();
+    await playScene(page);
 
     // First run: say nothing, and see where that leads.
     await page.getByRole("button", { name: /Say nothing and look away/ }).click();
+    await playScene(page);
     await page.getByRole("button", { name: "Two weeks later" }).click();
     await expect(page.getByText("The gap between noticing and acting")).toBeVisible();
 
@@ -107,9 +113,11 @@ test.describe("REWIND", () => {
 
     // Second run starts at the pivot with the first choice locked out.
     await expect(page.getByText("Second run")).toBeVisible({ timeout: 10_000 });
+    await playScene(page);
     await expect(page.getByRole("button", { name: /Say nothing and look away/ })).toBeDisabled();
 
     await page.getByRole("button", { name: /say something only he can hear/ }).click();
+    await playScene(page);
     await page.getByRole("button", { name: "Leave it there" }).click();
     await expect(page.getByText("It cost him nothing to change his mind")).toBeVisible();
 

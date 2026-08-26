@@ -60,3 +60,36 @@ export function trackConsoleErrors(page: Page): string[] {
   page.on("pageerror", (error) => errors.push(error.message));
   return errors;
 }
+
+/**
+ * Plays a story scene out to its end.
+ *
+ * Narrative surfaces now reveal one idea at a time instead of printing the
+ * whole segment, so a walkthrough has to press through the scene before the
+ * choices exist. This presses the single advance control until it is gone,
+ * which is exactly what a player does, and it deliberately stops at anything
+ * that is not an advance control so a test can never tap past a decision.
+ */
+export async function playScene(page: Page, limit = 12): Promise<number> {
+  let taps = 0;
+  for (let i = 0; i < limit; i += 1) {
+    const next = page.getByRole("button", { name: /^(Tap to continue|Continue)$/ }).first();
+
+    /*
+     * `isVisible()` does not auto-wait, so calling it straight after a
+     * navigation reports false for a control that is about to exist and the
+     * whole scene gets skipped. Waiting briefly first is the difference
+     * between "no scene here" and "the scene has not rendered yet". The same
+     * trap cost a day on the bottom-bar geometry test.
+     */
+    const appeared = await next
+      .waitFor({ state: "visible", timeout: 2000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!appeared) return taps;
+
+    await next.click();
+    taps += 1;
+  }
+  return taps;
+}

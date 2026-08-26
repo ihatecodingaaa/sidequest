@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { readProfile, seedProfile, trackConsoleErrors } from "./helpers";
+import { playScene, readProfile, seedProfile, trackConsoleErrors } from "./helpers";
 
 const SLUG = "one-bad-minute";
 const CAMPAIGN_ID = "campaign-one-bad-minute";
@@ -22,13 +22,16 @@ async function readCampaign(page: Page) {
  */
 async function playCrewShiftSolo(page: Page) {
   await page.getByRole("button", { name: "Start chapter 4" }).click();
-  await page.getByRole("button", { name: "Continue" }).click();
+  // The situation is a played scene now, so press through it first.
+  await playScene(page);
 
   await page.getByRole("button", { name: "Fewer players" }).click();
   await page.getByRole("button", { name: "Fewer players" }).click();
   await expect(page.getByText("Solo. You can still play it through.")).toBeVisible();
 
   await page.getByRole("button", { name: "Start" }).click();
+  // The situation plays out before the first private answer.
+  await playScene(page);
   await page.getByRole("button", { name: "Your call" }).click();
 
   // Round one, before thinking about it.
@@ -47,7 +50,7 @@ async function playCrewShiftSolo(page: Page) {
 /** Norm Mirror, the quickest of the reused mechanics. */
 async function playNormMirror(page: Page) {
   await page.getByRole("button", { name: "Start chapter 2" }).click();
-  await page.getByRole("button", { name: "Continue" }).click();
+  await playScene(page);
   await page.getByRole("button", { name: "Start" }).click();
 
   for (let i = 0; i < 3; i += 1) {
@@ -118,8 +121,11 @@ test.describe("QR entry", () => {
     // Exactly what a printed QR resolves to.
     await page.goto(`${CAMPAIGN}/chapter/the-favour`);
 
-    await expect(page.getByText("Chapter unlocked")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Move away from the station" })).toBeVisible();
+    // The unlock screen was the heaviest reading load in the chapter, so it now
+    // says three things: it worked, what this is, and move away. The congestion
+    // instruction is a line rather than a boxed heading.
+    await expect(page.getByText("Chapter 1 unlocked")).toBeVisible();
+    await expect(page.getByText("Move away from the station, then play.")).toBeVisible();
     await expect(page.getByRole("heading", { name: "The favour" })).toBeVisible();
 
     // The scan is what unlocks it, before anything is played.
@@ -136,7 +142,7 @@ test.describe("QR entry", () => {
     const errors = trackConsoleErrors(page);
     await page.goto(`${CAMPAIGN}/chapter/crew-shift`);
 
-    await expect(page.getByText("Chapter unlocked")).toBeVisible();
+    await expect(page.getByText(/Chapter \d unlocked/)).toBeVisible();
     await expect(page.getByRole("button", { name: "Get started" })).toHaveCount(0);
     expect(errors).toEqual([]);
   });
@@ -144,10 +150,10 @@ test.describe("QR entry", () => {
   test("survives a refresh mid-chapter", async ({ page }) => {
     await seedProfile(page);
     await page.goto(`${CAMPAIGN}/chapter/design-the-moment`);
-    await expect(page.getByText("Chapter unlocked")).toBeVisible();
+    await expect(page.getByText(/Chapter \d unlocked/)).toBeVisible();
 
     await page.reload();
-    await expect(page.getByText("Chapter unlocked")).toBeVisible();
+    await expect(page.getByText(/Chapter \d unlocked/)).toBeVisible();
     expect((await readCampaign(page))?.unlockedChapterIds).toContain("obm-c3");
   });
 
@@ -155,7 +161,7 @@ test.describe("QR entry", () => {
     await seedProfile(page);
     for (const slug of ["the-favour", "everyone-would", "design-the-moment", "crew-shift"]) {
       await page.goto(`${CAMPAIGN}/chapter/${slug}`);
-      await expect(page.getByText("Chapter unlocked"), slug).toBeVisible();
+      await expect(page.getByText(/Chapter \d unlocked/), slug).toBeVisible();
     }
   });
 });
@@ -175,7 +181,7 @@ test.describe("station codes", () => {
     await page.getByRole("button", { name: "Unlock chapter" }).click();
 
     await expect(page).toHaveURL(/design-the-moment$/);
-    await expect(page.getByText("Chapter unlocked")).toBeVisible();
+    await expect(page.getByText(/Chapter \d unlocked/)).toBeVisible();
   });
 });
 
@@ -186,11 +192,12 @@ test.describe("Crew Shift", () => {
     await page.goto(`${CAMPAIGN}/chapter/crew-shift`);
 
     await page.getByRole("button", { name: "Start chapter 4" }).click();
-    await page.getByRole("button", { name: "Continue" }).click();
+    await playScene(page);
 
     // Three players.
     await expect(page.getByText("3 players")).toBeVisible();
     await page.getByRole("button", { name: "Start" }).click();
+    await playScene(page);
     await page.getByRole("button", { name: "Pass to player 1" }).click();
 
     for (let player = 1; player <= 3; player += 1) {
@@ -322,6 +329,7 @@ test.describe("finale and follow-ups", () => {
     await expect(page.getByText("The finale is open.")).toBeVisible();
 
     await page.getByRole("link", { name: /^Finale/ }).click();
+    await playScene(page);
     await page.getByRole("button", { name: "Answer him" }).click();
     await page.getByRole("button", { name: /Call 1799 and the bank tonight/ }).click();
 
@@ -369,6 +377,7 @@ test.describe("finale and follow-ups", () => {
     });
 
     await page.goto(`${CAMPAIGN}/finale`);
+    await playScene(page);
     await page.getByRole("button", { name: "Answer him" }).click();
     await page.getByRole("button", { name: /Tell someone at home/ }).click();
     await expect(page.getByText(/You played all four stations/)).toBeVisible();
@@ -384,6 +393,7 @@ test.describe("finale and follow-ups", () => {
     await seedThreeChapters(page);
 
     await page.goto(`${CAMPAIGN}/finale`);
+    await playScene(page);
     await page.getByRole("button", { name: "Answer him" }).click();
     await page.getByRole("button", { name: /Call 1799/ }).click();
     await page.getByRole("button", { name: "Finish the Campaign" }).click();
@@ -404,7 +414,7 @@ test.describe("finale and follow-ups", () => {
     const xpBefore = (await readProfile(page)).xp as number;
 
     await page.getByRole("link", { name: /Aftermath/ }).click();
-    await page.getByRole("button", { name: "Continue" }).click();
+    await playScene(page);
     await page.getByRole("button", { name: /Next time say the quiet thing/ }).click();
     await page.getByRole("button", { name: "Finish" }).click();
 
@@ -414,7 +424,7 @@ test.describe("finale and follow-ups", () => {
 
     // And it pays once.
     await page.goto(`${CAMPAIGN}/follow-up/aftermath`);
-    await page.getByRole("button", { name: "Continue" }).click();
+    await playScene(page);
     await page.getByRole("button", { name: /Ask him what he would say/ }).click();
     await page.getByRole("button", { name: "Finish" }).click();
     await expect(page.getByText("Already counted.")).toBeVisible();
@@ -426,6 +436,7 @@ test.describe("finale and follow-ups", () => {
   test("the weekly follow-up needs a week, not a day", async ({ page }) => {
     await seedThreeChapters(page);
     await page.goto(`${CAMPAIGN}/finale`);
+    await playScene(page);
     await page.getByRole("button", { name: "Answer him" }).click();
     await page.getByRole("button", { name: /Call 1799/ }).click();
     await page.getByRole("button", { name: "Finish the Campaign" }).click();

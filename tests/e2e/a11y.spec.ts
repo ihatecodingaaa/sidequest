@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-import { seedProfile } from "./helpers";
+import { playScene, seedProfile } from "./helpers";
 
 /**
  * Accessibility coverage.
@@ -166,6 +166,9 @@ test.describe("accessibility", () => {
     await page.goto("/play/mission-otp");
 
     await page.getByRole("button", { name: "Start" }).click();
+    // Scenes are player-paced now, and this asserts nothing is *hidden* by
+    // reduced motion: the beats still advance and the XP still shows.
+    await playScene(page);
     await page.getByRole("button", { name: /Hang up$/ }).click();
     await page.getByRole("button", { name: "What this means" }).click();
     await page.getByRole("button", { name: "Finish mission" }).click();
