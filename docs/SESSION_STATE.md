@@ -4,7 +4,7 @@ Kept current so another session can pick this up cold. Update after every major
 stage.
 
 **Last updated:** 26 August 2026
-**Status:** Signature experience pass complete and verified. Feature complete overall.
+**Status:** Game feel pass complete and verified. Feature complete overall.
 **Repository:** https://github.com/ihatecodingaaa/sidequest
 **Deployment:** not yet deployed to Vercel. CLI installed, not authenticated.
 
@@ -102,18 +102,56 @@ no backend. Research in `docs/SIGNATURE_EXPERIENCE_RESEARCH.md`.
 | Offline copy | Says progress is saved on this device, which is true because there is no backend. |
 | Flaky test fixed | The bottom-bar geometry test read tab positions with `evaluateAll`, which does not auto-wait, so it flaked about six runs in seven. It predates this pass and was found by verifying each commit separately rather than only the tip. |
 
+## Game feel pass
+
+Ran after the signature experience pass, and unlike the two before it this one
+started from **user feedback rather than an audit**: real testers said it was
+too wordy, visually flat, and hard to navigate inside the Campaign. Research in
+`docs/GAME_FEEL_RESEARCH.md`, screen-by-screen findings in
+`docs/FOCAL_POINT_AUDIT.md`, the visual system in
+`docs/VISUAL_ART_DIRECTION.md`.
+
+| Change | Effect |
+| ------ | ------ |
+| `StoryBeat` | Every narrative surface reveals one idea at a time at the player's pace instead of printing the whole scene. Choices do not appear until the scene ends. Keyboard, screen reader and reduced motion all supported. |
+| Character portraits | Original stylised SVG, six expressions, speaker always named in text. Never realistic, and expression never carries an idea alone. |
+| Campaign navigation | The next chapter is lifted out of the list into the largest control on the screen, named. Node states use shape, icon, label and position, not colour alone. |
+| Chapter entry rebuilt | Was the heaviest reading load in the whole chapter at 45 words. Now three things: it worked, what this is, move away from the station. |
+| Mission marks | One original abstract SVG per signature mission, doing the job of recognition before reading. |
+| Echo collection | Five cosmetic variants, each unlocked deterministically by something actually done, selectable and persisted. No randomness, currency or scarcity. |
+| Debriefs | The behavioural mechanism moved behind a "Why this works" disclosure. Plain language stays in the play surface. |
+| Text audit tooling | `npm run audit:text` and `npm run audit:taps`, so the next person measures instead of guessing. |
+
+Measured, with `scripts/tap-audit.mjs`:
+
+| Journey | Taps before | after | Worst reading step before | after |
+| ------- | ----------: | ----: | ------------------------: | ----: |
+| ONE BAD MINUTE ch1 | 4 | 8 | 45w | 26w |
+| REWIND | 2 | 7 | 44w | 36w |
+| Crew Shift | 4 | 9 | 46w | 29w |
+
+Taps roughly doubled on purpose: more presses, far less to read per press.
+Story beats now deliver 12 to 18 words each. An early version reached 13 taps
+for chapter 1 by giving every sentence a beat, which is tap fatigue; merging
+tightly coupled lines and cutting one duplicated screen brought it back to 8.
+
+Deferred deliberately, with reasons in the research doc: background music (no
+lyrics is settled by the evidence, instrumental was a scope call), interface
+sound effects, and the four Digital Street Smarts missions (P2, gated behind
+this pass being complete).
+
 ## Verification
 
 Baseline before this stage, then after.
 
-| Check | Start | After Campaigns | After UX pass | After signature pass |
-| ----- | ----- | --------------- | ------------- | -------------------- |
-| `npm run lint` | clean | clean | clean | clean |
-| `npm run typecheck` | clean | clean | clean | clean |
-| `npm run test` | 65 | 129 | 129 | **143** |
-| `npx playwright test` | 79 (+1) | 135 (+1) | 149 (+7) | **175 (+7)** |
-| `npm run build` | passes | passes | passes | passes |
-| client JS | ~1.3 MB | ~1.6 MB | 1559 KB | **1574 KB** |
+| Check | Start | Campaigns | UX pass | Signature pass | Game feel pass |
+| ----- | ----- | --------- | ------- | -------------- | -------------- |
+| `npm run lint` | clean | clean | clean | clean | clean |
+| `npm run typecheck` | clean | clean | clean | clean | clean |
+| `npm run test` | 65 | 129 | 129 | 143 | **143** |
+| `npx playwright test` | 79 (+1) | 135 (+1) | 149 (+7) | 177 (+7) | **207 (+7)** |
+| `npm run build` | passes | passes | passes | passes | passes |
+| client JS | ~1.3 MB | ~1.6 MB | 1559 KB | 1574 KB | **1611 KB** |
 
 The seven skips are the new bottom-bar geometry tests, which are phone-only by
 design and skip on the desktop project. Six existing assertions were updated
@@ -139,10 +177,11 @@ Accessibility: axe at WCAG AA across 17 routes including five Campaign routes,
 plus accessible names, touch target sizes, skip link and reduced motion. All
 pass.
 
-Bundle: 1574 KB of JavaScript across 34 chunks, uncompressed, for the whole
-product, up 15 KB across the signature experience pass. No dependency was
-added: the increase is the reveal components, the protective factor data and
-the install hook. Measure it with:
+Bundle: 1611 KB of JavaScript across 34 chunks, uncompressed, for the whole
+product, up 37 KB across the game feel pass and 52 KB across the two passes
+together. No dependency has been added in either: the increase is components
+and inline SVG. Every visual in the product is drawn in code, so there is no
+image payload at all and nothing new to fetch at a roadshow. Measure it with:
 
     find .next/static/chunks -name '*.js' -printf '%s
 ' | awk '{s+=$1} END {print s/1024" KB"}'

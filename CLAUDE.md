@@ -99,6 +99,32 @@ work fully with location denied.
 - "Your crew held its position" is a result, not a failure. No confetti, no
   winner, no correct option.
 
+## Story and visuals
+
+- Narrative is player-paced. Use `StoryBeat`; never print a whole scene at
+  once. The unit is **one idea**, not one sentence: two short sentences that
+  form a single thought belong in one beat, and splitting a thought across two
+  taps reintroduces the split attention segmenting exists to remove.
+- Choices do not exist until the scene has finished. Nobody is asked a question
+  they have not read to the end of.
+- Exactly one advance control per screen. Two ways forward means one of them
+  silently skips the story.
+- **No visual without a job.** The valid jobs are enumerated in
+  `docs/VISUAL_ART_DIRECTION.md`. "Make it look fun" is not one.
+- All artwork is original SVG drawn in code. No stock, no third-party character
+  art, no AI imagery. If that ever changes, record source and licence in
+  `docs/ASSET_LICENSES.md` first.
+- Character portraits are stylised, never realistic, and expression never
+  carries an idea the words do not also state. Nothing may imply that
+  appearance predicts who offends.
+- Behavioural vocabulary stays out of the play surface. Plain language on
+  screen, mechanism behind "Why this works", jargon in the docs.
+- Node and status states use shape, icon, label and position, never colour
+  alone.
+- Echo cosmetics are deterministic, legible before they are earned, free, and
+  purely cosmetic. No randomness, no scarcity, no purchase, no expiry.
+- Safe gets none of this: no Echo, no collection, no marks, no sound, no motion.
+
 ## Track B alignment
 
 The submission is Delta Challenge Track B, **Crime Prevention**, not scam
