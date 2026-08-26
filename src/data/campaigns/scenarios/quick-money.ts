@@ -107,6 +107,7 @@ export const QUICK_MONEY_SCENARIO: Scenario = {
           "A question is much harder to push back on than a warning.",
           "Move the burden to whoever is asking. They usually cannot explain it out loud.",
         ],
+        protectiveFactorIds: ["norm-corrected", "face-saving-exit"],
       },
     },
 
@@ -126,6 +127,7 @@ export const QUICK_MONEY_SCENARIO: Scenario = {
           "People decide differently when nobody is watching them decide.",
           "Changing the setting is often the cheapest intervention available to you.",
         ],
+        protectiveFactorIds: ["private-challenge", "delay-inserted"],
       },
     },
 
@@ -146,6 +148,7 @@ export const QUICK_MONEY_SCENARIO: Scenario = {
           "Being correct and being effective are different problems.",
           "There is almost always a quieter version of the same sentence.",
         ],
+        protectiveFactorIds: ["norm-corrected"],
       },
     },
 

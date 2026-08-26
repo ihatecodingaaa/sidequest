@@ -7,6 +7,7 @@ import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/primitives";
 import { MissionShell } from "@/features/missions/engine/mission-shell";
+import { ShiftReveal } from "@/components/reveal/shift-reveal";
 import {
   useMissionHost,
   type MissionHost,
@@ -324,20 +325,14 @@ export function BreaksafePlayer({
         }
       >
         <div className="animate-rise">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <p className="mb-2 text-center text-xs font-semibold uppercase tracking-[0.12em] text-faint">
-                Before
-              </p>
-              <CheckoutMock variant="before" />
-            </div>
-            <div>
-              <p className="mb-2 text-center text-xs font-semibold uppercase tracking-[0.12em] text-volt-300">
-                After
-              </p>
-              <CheckoutMock variant="after" patches={patches} />
-            </div>
-          </div>
+          <ShiftReveal
+            layout="side-by-side"
+            accent="volt"
+            beforeLabel="Before"
+            afterLabel="After"
+            before={<CheckoutMock variant="before" />}
+            after={<CheckoutMock variant="after" patches={patches} />}
+          />
 
           <div className="animate-pop mt-7 rounded-3xl border border-quest-500/30 bg-quest-500/8 p-5 text-center">
             <p className="font-display text-xl leading-[1.15] font-extrabold tracking-tight text-chalk">

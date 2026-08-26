@@ -7,6 +7,7 @@ import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/primitives";
 import { MissionShell } from "@/features/missions/engine/mission-shell";
+import { ShiftReveal } from "@/components/reveal/shift-reveal";
 import {
   useMissionHost,
   type MissionHost,
@@ -219,8 +220,13 @@ export function NormMirrorPlayer({
   if (step === "reveal") {
     const answer = answers.find((entry) => entry.questionId === question.id);
     const guess = answer?.prediction ?? prediction;
-    const actual = question.demoAggregate;
-    const gap = guess - actual;
+    /*
+     * Never call this "actual". It is an invented number standing in for a
+     * study nobody has run, and a variable name is exactly how that slips into
+     * a template and out onto the screen.
+     */
+    const aggregate = question.demoAggregate;
+    const gap = guess - aggregate;
 
     return (
       <MissionShell
@@ -240,18 +246,23 @@ export function NormMirrorPlayer({
             {question.behaviour}
           </p>
 
-          <div className="mt-6 space-y-5">
-            <Bar label="You guessed" value={guess} accent="quest" />
-            <Bar label="Demo aggregate" value={actual} accent="volt" tagged />
-          </div>
+          <ShiftReveal
+            className="mt-6"
+            accent="volt"
+            beforeLabel="You predicted"
+            afterLabel="Prototype aggregate"
+            connector={<Users aria-hidden className="size-4" />}
+            before={<Bar value={guess} accent="quest" />}
+            after={<Bar value={aggregate} accent="volt" tagged />}
+          />
 
           <div className="sq-card mt-7 p-4">
             <p className="font-display text-lg leading-tight font-bold text-chalk">
               {gap >= 12
-                ? `You expected about ${Math.round(gap)} points more than the aggregate.`
+                ? `You thought this was about ${Math.round(gap)} points more common than the prototype figure.`
                 : gap <= -12
-                  ? `You expected about ${Math.abs(Math.round(gap))} points fewer than the aggregate.`
-                  : "Your guess was close to the aggregate."}
+                  ? `You thought this was about ${Math.abs(Math.round(gap))} points less common than the prototype figure.`
+                  : "Your guess landed close to the prototype figure."}
             </p>
             <p className="mt-2.5 text-sm leading-relaxed text-mist">{question.insight}</p>
           </div>
@@ -369,22 +380,25 @@ function QuestionHeader({
   );
 }
 
+/**
+ * One bar of the prediction comparison. The state label is `ShiftReveal`'s job.
+ * The prototype tag is not: it stays welded to the bar it describes, because
+ * that is the surface making the claim and a footnote further down the page is
+ * easy to read past.
+ */
 function Bar({
-  label,
   value,
   accent,
   tagged,
 }: {
-  label: string;
   value: number;
   accent: "quest" | "volt";
   tagged?: boolean;
 }) {
   return (
     <div>
-      <div className="mb-1.5 flex items-baseline justify-between">
+      <div className="mb-1.5 flex items-baseline justify-between gap-3">
         <span className="flex items-center gap-2 text-sm font-semibold text-mist">
-          {label}
           {tagged ? (
             <span className="rounded-full border border-gold-500/30 bg-gold-500/12 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-gold-400">
               Prototype data

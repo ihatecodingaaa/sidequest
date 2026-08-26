@@ -1,4 +1,5 @@
 import type { SkillAward } from "./core";
+import type { ProtectiveFactorId } from "./protective";
 
 /** Data-driven branching engine shared by quick quests and REWIND. */
 
@@ -32,6 +33,12 @@ export interface ScenarioOutcome {
   body: string;
   /** What actually made the difference. Behavioural, not moralising. */
   takeaways: string[];
+  /**
+   * Which shared protective factors this ending turned on. Resolved from the
+   * path the player took, so the debrief describes the story rather than
+   * grading the player. See `src/data/protective-factors.ts`.
+   */
+  protectiveFactorIds?: ProtectiveFactorId[];
 }
 
 export interface Scenario {

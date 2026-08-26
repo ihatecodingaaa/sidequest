@@ -120,6 +120,12 @@ test.describe("REWIND", () => {
     await expect(page.getByText("First run")).toBeVisible();
     await expect(page.getByText("After the rewind")).toBeVisible();
 
+    // The debrief names what the ending turned on, in plain language, and
+    // never in the behavioural vocabulary the factor is drawn from.
+    await expect(page.getByRole("heading", { name: "What changed the outcome?" })).toBeVisible();
+    await expect(page.getByText("Someone raised it privately")).toBeVisible();
+    await expect(page.getByText(/audience effects/i)).toHaveCount(0);
+
     await page.getByRole("button", { name: "What this trains" }).click();
     await page.getByRole("button", { name: "Finish mission" }).click();
 
@@ -146,8 +152,12 @@ test.describe("Norm Mirror", () => {
 
       await page.getByRole("button", { name: /I'd|I wouldn't/ }).first().click();
 
-      // The aggregate must always be visibly labelled as prototype data.
-      await expect(page.getByText("Demo aggregate")).toBeVisible();
+      // The comparison now uses the shared reveal grammar, so the two states
+      // are labelled by ShiftReveal rather than by the bars themselves. What
+      // must not move is the prototype tag: it stays welded to the aggregate
+      // bar, because that is the surface making the claim.
+      await expect(page.getByText("You predicted")).toBeVisible();
+      await expect(page.getByText("Prototype aggregate")).toBeVisible();
       await expect(page.getByText("Prototype data", { exact: true })).toBeVisible();
       await expect(page.getByText(/illustrative placeholders/i).first()).toBeVisible();
 
@@ -188,6 +198,11 @@ test.describe("BREAKSAFE", () => {
     await page.getByRole("button", { name: /No-fault rescan/ }).click();
 
     await page.getByRole("button", { name: "Rebuild the terminal" }).click();
+
+    // Same reveal grammar as REWIND, Norm Mirror and Crew Shift: two labelled
+    // states, both on screen, side by side because this content is spatial.
+    await expect(page.getByText("Before", { exact: true })).toBeVisible();
+    await expect(page.getByText("After", { exact: true })).toBeVisible();
 
     await expect(
       page.getByText("SAME PERSON. SAME PRODUCT. DIFFERENT ENVIRONMENT."),

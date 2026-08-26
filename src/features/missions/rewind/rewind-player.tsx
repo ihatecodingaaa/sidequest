@@ -7,6 +7,8 @@ import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/primitives";
 import { MissionShell } from "@/features/missions/engine/mission-shell";
+import { ShiftReveal } from "@/components/reveal/shift-reveal";
+import { WhatChanged } from "@/components/reveal/what-changed";
 import {
   useMissionHost,
   type MissionHost,
@@ -286,29 +288,24 @@ export function RewindPlayer({
             Same night. Same people. One different sentence.
           </h1>
 
-          <div className="mt-6 space-y-3">
-            <ComparisonRow
-              label="First run"
-              choice={firstPivotChoice?.label ?? ""}
-              outcome={firstOutcome}
-            />
-            <div className="flex items-center gap-3 px-1">
-              <span className="h-px flex-1 bg-white/10" />
-              <RotateCcw aria-hidden className="size-4 text-coral-300" />
-              <span className="h-px flex-1 bg-white/10" />
-            </div>
-            <ComparisonRow
-              label="After the rewind"
-              choice={secondPivotChoice?.label ?? ""}
-              outcome={second}
-              highlight
-            />
-          </div>
+          <ShiftReveal
+            className="mt-6"
+            accent="volt"
+            beforeLabel="First run"
+            afterLabel="After the rewind"
+            connector={<RotateCcw aria-hidden className="size-4" />}
+            before={<ComparisonRow choice={firstPivotChoice?.label ?? ""} outcome={firstOutcome} />}
+            after={
+              <ComparisonRow
+                choice={secondPivotChoice?.label ?? ""}
+                outcome={second}
+                highlight
+              />
+            }
+            summary="The gap between those two outcomes is about one second of real time. That is the whole argument for rehearsing it before it happens."
+          />
 
-          <p className="mt-6 text-sm leading-relaxed text-mist">
-            The gap between those two outcomes is about one second of real time. That is the whole
-            argument for rehearsing it before it happens.
-          </p>
+          <WhatChanged factorIds={second.protectiveFactorIds} />
         </div>
       </MissionShell>
     );
@@ -403,13 +400,16 @@ export function RewindPlayer({
   );
 }
 
+/**
+ * One side of the REWIND comparison. The state label belongs to `ShiftReveal`,
+ * which is what keeps this reveal reading like Norm Mirror's and Crew Shift's
+ * rather than like its own private layout.
+ */
 function ComparisonRow({
-  label,
   choice,
   outcome,
   highlight,
 }: {
-  label: string;
   choice: string;
   outcome: ScenarioOutcome;
   highlight?: boolean;
@@ -428,8 +428,7 @@ function ComparisonRow({
         highlight ? "border-volt-500/30 bg-volt-500/8" : "border-white/10 bg-white/4",
       )}
     >
-      <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-faint">{label}</p>
-      {choice ? <p className="mt-1.5 text-sm font-medium text-mist">{choice}</p> : null}
+      {choice ? <p className="text-sm font-medium text-mist">{choice}</p> : null}
       <p className={cn("mt-2.5 font-display text-base leading-snug font-bold", tone)}>
         {outcome.headline}
       </p>

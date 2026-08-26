@@ -122,6 +122,7 @@ export const REWIND_SCENARIO: Scenario = {
           "You did not have to be right out loud. You only had to make the other option available.",
           "One second of intervention beat a much longer conversation later.",
         ],
+        protectiveFactorIds: ["private-challenge", "face-saving-exit"],
       },
     },
     {
@@ -140,6 +141,7 @@ export const REWIND_SCENARIO: Scenario = {
           "Interventions spread. The person you help is the most likely next person to do it.",
           "Keeping it light was the reason it worked. Weight would have ended the conversation.",
         ],
+        protectiveFactorIds: ["norm-corrected", "face-saving-exit"],
       },
     },
 
@@ -160,6 +162,7 @@ export const REWIND_SCENARIO: Scenario = {
           "Nobody had to be corrected, so nobody had to push back.",
           "This is the same principle BREAKSAFE uses on a system: make the safe action the easy one.",
         ],
+        protectiveFactorIds: ["environment-changed", "delay-inserted"],
       },
     },
 
@@ -203,6 +206,7 @@ export const REWIND_SCENARIO: Scenario = {
           "Being right is not the same as being effective.",
           "Backing off and moving the group was the recovery. It was still available.",
         ],
+        protectiveFactorIds: ["norm-corrected"],
       },
     },
     {
