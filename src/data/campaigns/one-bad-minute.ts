@@ -24,7 +24,7 @@ export const ONE_BAD_MINUTE: Campaign = {
   title: "ONE BAD MINUTE",
   subtitle: "Four friends, one ordinary day",
   description:
-    "A friend gets offered easy money. Nobody plans anything. Over one day, four small decisions decide how it ends. You are not solving anything. You are learning to see the moments where it can still change direction.",
+    "One friend asks another for a favour. Nobody plans anything. Over one day, four small decisions decide how it ends. You are not solving anything. You are learning to see the moments where it can still change direction.",
   premise: "Small decisions change the direction of a situation.",
   status: "available",
   ageBands: ["13-15", "16-18", "19-25"],
@@ -64,19 +64,19 @@ export const ONE_BAD_MINUTE: Campaign = {
     {
       id: "obm-c1",
       campaignId: "campaign-one-bad-minute",
-      slug: "quick-money",
+      slug: "the-favour",
       chapterNumber: 1,
       chapterType: "station",
-      title: "Quick money",
-      shortDescription: "Ilyas gets an offer that sounds like income.",
+      title: "The favour",
+      shortDescription: "Ken asks Ilyas for a favour, in front of everyone.",
       config: { mechanic: "rewind", scenarioId: "campaign-quick-money" },
       accent: "coral",
-      brief: "Play the forty seconds before he agrees. Then take them back.",
+      brief: "Play the forty seconds before he says yes. Then take them back.",
       intro: {
         slug: "Thursday, 4:12pm",
         lines: [
           "Four of you. A void deck near the interchange. Nothing happening.",
-          "Ilyas has been quiet since lunch, and now he is smiling at his phone.",
+          "Ken has been building up to asking something for about ten minutes.",
         ],
       },
       outro: {
@@ -85,7 +85,8 @@ export const ONE_BAD_MINUTE: Campaign = {
           "That is the thing about these moments. They do not announce themselves.",
         ],
       },
-      behaviouralMechanism: "Decision rehearsal and implementation intentions, plus peer intervention.",
+      behaviouralMechanism:
+        "Decision rehearsal and implementation intentions, plus peer intervention. The ask comes from inside the group, which is where it comes from in reality.",
       behaviouralObjective:
         "Practise a low-conflict intervention while the situation is still easy to reverse.",
       xp: 70,

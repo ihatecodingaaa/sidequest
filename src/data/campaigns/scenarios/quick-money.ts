@@ -3,22 +3,29 @@ import type { Scenario } from "@/types/scenario";
 /**
  * ONE BAD MINUTE, chapter 1. Runs on the existing REWIND mechanic.
  *
- * Deliberately shorter than the standalone REWIND: this one is played at a
- * roadshow, standing up, with friends waiting. Setup, pivot, outcome, rewind.
+ * Track B alignment note. This chapter used to open with an outside recruiter
+ * messaging Ilyas with a job offer, which framed him as a scam victim. The
+ * challenge is youth crime prevention through peer-driven approaches, and the
+ * behavioural drivers it names are peer pressure, impulsive decision-making,
+ * desire for social acceptance and limited understanding of consequences.
  *
- * Content note: the scenario describes a request and a decision. It contains
- * no operational detail about how account misuse works, because that is not
- * the thing being rehearsed. What is being rehearsed is the sentence you say
- * in the four seconds before your friend agrees.
+ * So the ask now comes from Ken, standing right there, as a favour between
+ * friends. Nothing external pressures Ilyas: his friend does, in front of the
+ * group, and the thing being asked for is his identity. That is the same
+ * offence pathway with the actual youth mechanism restored.
+ *
+ * It contains no operational detail about how account misuse works, because
+ * that is not what is being rehearsed. What is being rehearsed is the sentence
+ * you say in the forty seconds before your friend agrees.
  */
 
 export const QUICK_MONEY_SCENARIO: Scenario = {
   id: "campaign-quick-money",
   intro: {
     kicker: "Chapter 1",
-    title: "Quick money",
+    title: "The favour",
     setup:
-      "Thursday, 4:12pm. Void deck near the interchange. Ilyas has been quiet since lunch, and now he is smiling at his phone.",
+      "Thursday, 4:12pm. Void deck near the interchange. Ken has been building up to asking something for about ten minutes.",
   },
   startBeatId: "offer",
   beats: [
@@ -26,9 +33,9 @@ export const QUICK_MONEY_SCENARIO: Scenario = {
       id: "offer",
       slug: "4:12pm",
       lines: [
-        "Ilyas turns his phone round so you can see it.",
-        "Three hundred dollars. Today. All he has to do is let someone use his bank account for one transfer.",
-        "He says the guy is a friend of his cousin.",
+        "Ken finally says it. He needs an account that is not his, just for a week.",
+        "Something about reselling, and his own account being a problem, and it being completely fine.",
+        "He is looking at Ilyas when he says it.",
       ],
       choices: [{ id: "on", label: "Keep listening", next: "pivot", tone: "neutral" }],
     },
@@ -37,23 +44,23 @@ export const QUICK_MONEY_SCENARIO: Scenario = {
       slug: "4:13pm",
       isPivot: true,
       lines: [
-        "Ilyas: my account is just sitting there anyway.",
-        "Ken: bro three hundred. Take it.",
-        "He starts typing his details into the chat. It will take him about forty seconds.",
+        "Ken: bro it is literally nothing. I will give you a cut.",
+        "Jas laughs and says Ilyas is scared. Ilyas says he is not scared.",
+        "He starts typing his details into Ken's phone. It will take him about forty seconds.",
         "He glances up at you.",
       ],
       choices: [
         {
           id: "check",
-          label: "Ask him to send you the number first, so you can check it",
-          reaction: "You say it flatly, like a favour rather than a warning.",
+          label: "Ask Ken, out loud, what the money actually is",
+          reaction: "You keep it flat, like curiosity rather than an accusation.",
           next: "check-1",
           tone: "safe",
           isPreferred: true,
         },
         {
           id: "pull",
-          label: "Say you need him for something and walk him away from the group",
+          label: "Say you need Ilyas for something and walk him away",
           reaction: "You stand up. He follows without thinking about it.",
           next: "pull-1",
           tone: "safe",
@@ -61,14 +68,14 @@ export const QUICK_MONEY_SCENARIO: Scenario = {
         },
         {
           id: "callout",
-          label: "Say out loud that it is a mule scam",
-          reaction: "Ken snorts. Ilyas's jaw sets.",
+          label: "Tell Ilyas he is being used",
+          reaction: "It lands louder than you meant. Ken's face changes. So does Ilyas's.",
           next: "callout-1",
           tone: "neutral",
         },
         {
           id: "joke",
-          label: "Laugh and tell him to split it with you",
+          label: "Laugh and ask for a cut too",
           reaction: "Everyone laughs. He keeps typing.",
           next: "sent",
           tone: "risky",
@@ -87,18 +94,18 @@ export const QUICK_MONEY_SCENARIO: Scenario = {
       id: "check-1",
       slug: "4:14pm",
       lines: [
-        "He sends you the number. You type it into ScamShield while he watches.",
-        "It comes back flagged.",
-        "He does not say much. He also stops typing.",
+        "Ken says it is complicated. Then he says it is not his business to explain. Then he changes the subject.",
+        "Nobody says anything for a second, which is long enough.",
+        "Ilyas stops typing and hands the phone back.",
       ],
       outcome: {
         kind: "good",
-        headline: "You gave him a reason, not a lecture",
+        headline: "You made Ken answer instead of making Ilyas refuse",
         body:
-          "Checking a number is a two-tap action that costs Ilyas nothing socially. He did not have to admit he was wrong in front of Ken, and he still got to make the decision himself.",
+          "The pressure was on the wrong person. One question moved it onto the person who was actually asking, and he could not answer it in front of everyone. Ilyas never had to say no.",
         takeaways: [
-          "Verifying is a task, not an accusation. It is much easier to accept.",
-          "The answer came from a tool, not from you, so there was nothing to argue with.",
+          "A question is much harder to push back on than a warning.",
+          "Move the burden to whoever is asking. They usually cannot explain it out loud.",
         ],
       },
     },
@@ -107,17 +114,17 @@ export const QUICK_MONEY_SCENARIO: Scenario = {
       id: "pull-1",
       slug: "4:14pm",
       lines: [
-        "Twenty metres away, with nobody watching, he says it out loud himself: it is a bit weird, right.",
-        "By the time you walk back he has stopped replying to the chat.",
+        "Twenty metres away, with nobody watching, he says it himself: it is a bit weird, right.",
+        "By the time you walk back, he has changed his mind and nobody makes him explain why.",
       ],
       outcome: {
         kind: "good",
         headline: "You removed the audience",
         body:
-          "Nothing you said changed his mind. Taking away the three hundred dollars of peer approval standing next to him did.",
+          "Nothing you said changed his mind. Taking away the three people watching him decide did. He was never really choosing about an account, he was choosing about not looking scared.",
         takeaways: [
           "People decide differently when nobody is watching them decide.",
-          "Changing the setting is often the lowest cost intervention available to you.",
+          "Changing the setting is often the cheapest intervention available to you.",
         ],
       },
     },
@@ -126,15 +133,15 @@ export const QUICK_MONEY_SCENARIO: Scenario = {
       id: "callout-1",
       slug: "4:14pm",
       lines: [
-        "Ilyas: you think I am stupid?",
-        "Ken: relax lah, so serious.",
+        "Ilyas: I am not being used. Relax.",
+        "Ken: yeah, relax.",
         "Now backing out means agreeing with you in front of everyone. He finishes typing.",
       ],
       outcome: {
         kind: "mixed",
         headline: "You were right, and it made it harder",
         body:
-          "The moment it became public, Ilyas stopped choosing between safe and unsafe and started choosing between backing down and holding his ground. You picked the fight he could not lose gracefully.",
+          "The moment it became public, Ilyas stopped choosing between safe and unsafe and started choosing between backing down and holding his ground. You picked the argument he could not lose gracefully.",
         takeaways: [
           "Being correct and being effective are different problems.",
           "There is almost always a quieter version of the same sentence.",
@@ -146,18 +153,19 @@ export const QUICK_MONEY_SCENARIO: Scenario = {
       id: "sent",
       slug: "Eleven days later",
       lines: [
-        "The three hundred arrived. So did two more offers.",
+        "The cut arrived. Forty dollars, which felt like proof it was fine.",
         "Then the account froze, and there is a letter, and Ilyas's mother is asking you what happened because he will not say.",
+        "Ken has stopped replying to the group chat.",
       ],
       outcome: {
         kind: "poor",
         headline: "It was his account, so it is his name",
         body:
-          "Money that passes through an account leads back to whoever owns it. Not knowing where it came from does not undo the trail, and in Singapore that is taken seriously even when somebody genuinely did not know.",
+          "Money that moves through an account leads back to whoever owns it. Not knowing what it was does not undo the trail, and in Singapore that is taken seriously even when somebody genuinely did not know. Ken is not the one being asked to explain it.",
         takeaways: [
-          "No real arrangement needs your bank account to move somebody else's money.",
-          "The offer looked like income. It was rented liability.",
-          "If it has already happened, call 1799 and the bank straight away. Early makes a difference.",
+          "Lending your identity is not a favour, it is a transfer of blame.",
+          "The person asking is never the person it lands on.",
+          "If it has already happened, tell someone and call the bank early. Early makes a difference.",
         ],
       },
     },
@@ -165,10 +173,10 @@ export const QUICK_MONEY_SCENARIO: Scenario = {
   debrief: {
     title: "The forty seconds",
     mechanism:
-      "Decision rehearsal. The whole chapter lives inside the time it took Ilyas to type his details. Saying the sentence once here makes it retrievable later, which is the only thing that helps at speed.",
+      "Decision rehearsal. The whole chapter lives inside the time it took Ilyas to type his details. Saying the sentence once here makes it available later, which is the only thing that helps at speed.",
     points: [
       "Every option was available inside the same forty seconds.",
-      "The two that worked cost Ilyas no face at all.",
+      "The two that worked did not require Ilyas to admit anything in front of his friends.",
       "You never had to be the person who was right. You only had to make the other option easy.",
     ],
   },
