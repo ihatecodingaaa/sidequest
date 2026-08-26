@@ -1,397 +1,287 @@
 "use client";
 
 import Link from "next/link";
-import {
-  ArrowRight,
-  Flame,
-  Gift,
-  MapPin,
-  Radio,
-  Sparkles,
-  Users,
-  Zap,
-} from "lucide-react";
+import { ArrowRight, ChevronRight, Play, Radio, Users, Zap } from "lucide-react";
 
-import { cn } from "@/lib/cn";
-import { ACCENT_TEXT } from "@/lib/accent";
-import { formatDuration, formatXp, greetingFor } from "@/lib/format";
+import { formatXp, greetingFor } from "@/lib/format";
 import { getLevelProgress } from "@/lib/xp";
 import { useMounted, useProfile } from "@/hooks/use-profile";
 import { getFeaturedPulseItem } from "@/data/pulse";
 import { getMission } from "@/data/missions";
 import { getCrew } from "@/data/crews";
 import { FEATURED_STATION_ID, getRadioStation } from "@/data/radio";
-import { REWARDS } from "@/data/rewards";
-import { ButtonLink } from "@/components/ui/button";
-import {
-  Chip,
-  ExternalLink,
-  ProgressBar,
-  ProvenanceTag,
-  SectionHeader,
-} from "@/components/ui/primitives";
+import { CAMPAIGNS } from "@/data/campaigns";
+import { completedPhysicalCount, physicalChapters } from "@/lib/campaign";
 import { Wordmark } from "@/components/layout/wordmark";
-import { MissionCard } from "@/components/mission/mission-card";
 import { SignatureStrip } from "@/components/mission/signature-strip";
-import { CampaignHomeCard } from "@/features/campaigns/campaign-home-card";
-import { offsetLabel } from "@/features/pulse/offset-label";
+import { ExternalLink, ProvenanceTag } from "@/components/ui/primitives";
+import type { CampaignProgress } from "@/types/campaign";
 
-const QUICK_QUEST_ID = "mission-otp";
-const FIELD_QUEST_ID = "mission-field-design-hunt";
-
+/**
+ * Home.
+ *
+ * One hero, then a small number of clearly subordinate things.
+ *
+ * The previous version presented eleven cards of near-identical weight across
+ * nine sections with six competing exits, which taught the user that nothing
+ * in particular mattered. A home screen has to answer "what should I do now",
+ * and it can only answer that if one thing outranks the rest.
+ *
+ * The hero is the Campaign. It is the product's most distinctive experience
+ * and its most directly on-brief content: peer pressure, a shop-theft moment,
+ * an account somebody lends to a friend, and a group decision, all across one
+ * day. It shows progress when there is progress and an invitation when there
+ * is not.
+ *
+ * Nothing was deleted from the product here. The field quest, the reward
+ * teaser and the quick quest all still exist one tab away; they were
+ * deprioritised, not removed.
+ */
 export function HomeScreen() {
   const { profile, ready } = useProfile();
   const mounted = useMounted();
   const level = getLevelProgress(profile.xp);
 
+  const campaign = CAMPAIGNS[0];
+  const progress = ready && campaign ? profile.campaigns?.[campaign.id] : undefined;
   const featured = getFeaturedPulseItem();
-  const relatedMission = featured.relatedMissionId ? getMission(featured.relatedMissionId) : undefined;
-  const quickQuest = getMission(QUICK_QUEST_ID);
-  const fieldQuest = getMission(FIELD_QUEST_ID);
+  const relatedMission = featured.relatedMissionId
+    ? getMission(featured.relatedMissionId)
+    : undefined;
   const crew = getCrew(profile.crewId);
   const station = getRadioStation(FEATURED_STATION_ID);
-  const teaser = REWARDS[0];
 
-  // Rendered only after mount: the greeting depends on the visitor's clock,
-  // which the server does not have.
+  // The greeting reads the visitor's clock, which the server does not have.
   const greeting = mounted ? greetingFor() : "Welcome";
   const name = ready && profile.displayName ? `, ${profile.displayName}` : "";
 
   return (
-    <div className="space-y-7">
-      {/* ------------------------------------------------ Header and XP */}
-      <header>
-        <div className="flex items-center justify-between">
-          <Wordmark className="lg:hidden" />
-          <Link
-            href="/you"
-            className="ml-auto inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 text-sm font-semibold text-volt-300 sq-pressable"
-          >
-            <Zap aria-hidden className="size-4" />
-            <span className="tabular-nums">{ready ? formatXp(profile.xp) : "0"}</span>
-            <span className="text-faint">XP</span>
-          </Link>
-        </div>
-
-        <h1 className="mt-5 font-display text-[1.7rem] leading-tight font-extrabold tracking-tight text-chalk lg:text-4xl">
-          {greeting}
-          {name}
-        </h1>
-
-        <div className="sq-card mt-4 p-4">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-faint">
-                Level {ready ? level.level : 1}
-              </p>
-              <p className="mt-0.5 font-display text-xl font-extrabold text-chalk">
-                {ready ? level.title : "Rookie"}
-              </p>
-            </div>
-            {ready && profile.streakDays > 0 ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-coral-500/12 px-2.5 py-1 text-sm font-bold text-coral-300">
-                <Flame aria-hidden className="size-4" />
-                {profile.streakDays} day{profile.streakDays === 1 ? "" : "s"}
-              </span>
-            ) : null}
-          </div>
-
-          <ProgressBar
-            className="mt-3.5"
-            value={ready ? level.fraction : 0}
-            label="Progress to the next level"
-          />
-          <p className="mt-2 text-xs text-muted">
-            {ready && !level.isMaxLevel
-              ? `${level.xpForNextLevel} XP to level ${level.level + 1}. Progress tracks what you can do, not how much you have read.`
-              : "Top level. Progress tracks what you can do, not how much you have read."}
-          </p>
-        </div>
+    <div className="space-y-8">
+      <header className="flex items-center justify-between gap-3">
+        <Wordmark className="lg:hidden" />
+        <Link
+          href="/you"
+          aria-label={`Level ${ready ? level.level : 1}, ${ready ? profile.xp : 0} XP. Open your profile.`}
+          className="ml-auto inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 bg-white/5 pr-3.5 pl-3 text-sm font-semibold sq-pressable"
+        >
+          <Zap aria-hidden className="size-4 text-volt-300" />
+          <span className="tabular-nums text-volt-300">{ready ? formatXp(profile.xp) : "0"}</span>
+          <span className="text-faint">Lv {ready ? level.level : 1}</span>
+        </Link>
       </header>
 
-      {/* ------------------------------------------------- Safety Pulse */}
-      <section aria-labelledby="pulse-hero">
-        <SectionHeader title="Safety Pulse" action="See all" href="/pulse" />
+      <h1 className="font-display text-[1.75rem] leading-tight font-extrabold tracking-tight text-chalk lg:text-4xl">
+        {greeting}
+        {name}
+      </h1>
 
-        <article className="sq-card relative overflow-hidden">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -top-24 -right-16 size-56 rounded-full bg-pulse-500/12 blur-3xl"
-          />
+      {campaign ? <CampaignHero progress={progress} /> : null}
 
-          <div className="relative p-4 pb-0">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <Chip accent="pulse">{featured.category}</Chip>
-              <ProvenanceTag provenance={featured.provenance} compact />
-              <span className="text-[0.7rem] font-semibold text-faint">
-                {offsetLabel(featured.publishedOffsetHours)}
-              </span>
-            </div>
-
-            <h3
-              id="pulse-hero"
-              className="mt-3 text-balance-tight font-display text-xl leading-tight font-extrabold text-chalk lg:text-2xl"
-            >
-              {featured.title}
-            </h3>
-            <p className="mt-2 text-sm leading-relaxed text-mist">{featured.summary}</p>
-
-            <p className="mt-3 text-xs text-faint">
-              Based on {featured.source}
-            </p>
-          </div>
-
-          <div className="relative mt-4 border-t border-white/8 p-4">
-            {relatedMission ? (
-              <>
-                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.1em] text-quest-300">
-                  Information to action
-                </p>
-                <ButtonLink
-                  href={`/missions/${relatedMission.id}`}
-                  full
-                  size="lg"
-                  className="lg:mx-auto lg:w-auto lg:px-12"
-                >
-                  <Sparkles aria-hidden className="size-4" />
-                  Try the related quest
-                </ButtonLink>
-                <p className="mt-2.5 text-center text-xs text-faint">
-                  {relatedMission.title} &middot; {formatDuration(relatedMission.durationMinutes)}{" "}
-                  &middot; {relatedMission.xp} XP
-                </p>
-              </>
-            ) : (
-              <ButtonLink href={`/pulse/${featured.id}`} full size="lg" variant="secondary">
-                Read more
-              </ButtonLink>
-            )}
-          </div>
-        </article>
-      </section>
-
-      {/* --------------------------------------------- Signature missions */}
-      <section aria-labelledby="signature">
-        <SectionHeader
-          id="signature"
-          title="The three that matter"
-          subtitle="Rehearse a decision, check a norm, redesign a system."
-          action="All missions"
-          href="/missions"
-        />
-        <SignatureStrip />
-      </section>
-
-      {/* ------------------------------------------------------ Campaign */}
-      <section aria-labelledby="campaign">
-        <SectionHeader
-          id="campaign"
-          title="At an event"
-          subtitle="Scan a code, play on your phone, and it keeps going after you leave."
-          action="All Campaigns"
-          href="/campaigns"
-        />
-        <CampaignHomeCard />
-      </section>
-
-      {/* -------------------------------------------------- Quick Quest */}
-      {quickQuest ? (
-        <section aria-labelledby="quick-quest">
-          <SectionHeader
-            title="Two minutes"
-            subtitle="Short enough to finish before your stop."
-            action="All missions"
-            href="/missions"
-          />
-          <div id="quick-quest">
-            <MissionCard
-              mission={quickQuest}
-              complete={ready && profile.completedMissionIds.includes(quickQuest.id)}
-            />
-          </div>
+      <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
+        <section aria-labelledby="play-now">
+          <SectionTitle id="play-now" title="Play now" href="/missions" action="All missions" />
+          <SignatureStrip className="sm:grid-cols-1" />
         </section>
-      ) : null}
 
-      <div className="grid gap-7 lg:grid-cols-2">
-      {/* ------------------------------------------------------ Nearby */}
-      {fieldQuest ? (
-        <section aria-labelledby="nearby">
-          <SectionHeader
-            title="Near you"
-            subtitle={
-              ready && profile.neighbourhood
-                ? `Showing activity around ${profile.neighbourhood}`
-                : "Pick an area to see what is on"
-            }
-          />
-          <article id="nearby" className="sq-card overflow-hidden">
-            <div className="flex items-start gap-3 p-4">
-              <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-volt-500/12">
-                <MapPin aria-hidden className="size-5 text-volt-300" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <Chip accent="volt">Field Quest</Chip>
-                  <ProvenanceTag provenance={fieldQuest.provenance} compact />
-                </div>
-                <h3 className="mt-2 font-display text-base font-bold text-chalk">
-                  {fieldQuest.title}
-                </h3>
-                <p className="mt-1 text-sm text-muted">{fieldQuest.location?.venue}</p>
-                <p className="mt-2 text-xs text-faint">
-                  {formatDuration(fieldQuest.durationMinutes)} &middot; {fieldQuest.xp} XP &middot;
-                  check in on site or with a code
-                </p>
-              </div>
-            </div>
-            <div className="border-t border-white/8 p-3">
-              <ButtonLink href={`/missions/${fieldQuest.id}`} variant="secondary" full>
-                Open Field Quest
-                <ArrowRight aria-hidden className="size-4" />
-              </ButtonLink>
-            </div>
-          </article>
-        </section>
-      ) : null}
-
-      {/* -------------------------------------------------------- Crew */}
-      {crew ? (
-        <section aria-labelledby="crew">
-          <SectionHeader title="Your crew" action="Open" href="/crew" />
-          <Link
-            id="crew"
-            href="/crew"
-            className="sq-card sq-pressable block p-4 hover:border-white/16"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="font-display text-lg font-bold text-chalk">{crew.name}</p>
-                <p className="mt-0.5 text-xs text-muted">
-                  {crew.members.length} members &middot; rank {crew.rank} this week
-                </p>
-              </div>
-              <span className="shrink-0 text-right">
-                <span className="block font-display text-xl font-extrabold text-volt-300 tabular-nums">
-                  {formatXp(crew.weeklyXp)}
+        <div className="space-y-8">
+          {crew ? (
+            <section aria-labelledby="crew">
+              <SectionTitle id="crew" title="Your crew" href="/crew" action="Open" />
+              <Link
+                href="/crew"
+                className="flex min-h-16 items-center gap-3.5 rounded-2xl border border-white/8 p-3.5 transition-colors hover:bg-white/4"
+              >
+                <span className="flex -space-x-2">
+                  {crew.members.slice(0, 4).map((member) => (
+                    <span
+                      key={member.id}
+                      className="grid size-8 place-items-center rounded-full border-2 border-ink-900 bg-ink-700 text-[0.65rem] font-bold text-mist"
+                    >
+                      {member.initials}
+                    </span>
+                  ))}
                 </span>
-                <span className="block text-[0.65rem] font-semibold uppercase tracking-wide text-faint">
-                  crew XP
-                </span>
-              </span>
-            </div>
-
-            <div className="mt-3.5 flex items-center gap-3">
-              <div className="flex -space-x-2">
-                {crew.members.slice(0, 5).map((member) => (
-                  <span
-                    key={member.id}
-                    className={cn(
-                      "grid size-8 place-items-center rounded-full border-2 border-ink-900 bg-ink-700 text-[0.65rem] font-bold",
-                      ACCENT_TEXT[member.accent],
-                    )}
-                  >
-                    {member.initials}
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-bold text-chalk">{crew.name}</span>
+                  <span className="block truncate text-xs text-muted">
+                    {crew.currentChallenge.title}
                   </span>
-                ))}
-              </div>
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-mist">
-                <Users aria-hidden className="size-3.5 text-faint" />
-                {crew.currentChallenge.title}
-              </span>
-            </div>
+                </span>
+                <Users aria-hidden className="size-4 shrink-0 text-faint" />
+              </Link>
+            </section>
+          ) : null}
 
-            <ProgressBar
-              className="mt-3"
-              accent="quest"
-              value={crew.currentChallenge.progress / crew.currentChallenge.target}
-              label="Crew challenge progress"
-            />
-            <p className="mt-1.5 text-xs text-faint">
-              {crew.currentChallenge.progress} of {crew.currentChallenge.target} done
-            </p>
-          </Link>
-        </section>
-      ) : null}
+          <section aria-labelledby="knowing">
+            <SectionTitle id="knowing" title="Worth knowing" href="/pulse" action="More" />
+            <article className="rounded-2xl border border-white/8 p-4">
+              <h3 className="text-balance-tight font-display text-lg leading-tight font-bold text-chalk">
+                {featured.title}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted">{featured.summary}</p>
 
-      {/* ------------------------------------------------------- Radio */}
-      {station ? (
-        <section aria-labelledby="radio">
-          <SectionHeader title="Radio" action="All stations" href="/radio" />
-          <article id="radio" className="sq-card flex items-center gap-3.5 p-4">
-            <span className="relative grid size-12 shrink-0 place-items-center rounded-2xl bg-coral-500/12">
-              <span
-                aria-hidden
-                className="animate-pulse-ring absolute inset-0 rounded-2xl border border-coral-500/40"
-              />
-              <Radio aria-hidden className="size-5 text-coral-300" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="font-display text-base font-bold text-chalk">
-                {station.name}
-                <span className="ml-2 text-xs font-semibold text-faint">{station.frequency}</span>
+              {/*
+                The signature interaction, and the reason this section is not
+                just a news card: a story does not end when you close it, it
+                becomes the decision.
+              */}
+              {relatedMission ? (
+                <Link
+                  href={`/missions/${relatedMission.id}`}
+                  className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-quest-300 hover:text-quest-400"
+                >
+                  <Play aria-hidden className="size-4" />
+                  Play {relatedMission.title}
+                  <ArrowRight aria-hidden className="size-4" />
+                </Link>
+              ) : (
+                <Link
+                  href={`/pulse/${featured.id}`}
+                  className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-quest-300"
+                >
+                  Read more
+                </Link>
+              )}
+
+              <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-faint">
+                <ProvenanceTag provenance={featured.provenance} compact />
+                {featured.source}
               </p>
-              <p className="line-clamp-2 text-xs leading-snug text-muted">{station.description}</p>
-            </div>
-            <ExternalLink
-              href={station.officialUrl}
-              className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full bg-white/6 px-3.5 text-sm font-semibold text-chalk sq-pressable hover:bg-white/10"
+            </article>
+          </section>
+
+          {station ? (
+            <section aria-labelledby="radio">
+              <SectionTitle id="radio" title="Listening" href="/radio" action="Stations" />
+              <ExternalLink
+                href={station.officialUrl}
+                showIcon={false}
+                className="flex min-h-16 items-center gap-3 rounded-2xl border border-white/8 px-3.5 py-3 transition-colors hover:bg-white/4"
+              >
+                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-coral-500/12">
+                  <Radio aria-hidden className="size-4 text-coral-300" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-bold text-chalk">
+                    {station.name}
+                    <span className="ml-1.5 text-xs font-medium text-faint">
+                      {station.frequency}
+                    </span>
+                  </span>
+                  <span className="block truncate text-xs text-muted">
+                    Opens {station.platform}
+                  </span>
+                </span>
+                <ChevronRight aria-hidden className="size-4 shrink-0 text-faint" />
+              </ExternalLink>
+            </section>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ Hero */
+
+/**
+ * The one element on the screen with real weight.
+ *
+ * Deliberately not a card from the same family as everything else: larger
+ * radius, its own colour field, a solid light button. If it looked like the
+ * other surfaces it would not be a hero, it would be the first of several.
+ *
+ * The colour field is CSS gradients rather than artwork: no image weight, no
+ * licensing question, and nothing to load on a roadshow connection.
+ */
+function CampaignHero({ progress }: { progress: CampaignProgress | undefined }) {
+  const campaign = CAMPAIGNS[0];
+  const stations = physicalChapters(campaign);
+  const done = progress ? completedPhysicalCount(campaign, progress) : 0;
+  const started = Boolean(progress);
+
+  return (
+    <Link
+      href={`/campaigns/${campaign.slug}`}
+      className="group relative block overflow-hidden rounded-[1.75rem] border border-coral-500/25 sq-pressable"
+    >
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-[radial-gradient(120%_100%_at_10%_0%,rgba(255,95,95,0.3)_0%,transparent_58%),radial-gradient(100%_90%_at_100%_100%,rgba(110,86,248,0.34)_0%,transparent_62%)]"
+      />
+      <div aria-hidden className="sq-grid-lines absolute inset-0 opacity-30" />
+
+      <div className="relative p-5 pt-6">
+        <p className="text-[0.7rem] font-bold uppercase tracking-[0.16em] text-coral-300">
+          {started ? "Continue" : "Story campaign"}
+        </p>
+
+        <h2 className="mt-2 font-display text-[2rem] leading-[1.02] font-extrabold tracking-tight text-chalk">
+          {campaign.title}
+        </h2>
+        <p className="mt-2 max-w-md text-sm leading-relaxed text-mist">
+          {started
+            ? "Four friends, one ordinary day. Pick up where you left off."
+            : "One friend makes a bad call. Nobody plans anything. Four small decisions decide how it ends."}
+        </p>
+
+        {started ? (
+          <div className="mt-4 max-w-xs">
+            <div
+              className="h-1.5 w-full overflow-hidden rounded-full bg-white/12"
+              role="progressbar"
+              aria-valuenow={done}
+              aria-valuemin={0}
+              aria-valuemax={stations.length}
+              aria-label="Campaign progress"
             >
-              Listen
-            </ExternalLink>
-          </article>
-          <p className="mt-2 px-1 text-xs text-faint">
-            Opens {station.platform}, the official listening service. SIDEQUEST does not stream
-            audio.
-          </p>
-        </section>
-      ) : null}
-
-      {/* ------------------------------------------------------ Reward */}
-      <section aria-labelledby="reward">
-        <SectionHeader title="Worth working towards" action="Rewards" href="/rewards" />
-        <article id="reward" className="sq-card p-4">
-          <div className="flex items-start gap-3">
-            <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-gold-500/12">
-              <Gift aria-hidden className="size-5 text-gold-400" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <ProvenanceTag provenance={teaser.provenance} compact />
-              </div>
-              <h3 className="mt-2 font-display text-base font-bold text-chalk">{teaser.title}</h3>
-              <p className="mt-1 text-sm text-muted">{teaser.description}</p>
+              <div
+                className="h-full rounded-full bg-coral-400 transition-[width] duration-700"
+                style={{ width: `${(done / stations.length) * 100}%` }}
+              />
             </div>
-          </div>
-
-          <div className="mt-3.5">
-            <ProgressBar
-              accent="gold"
-              value={ready ? Math.min(1, profile.xp / teaser.xpCost) : 0}
-              label={`Progress towards ${teaser.title}`}
-            />
-            <p className="mt-2 text-xs text-faint">
-              {ready
-                ? profile.xp >= teaser.xpCost
-                  ? "Unlocked. Open Rewards to claim it."
-                  : `${teaser.xpCost - profile.xp} XP to go`
-                : `${teaser.xpCost} XP`}
+            <p className="mt-2 text-xs font-semibold text-mist tabular-nums">
+              {done} of {stations.length} chapters
             </p>
           </div>
-        </article>
-      </section>
+        ) : null}
 
+        <span className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-chalk px-5 text-sm font-bold text-ink-900 transition-transform duration-200 group-active:scale-[0.98]">
+          {started ? "Continue" : "Start"}
+          <ArrowRight aria-hidden className="size-4" />
+        </span>
       </div>
+    </Link>
+  );
+}
 
-      {/* ------------------------------------------------------ Thesis */}
-      <section className="sq-card sq-grid-lines overflow-hidden p-5">
-        <p className="text-balance-tight font-display text-lg leading-snug font-bold text-chalk">
-          We are not building another place to learn about crime prevention. We are building a
-          reason to take part in it.
-        </p>
-        <p className="mt-2.5 text-sm text-muted">
-          See it, play it, act on it, then design what comes next.
-        </p>
-      </section>
+/* --------------------------------------------------------------- Section */
+
+/** A quiet section label with at most one secondary exit. */
+function SectionTitle({
+  id,
+  title,
+  href,
+  action,
+}: {
+  id: string;
+  title: string;
+  href?: string;
+  action?: string;
+}) {
+  return (
+    <div className="mb-3 flex items-baseline justify-between gap-3">
+      <h2 id={id} className="text-sm font-bold uppercase tracking-[0.1em] text-faint">
+        {title}
+      </h2>
+      {href && action ? (
+        <Link
+          href={href}
+          className="-mr-2 inline-flex min-h-11 items-center px-2 text-xs font-semibold text-quest-300 hover:text-quest-400"
+        >
+          {action}
+        </Link>
+      ) : null}
     </div>
   );
 }

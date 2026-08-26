@@ -6,7 +6,7 @@ import { Award, ChevronRight, Flame, Gift, Settings, Users, Zap } from "lucide-r
 import { cn } from "@/lib/cn";
 import { formatXp } from "@/lib/format";
 import { getLevelProgress } from "@/lib/xp";
-import { MISSIONS, getMission } from "@/data/missions";
+import { getMission } from "@/data/missions";
 import { SAFETY_SKILLS, skillTier } from "@/data/skills";
 import { getCrew } from "@/data/crews";
 import { getReward } from "@/data/rewards";
@@ -28,17 +28,18 @@ export function ProfileScreen() {
         .filter((mission): mission is NonNullable<typeof mission> => Boolean(mission))
     : [];
 
-  const totalSkillPoints = Object.values(profile.skillPoints).reduce<number>(
-    (sum, value) => sum + (value ?? 0),
-    0,
-  );
+  const skillRows = SAFETY_SKILLS.map((skill) => {
+    const points = ready ? (profile.skillPoints[skill.id] ?? 0) : 0;
+    return { skill, points, tier: skillTier(points) };
+  });
+  const startedSkills = skillRows.filter((entry) => entry.points > 0);
+  const notStartedSkills = skillRows.filter((entry) => entry.points === 0);
 
   return (
     <div className="space-y-7">
       <PageHeader
-        eyebrow="You"
         title={ready && profile.displayName ? profile.displayName : "Your progress"}
-        lede="Your Safety Passport records what you can do, not how much you have read."
+        lede="What you have done, and what you are getting good at."
         action={
           <Link
             href="/settings"
@@ -73,9 +74,9 @@ export function ProfileScreen() {
 
       <div className="grid grid-cols-3 gap-2.5">
         <StatTile
-          label="Missions"
+          label="Played"
           value={String(completed.length)}
-          hint={`of ${MISSIONS.length}`}
+          hint={completed.length === 1 ? "mission" : "missions"}
           accent="quest"
         />
         <StatTile
@@ -85,73 +86,75 @@ export function ProfileScreen() {
           accent="coral"
         />
         <StatTile
-          label="Skill pts"
-          value={ready ? formatXp(totalSkillPoints) : "0"}
-          hint="across 7 areas"
+          label="Building"
+          value={String(startedSkills.length)}
+          hint={startedSkills.length === 1 ? "capability" : "capabilities"}
           accent="volt"
         />
       </div>
 
-      {/* Safety Passport */}
+      {/*
+        Safety Passport.
+
+        Capability, not assessment. The previous version rendered seven
+        identical progress bars with a point count and a "next tier at N"
+        readout, four of them empty, which is a school report card. It also
+        showed a new user four empty bars before anything they had done.
+
+        Now: what you are actually building, with the tier phrased as a
+        capability, and the untouched areas collapsed into one quiet line
+        rather than four rows of nothing.
+      */}
       <section>
         <SectionHeader
           title="Safety Passport"
-          subtitle="What you can do, and how far along you are."
+          subtitle="What you can do, not what you scored."
         />
 
-        <ul className="space-y-2.5">
-          {SAFETY_SKILLS.map((skill) => {
-            const points = ready ? (profile.skillPoints[skill.id] ?? 0) : 0;
-            const tier = skillTier(points);
-            const ceiling = tier.nextAt ?? Math.max(points, 130);
-            const floorForTier = points === 0 ? 0 : points;
-
-            return (
-              <li key={skill.id} className="sq-card p-4">
+        {startedSkills.length === 0 ? (
+          <p className="rounded-2xl border border-white/8 px-5 py-8 text-center text-sm text-muted">
+            Play anything and this fills in. Each mission builds a different
+            thing.
+          </p>
+        ) : (
+          <ul className="space-y-2.5">
+            {startedSkills.map(({ skill, points, tier }) => (
+              <li key={skill.id} className="rounded-2xl border border-white/8 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-display text-base font-bold text-chalk">{skill.name}</p>
-                    <p className="mt-0.5 text-xs leading-snug text-muted">{skill.capability}</p>
+                    <p className="mt-0.5 text-sm leading-snug text-muted">{skill.capability}</p>
                   </div>
                   <span
                     className={cn(
                       "shrink-0 rounded-full px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide",
-                      tier.index === 0
-                        ? "bg-white/6 text-faint"
-                        : tier.index >= 3
-                          ? "bg-volt-500/15 text-volt-300"
-                          : "bg-quest-500/15 text-quest-300",
+                      tier.index >= 3
+                        ? "bg-volt-500/15 text-volt-300"
+                        : "bg-quest-500/15 text-quest-300",
                     )}
                   >
                     {tier.label}
                   </span>
                 </div>
-
                 <ProgressBar
                   className="mt-3"
                   accent={tier.index >= 3 ? "volt" : "quest"}
-                  value={tier.nextAt ? Math.min(1, floorForTier / ceiling) : 1}
-                  label={`${skill.name} progress`}
+                  value={tier.nextAt ? Math.min(1, points / tier.nextAt) : 1}
+                  label={`${skill.name}: ${tier.label}`}
                 />
-                <p className="mt-1.5 text-xs text-faint">
-                  {points === 0 ? (
-                    "No missions have built this yet"
-                  ) : (
-                    <span className="tabular-nums">
-                      {points} points
-                      {tier.nextAt ? <> &middot; next tier at {tier.nextAt}</> : null}
-                    </span>
-                  )}
-                </p>
               </li>
-            );
-          })}
-        </ul>
+            ))}
+          </ul>
+        )}
 
-        <p className="mt-3 text-xs leading-relaxed text-faint">
-          The Safety Passport is a SIDEQUEST record. It is not a SkillsFuture credential and carries
-          no formal recognition. The structure is designed so a recognised credential could be
-          issued by an appropriate body in future.
+        {notStartedSkills.length ? (
+          <p className="mt-3 text-xs leading-relaxed text-faint">
+            Not started yet: {notStartedSkills.map((entry) => entry.skill.name).join(", ")}.
+          </p>
+        ) : null}
+
+        <p className="mt-2 text-xs leading-relaxed text-faint">
+          A SIDEQUEST record, not a SkillsFuture credential. It carries no formal recognition.
         </p>
       </section>
 

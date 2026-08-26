@@ -18,7 +18,7 @@ import {
 
 import { cn } from "@/lib/cn";
 import { ACCENT_BG_SOFT, ACCENT_TEXT } from "@/lib/accent";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Chip, ProgressBar, ProvenanceTag } from "@/components/ui/primitives";
 import { PageHeader } from "@/components/layout/app-shell";
 import { useCampaign } from "./use-campaign";
@@ -259,25 +259,25 @@ export function CampaignDetail({ campaign }: { campaign: Campaign }) {
 
       <FollowUpList campaign={campaign} />
 
-      {/* Utilities */}
-      <section className="grid gap-2.5 sm:grid-cols-2">
-        <ButtonLink
+      {/*
+        Organiser and evaluator tools. Quiet links rather than two full-width
+        buttons: a participant never needs either of these, and giving them
+        button weight put event logistics on the same footing as the story.
+      */}
+      <section className="flex flex-wrap items-center gap-x-5 gap-y-1">
+        <Link
           href={`/campaigns/${campaign.slug}/stations`}
-          variant="secondary"
-          size="lg"
-          full
+          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-mist hover:text-chalk"
         >
-          <QrCode aria-hidden className="size-4" />
+          <QrCode aria-hidden className="size-4 text-faint" />
           Station signs
-        </ButtonLink>
-        <ButtonLink
+        </Link>
+        <Link
           href={`/campaigns/${campaign.slug}/impact`}
-          variant="secondary"
-          size="lg"
-          full
+          className="inline-flex min-h-11 items-center text-sm font-semibold text-mist hover:text-chalk"
         >
           What a pilot could measure
-        </ButtonLink>
+        </Link>
       </section>
 
       <CampaignDemoControls campaign={campaign} />

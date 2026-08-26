@@ -2,97 +2,101 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Bookmark, BookmarkCheck, Radio, Sparkles } from "lucide-react";
+import { ArrowRight, Bookmark, BookmarkCheck, ChevronRight, Play, Radio } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import { ACCENT_TEXT } from "@/lib/accent";
 import { DISCOVERY_LINKS, PULSE_ITEMS } from "@/data/pulse";
 import { getMission } from "@/data/missions";
 import { PageHeader } from "@/components/layout/app-shell";
-import { Chip, ExternalLink, ProvenanceTag } from "@/components/ui/primitives";
+import { ExternalLink, ProvenanceTag } from "@/components/ui/primitives";
 import { useAppStore } from "@/store/app-store";
 import { useProfile } from "@/hooks/use-profile";
 import { offsetLabel } from "./offset-label";
-import type { ContentCategory } from "@/types/core";
+import type { ContentCategory, Interest } from "@/types/core";
 
-type Filter = "for-you" | "saved" | ContentCategory;
+type Filter = "latest" | "saved" | ContentCategory;
 
 const FILTERS: { id: Filter; label: string }[] = [
-  { id: "for-you", label: "For you" },
-  { id: "singapore", label: "Singapore" },
+  { id: "latest", label: "Latest" },
+  { id: "youth", label: "Friends" },
+  { id: "safety", label: "Everyday" },
   { id: "scams", label: "Scams" },
-  { id: "youth", label: "Youth" },
-  { id: "cyber", label: "Cyber" },
   { id: "community", label: "Community" },
-  { id: "safety", label: "Safety" },
   { id: "saved", label: "Saved" },
 ];
 
+/**
+ * Interests are a user vocabulary; categories are a content vocabulary. They
+ * are not the same list and matching them by string coincidence was a bug:
+ * "scams" matched, "youth" did not, so a profile with the default interests
+ * quietly sorted every scam story above every peer-pressure story.
+ */
+const INTEREST_TO_CATEGORY: Partial<Record<Interest, ContentCategory[]>> = {
+  scams: ["scams"],
+  cyber: ["cyber"],
+  "peer-pressure": ["youth"],
+  design: ["safety"],
+  volunteering: ["community"],
+  events: ["community"],
+  news: ["singapore", "safety"],
+};
+
+/**
+ * Pulse.
+ *
+ * The previous version stacked eight identical cards, each led by a threat
+ * category chip and each closed by the same call to action. Read as a column
+ * that is a wall of SCAMS, SCAMS, SCAMS, CYBER, and SIDEQUEST is explicitly
+ * not in the business of making Singapore feel unsafe.
+ *
+ * Now: one lead story with real weight, then a compact list. The
+ * Pulse-to-Mission handoff, which is the product's signature interaction, is
+ * prominent on the lead and quiet on the rest, so it reads as an invitation
+ * rather than as a repeated footer.
+ *
+ * Provenance is declared once at the top of the feed and again at the bottom,
+ * and appears in full on every detail page. It is not repeated on every card,
+ * where at eight-per-screen it had stopped being information and become
+ * texture.
+ */
 export function PulseFeed() {
   const { profile, ready } = useProfile();
   const toggleSaved = useAppStore((state) => state.toggleSavedPulse);
-  const [filter, setFilter] = useState<Filter>("for-you");
+  const [filter, setFilter] = useState<Filter>("latest");
 
   const items = useMemo(() => {
     if (filter === "saved") {
       return PULSE_ITEMS.filter((item) => profile.savedPulseIds.includes(item.id));
     }
-    if (filter === "for-you") {
-      // Interests reorder the feed. Nothing is removed, so a judge always sees
-      // the same catalogue whichever profile they arrive with.
-      return [...PULSE_ITEMS].sort((a, b) => {
-        const score = (category: ContentCategory) =>
-          profile.interests.includes(category as never) ? 1 : 0;
-        return score(b.category) - score(a.category) || a.publishedOffsetHours - b.publishedOffsetHours;
-      });
+    if (filter === "latest") {
+      const boosted = new Set(
+        profile.interests.flatMap((interest) => INTEREST_TO_CATEGORY[interest] ?? []),
+      );
+      // Recency leads. An interest match is worth a six hour head start, which
+      // personalises the order without letting it override what is new.
+      return [...PULSE_ITEMS].sort(
+        (a, b) =>
+          a.publishedOffsetHours -
+          (boosted.has(a.category) ? 6 : 0) -
+          (b.publishedOffsetHours - (boosted.has(b.category) ? 6 : 0)),
+      );
     }
-    if (filter === "singapore") return PULSE_ITEMS;
     return PULSE_ITEMS.filter((item) => item.category === filter);
   }, [filter, profile.interests, profile.savedPulseIds]);
 
+  const [lead, ...rest] = items;
+
   return (
     <div>
-      <PageHeader
-        eyebrow="Pillar one"
-        title="Pulse"
-        lede="What is actually happening, in plain language, with somewhere to go afterwards."
-      />
+      <PageHeader title="Pulse" lede="What is worth knowing, and what you can do about it." />
 
-      {/* Discovery */}
-      <section className="mb-6">
-        <div className="sq-scroll-x sq-edge-fade -mx-4 flex gap-2.5 px-4 pb-1 lg:mx-0 lg:px-0">
-          {DISCOVERY_LINKS.map((link) => (
-            <ExternalLink
-              key={link.id}
-              href={link.url}
-              showIcon={false}
-              className="sq-card sq-pressable w-44 shrink-0 p-3.5 hover:border-white/16"
-            >
-              <span className={cn("block text-[0.65rem] font-bold uppercase tracking-wide", ACCENT_TEXT[link.accent])}>
-                {link.publisher}
-              </span>
-              <span className="mt-1 block text-sm font-bold text-chalk">{link.label}</span>
-              <span className="mt-1 block text-xs leading-snug text-muted">{link.description}</span>
-            </ExternalLink>
-          ))}
-          <Link
-            href="/radio"
-            className="sq-card sq-pressable flex w-44 shrink-0 flex-col justify-between p-3.5 hover:border-white/16"
-          >
-            <Radio aria-hidden className="size-4 text-coral-300" />
-            <span>
-              <span className="mt-2 block text-sm font-bold text-chalk">Radio</span>
-              <span className="mt-1 block text-xs text-muted">Six stations on meLISTEN</span>
-            </span>
-          </Link>
-        </div>
-        <p className="mt-2 px-1 text-xs text-faint">
-          These open the publisher&apos;s own site. SIDEQUEST does not republish their articles.
-        </p>
-      </section>
+      <p className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-faint">
+        <ProvenanceTag provenance="seeded" compact />
+        <span>Written by the SIDEQUEST team from public advisories.</span>
+      </p>
 
-      {/* Filters */}
-      <div className="sq-scroll-x sq-edge-fade -mx-4 mb-5 flex gap-2 px-4 lg:mx-0 lg:px-0">
+      <div className="sq-scroll-x sq-edge-fade -mx-4 mb-6 flex gap-2 px-4 lg:mx-0 lg:px-0">
         {FILTERS.map((option) => (
           <button
             key={option.id}
@@ -112,72 +116,151 @@ export function PulseFeed() {
       </div>
 
       {items.length === 0 ? (
-        <p className="sq-card px-5 py-10 text-center text-sm text-muted">
+        <p className="rounded-2xl border border-white/8 px-5 py-10 text-center text-sm text-muted">
           {filter === "saved"
             ? "Nothing saved yet. Tap the bookmark on any story."
             : "Nothing in this category yet."}
         </p>
       ) : (
-        <ul className="grid gap-3 lg:grid-cols-2">
-          {items.map((item) => {
-            const mission = item.relatedMissionId ? getMission(item.relatedMissionId) : undefined;
-            const saved = ready && profile.savedPulseIds.includes(item.id);
+        <>
+          {lead ? (
+            <LeadStory
+              item={lead}
+              saved={ready && profile.savedPulseIds.includes(lead.id)}
+              onToggleSave={() => toggleSaved(lead.id)}
+            />
+          ) : null}
 
-            return (
-              <li key={item.id} className="sq-card group relative overflow-hidden">
-                <Link href={`/pulse/${item.id}`} className="block p-4 pr-12">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <Chip accent="pulse">{item.category}</Chip>
-                    <ProvenanceTag provenance={item.provenance} compact />
-                    <span className="text-[0.7rem] font-semibold text-faint">
-                      {offsetLabel(item.publishedOffsetHours)}
-                    </span>
-                  </div>
-
-                  <h2 className="mt-2.5 text-balance-tight font-display text-lg leading-tight font-bold text-chalk">
-                    {item.title}
-                  </h2>
-                  <p className="mt-1.5 line-clamp-3 text-sm leading-snug text-muted">
-                    {item.summary}
-                  </p>
-                  <p className="mt-2.5 text-xs text-faint">Based on {item.source}</p>
-                </Link>
-
-                <button
-                  type="button"
-                  onClick={() => toggleSaved(item.id)}
-                  aria-pressed={saved}
-                  aria-label={saved ? `Remove ${item.title} from saved` : `Save ${item.title}`}
-                  className="absolute top-2.5 right-2.5 grid size-11 place-items-center rounded-full text-faint sq-pressable hover:bg-white/8 hover:text-chalk"
-                >
-                  {saved ? (
-                    <BookmarkCheck aria-hidden className="size-5 text-pulse-300" />
-                  ) : (
-                    <Bookmark aria-hidden className="size-5" />
-                  )}
-                </button>
-
-                {mission ? (
-                  <Link
-                    href={`/missions/${mission.id}`}
-                    className="flex items-center gap-2 border-t border-white/8 px-4 py-3 text-sm font-semibold text-quest-300 sq-pressable hover:bg-white/4"
-                  >
-                    <Sparkles aria-hidden className="size-4" />
-                    Try the related quest
-                    <span className="ml-auto text-xs font-medium text-faint">{mission.xp} XP</span>
-                  </Link>
-                ) : null}
-              </li>
-            );
-          })}
-        </ul>
+          {rest.length ? (
+            <ul className="mt-7 divide-y divide-white/6 overflow-hidden rounded-2xl border border-white/8">
+              {rest.map((item) => {
+                const mission = item.relatedMissionId ? getMission(item.relatedMissionId) : undefined;
+                return (
+                  <li key={item.id}>
+                    <Link
+                      href={`/pulse/${item.id}`}
+                      className="flex min-h-20 items-center gap-3 px-4 py-3.5 transition-colors hover:bg-white/4"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[0.95rem] leading-snug font-bold text-chalk">
+                          {item.title}
+                        </span>
+                        <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-faint">
+                          <span>{offsetLabel(item.publishedOffsetHours)}</span>
+                          {mission ? (
+                            <span className="font-semibold text-quest-300">Has a quest</span>
+                          ) : null}
+                        </span>
+                      </span>
+                      <ChevronRight aria-hidden className="size-4 shrink-0 text-faint" />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </>
       )}
 
-      <p className="mt-8 text-xs leading-relaxed text-faint">
-        Pulse summaries are written by the SIDEQUEST team from public advisories and are marked as
-        prototype content. Recency labels are illustrative. Every item links to the authority it is
-        based on, which is where the primary source lives.
-      </p>
+      {/* Discovery, below the product's own content rather than above it. */}
+      <section className="mt-8">
+        <h2 className="mb-3 text-sm font-bold uppercase tracking-[0.1em] text-faint">Elsewhere</h2>
+        <ul className="divide-y divide-white/6 overflow-hidden rounded-2xl border border-white/8">
+          {DISCOVERY_LINKS.map((link) => (
+            <li key={link.id}>
+              <ExternalLink
+                href={link.url}
+                showIcon={false}
+                className="flex min-h-14 items-center gap-3 px-4 py-3 transition-colors hover:bg-white/4"
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold text-chalk">{link.label}</span>
+                  <span className="block truncate text-xs text-muted">{link.description}</span>
+                </span>
+                <span className={cn("shrink-0 text-xs font-bold", ACCENT_TEXT[link.accent])}>
+                  {link.publisher}
+                </span>
+              </ExternalLink>
+            </li>
+          ))}
+          <li>
+            <Link
+              href="/radio"
+              className="flex min-h-14 items-center gap-3 px-4 py-3 transition-colors hover:bg-white/4"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-chalk">Radio</span>
+                <span className="block text-xs text-muted">Six stations on meLISTEN</span>
+              </span>
+              <Radio aria-hidden className="size-4 shrink-0 text-coral-300" />
+            </Link>
+          </li>
+        </ul>
+        <p className="mt-2 text-xs text-faint">
+          These open the publisher&apos;s own site. SIDEQUEST does not republish their articles.
+        </p>
+      </section>
     </div>
+  );
+}
+
+/**
+ * The lead story.
+ *
+ * Not a card. Larger type, no enclosing border, and the mission handoff as a
+ * real button rather than a repeated link, so one story clearly outranks the
+ * others instead of eight competing on equal terms.
+ */
+function LeadStory({
+  item,
+  saved,
+  onToggleSave,
+}: {
+  item: (typeof PULSE_ITEMS)[number];
+  saved: boolean;
+  onToggleSave: () => void;
+}) {
+  const mission = item.relatedMissionId ? getMission(item.relatedMissionId) : undefined;
+
+  return (
+    <article>
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-pulse-300">
+          {offsetLabel(item.publishedOffsetHours)}
+        </p>
+        <button
+          type="button"
+          onClick={onToggleSave}
+          aria-pressed={saved}
+          aria-label={saved ? `Remove ${item.title} from saved` : `Save ${item.title}`}
+          className="-mt-2 -mr-2 grid size-11 shrink-0 place-items-center rounded-full text-faint sq-pressable hover:bg-white/8 hover:text-chalk"
+        >
+          {saved ? (
+            <BookmarkCheck aria-hidden className="size-5 text-pulse-300" />
+          ) : (
+            <Bookmark aria-hidden className="size-5" />
+          )}
+        </button>
+      </div>
+
+      <Link href={`/pulse/${item.id}`} className="block">
+        <h2 className="mt-1 text-balance-tight font-display text-[1.6rem] leading-[1.12] font-extrabold tracking-tight text-chalk lg:text-3xl">
+          {item.title}
+        </h2>
+        <p className="mt-3 text-base leading-relaxed text-mist">{item.summary}</p>
+        <p className="mt-3 text-xs text-faint">Based on {item.source}</p>
+      </Link>
+
+      {mission ? (
+        <Link
+          href={`/missions/${mission.id}`}
+          className="mt-5 inline-flex min-h-12 items-center gap-2 rounded-full bg-quest-500 px-5 text-sm font-bold text-white sq-pressable hover:bg-quest-400"
+        >
+          <Play aria-hidden className="size-4" />
+          Play {mission.title}
+          <ArrowRight aria-hidden className="size-4" />
+        </Link>
+      ) : null}
+    </article>
   );
 }
