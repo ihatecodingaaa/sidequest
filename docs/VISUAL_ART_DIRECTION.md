@@ -68,15 +68,8 @@ of it.
 
 ## Character style
 
-Deliberately stylised, deliberately not faces.
-
-- Head is a rounded rectangle. Hair and shoulders are one silhouette path.
-- Two dot eyes, two brow strokes, one mouth stroke. That is the whole face.
-- Characters differ by **silhouette and colour**, not by features. Ken is
-  cropped and orange, Ilyas is longer at the sides and cyan, Rina has a fuller
-  crown and violet, You is the simplest shape and volt green.
-- Portraits render at 40px. Anything requiring more detail than a 40px
-  silhouette can carry is out of scope by definition.
+Deliberately stylised, deliberately not photographic. The build is described
+under "Story cast" below; what follows are the rules that constrain it.
 
 **Three prohibitions, and they are not stylistic.**
 
@@ -115,16 +108,98 @@ announcing the mark would only repeat it.
 
 ---
 
-## Echo
+## Echo, the mascot
 
-Echo is a signal shape, not a mascot: a ring with a mark through it, in the same
-language as the shield. No face, no eyes, no limbs, no cartoon.
+Echo used to be a ring with a stroke through it: a logo that talks. It had no
+silhouette, so it read as one icon among the others in the set, and nobody
+forms an attachment to a logo that talks. It is now a character.
 
-Four moods change the inner mark only. Five collectible styles change the ring
-colour and add an optional dashed halo, and **nothing else**: a style never
-changes what Echo says or anything about progress.
+**Construction**, and every part of it is load-bearing:
 
-Echo never appears on Safe.
+| Layer | What it is | Why |
+| ----- | ---------- | --- |
+| Body | The SIDEQUEST shield with its corners eased | The mascot and the logo are visibly the same object, so a character exists without introducing a second visual language |
+| Visor | A dark inset panel carrying the face | Stops this becoming a blob with eyes, and gives the expression contrast that survives 28px |
+| Eyes | Small, precise, geometric | The entire line between characterful and condescending |
+| Crest | A per-variant ornament above the body | Makes the collection structural rather than five colour swaps |
+
+**Six expressions**: neutral, thinking, pleased, concerned, surprised, proud.
+Carried by mouth and eye shape together, never by colour, and never alone: the
+copy beside Echo always states the thing, because a screen reader gets no
+expression at all.
+
+Asymmetry is what separates thinking from concerned. The first version used a
+frown for both and they were indistinguishable at any size.
+
+**Hard prohibitions.** No big pleading eyes, no glossy highlights, no blush, no
+sparkles, no bounce loop, no limbs. Those are the vocabulary of design that
+assumes the viewer needs protecting from complexity, and this product is about
+shop theft and money mule recruitment.
+
+**Sizes.** Legible from the same 64 unit drawing at 28px inline in a line of
+text and at 120px on a completion screen. Nothing relies on detail that
+disappears at the small size.
+
+**Echo never appears on Safe.** Not in any size, not in any state.
+
+### The tonal test
+
+Before adding any charm anywhere, ask:
+
+> If this same screen appeared in a story about something serious happening to a
+> friend, would the character still be appropriate?
+
+If not, pull it back. This is the test that keeps cute from becoming childish,
+and it is the one worth applying hardest to reward moments.
+
+## Collectible style
+
+Five variants, distinguished by **crest shape first and colour second**, so the
+collection reads as five characters rather than one character in five tints.
+Each crest also means something:
+
+| Variant | Crest | Earned by |
+| ------- | ----- | --------- |
+| Core | A single steady arc | Yours from the start |
+| Shift | A second arc, offset behind the first | Playing Crew Shift with a crew |
+| Signal | A raised antenna with a node | Finishing REWIND |
+| Scout | A raised marker, like a flag | Finishing a Field Quest |
+| Architect | A squared bracket | Finishing BREAKSAFE |
+
+Displayed as a **grid of tiles**, not a list of rows. Ownership is felt through
+display: an enumerated list reads as configuration, a grid at a size where the
+characters are visible reads as a collection. Locked tiles keep their full tile,
+dim the silhouette, and state their condition, because a slot that is visibly a
+slot invites completion in a way a greyed row does not.
+
+The visible label drops the "Echo " prefix, since five tiles starting with the
+same word is noise. The accessible name keeps it along with the state.
+
+## Story cast
+
+Built from three separated layers, for the same reason the mascot has a visor:
+a flat silhouette in one colour has nothing to separate the face from the head,
+so features drown at portrait size.
+
+| Layer | Purpose |
+| ----- | ------- |
+| Field | A soft tinted disc, so the portrait reads as a person against the card |
+| Hair | A real silhouette in the character's colour. The main way you tell them apart at a glance |
+| Face | A light plane with dark features, which is where the contrast comes from |
+
+Ken is cropped and squared, Ilyas is longer and swept, Rina is tied back with
+volume, You is the simplest shape because it is whoever is holding the phone.
+
+## Editorial motifs
+
+Updates gets artwork about the **object or system a story is about**, never a
+scene and never a person's situation. Objects and systems carry information
+cheaply; places do not, which is why there is no motif for "a void deck": the
+scene label says it in three words and an illustration would take a third of
+the screen to say the same thing.
+
+A story with no motif gets no artwork. That is the correct outcome of "no
+visual without a job", not a gap to fill later.
 
 ---
 
@@ -141,6 +216,19 @@ gold. What this pass adds is discipline about who may use them.
   so a person is never mistaken for a category.
 
 ---
+
+## Delight budget
+
+Delight is *load-bearing at a moment*; clutter is *present at rest*. A reward
+animation that plays once on unlock is delight; the same animation looping on
+the collection screen is clutter. A mascot on a completion screen is a
+character; a mascot in the corner of every screen is a watermark.
+
+- At most **one character presence** per screen.
+- At most **one hero artwork** per screen.
+- **No character at all** on Safe or Settings.
+- Artwork concentrates at moments: completion, unlock, chapter start, story
+  beats. Steady-state browsing screens stay as clean as the UX pass left them.
 
 ## Motion
 
