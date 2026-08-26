@@ -93,7 +93,7 @@ Baseline before this stage, then after.
 | `npm run test` | 65 | 129 | **129** |
 | `npx playwright test` | 79 (+1 skip) | 135 (+1 skip) | **149 (+7 skip)** |
 | `npm run build` | passes | passes | passes |
-| chunks | 1.3 MB | 1.61 MB | **1.63 MB** |
+| client JS | ~1.3 MB | ~1.6 MB | **1559 KB** |
 
 The seven skips are the new bottom-bar geometry tests, which are phone-only by
 design and skip on the desktop project. Six existing assertions were updated
@@ -119,10 +119,18 @@ Accessibility: axe at WCAG AA across 17 routes including five Campaign routes,
 plus accessible names, touch target sizes, skip link and reduced motion. All
 pass.
 
-Bundle: about 1.7 MB of JavaScript chunks across all routes before compression,
-up from 1.3 MB. The QR encoder is roughly 50 KB, code-split into chunks
-referenced only by the organiser station signs page and never loaded by a
-participant.
+Bundle: 1559 KB of JavaScript across 33 chunks, uncompressed, for the whole
+product. Measure it with:
+
+    find .next/static/chunks -name '*.js' -printf '%s
+' | awk '{s+=$1} END {print s/1024" KB"}'
+
+The two earlier figures in the table above were taken with a different command
+and are approximate; this one is exact and is the measure to use from now on.
+The UX pass added no dependencies and deleted one component, so its own effect
+on this number is close to nothing. The QR encoder is roughly 50 KB, code-split
+into chunks referenced only by the organiser station signs page and never
+loaded by a participant.
 
 ## Known limitations
 
