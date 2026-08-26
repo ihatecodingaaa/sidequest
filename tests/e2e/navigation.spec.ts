@@ -29,7 +29,7 @@ test.describe("bottom navigation", () => {
     const tabs = nav.getByRole("link");
     await expect(tabs).toHaveCount(5);
 
-    for (const [index, label] of ["Home", "Pulse", "Safe", "Missions", "You"].entries()) {
+    for (const [index, label] of ["Home", "Updates", "Safe", "Missions", "You"].entries()) {
       await expect(tabs.nth(index), `tab ${index} should be ${label}`).toHaveAccessibleName(
         new RegExp(`^${label}`),
       );

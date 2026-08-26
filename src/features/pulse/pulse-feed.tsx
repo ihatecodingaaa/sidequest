@@ -89,7 +89,7 @@ export function PulseFeed() {
 
   return (
     <div>
-      <PageHeader title="Pulse" lede="What is worth knowing, and what you can do about it." />
+      <PageHeader title="Updates" lede="What is worth knowing, and what you can do about it." />
 
       <p className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-faint">
         <ProvenanceTag provenance="seeded" compact />

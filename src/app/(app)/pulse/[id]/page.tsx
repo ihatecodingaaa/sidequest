@@ -10,7 +10,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const item = getPulseItem(id);
-  return { title: item ? item.title : "Pulse", description: item?.summary };
+  return { title: item ? item.title : "Updates", description: item?.summary };
 }
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {

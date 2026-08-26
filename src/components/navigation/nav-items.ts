@@ -30,10 +30,17 @@ export interface NavItem {
  *
  * Each label answers a question the user is actually asking:
  *   Home     what is happening for me
- *   Pulse    what should I know
+ *   Updates  what should I know
  *   Safe     I need help
  *   Missions what can I do
  *   You      my progress
+ *
+ * "Pulse" was the label here until the UX audit flagged it (H8). An invented
+ * word cannot be predicted by someone who has not used the app, and a tab bar
+ * label's only job is prediction. Pulse survives as the section's name inside
+ * the destination, where branding is free and navigation is not at stake. The
+ * route stays /pulse: renaming URLs for cosmetic consistency would break every
+ * link anyone has already shared.
  */
 export const NAV_ITEMS: NavItem[] = [
   {
@@ -45,7 +52,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     href: "/pulse",
-    label: "Pulse",
+    label: "Updates",
     icon: Newspaper,
     accent: "pulse",
     matches: ["/pulse", "/radio"],

@@ -36,7 +36,9 @@ test.describe("app shell", () => {
 
     for (const [path, heading] of [
       ["/", "ONE BAD MINUTE"],
-      ["/pulse", "Pulse"],
+      // The tab and the page both say "Updates" now. An invented word cannot
+      // be predicted by a first-time user, and the page has to confirm arrival.
+      ["/pulse", "Updates"],
       ["/missions", "Missions"],
       ["/safe", "What do you need?"],
       ["/you", "Safety Passport"],
@@ -62,7 +64,7 @@ test.describe("app shell", () => {
     const nav = page.getByRole("navigation", { name: "Primary" }).first();
 
     const steps: [string, RegExp][] = [
-      ["Pulse", /\/pulse$/],
+      ["Updates", /\/pulse$/],
       ["Missions", /\/missions$/],
       ["Safe", /\/safe$/],
       ["You", /\/you$/],
