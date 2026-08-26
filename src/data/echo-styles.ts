@@ -116,3 +116,25 @@ export function resolveEchoStyle(profile: UserProfile): EchoStyle {
   if (selected && unlockedEchoStyles(profile).has(selected)) return ECHO_STYLES[selected];
   return ECHO_STYLES.core;
 }
+
+/**
+ * Which style a mission earns, if any.
+ *
+ * The completion screen needs this to turn an unlock into a *moment*. An
+ * unlock that is merely recorded, and discovered later on a different screen,
+ * has happened in storage rather than in the experience.
+ *
+ * Kept beside the unlock rules it mirrors, so the two cannot drift: if a
+ * mission stops granting a style, both sides change in the same file.
+ */
+export const MISSION_UNLOCKS: Record<string, EchoStyleId> = {
+  "mission-rewind": "signal",
+  "mission-breaksafe": "architect",
+  "mission-field-quest": "scout",
+};
+
+/** The style this mission grants, or null. */
+export function styleUnlockedByMission(missionId: string): EchoStyle | null {
+  const id = MISSION_UNLOCKS[missionId];
+  return id ? ECHO_STYLES[id] : null;
+}

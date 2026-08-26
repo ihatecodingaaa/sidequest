@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowRight, Check, Sparkles, Zap } from "lucide-react";
+import { ArrowRight, Sparkles, Zap } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import { ACCENT_TEXT } from "@/lib/accent";
@@ -12,7 +12,11 @@ import { getPulseItem } from "@/data/pulse";
 import { QUICK_LINKS } from "@/lib/official-links";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { ExternalLink } from "@/components/ui/primitives";
-import { usePrefersReducedMotion } from "@/hooks/use-profile";
+import { usePrefersReducedMotion, useProfile } from "@/hooks/use-profile";
+import { EchoMascot } from "@/components/echo/echo-mascot";
+import { EchoUnlock } from "@/components/echo/echo-unlock";
+import { WhyThisWorks } from "@/components/reveal/why-this-works";
+import { resolveEchoStyle, styleUnlockedByMission, unlockedEchoStyles } from "@/data/echo-styles";
 import type { Mission } from "@/types/mission";
 import type { AwardResult } from "@/lib/xp";
 
@@ -60,6 +64,18 @@ export function MissionComplete({
     return () => cancelAnimationFrame(frame);
   }, [animates, result.xpGained]);
 
+  /*
+   * A style counts as *newly* unlocked when this mission grants one and the
+   * profile now has it. `result.awarded` is the first-completion signal, so a
+   * replay correctly shows nothing rather than re-announcing an old unlock.
+   */
+  const { profile, ready } = useProfile();
+  const granted = styleUnlockedByMission(mission.id);
+  const newlyUnlocked =
+    granted && result.awarded && ready && unlockedEchoStyles(profile).has(granted.id)
+      ? granted
+      : null;
+
   const relatedPulse = mission.relatedPulseItemIds?.[0]
     ? getPulseItem(mission.relatedPulseItemIds[0])
     : undefined;
@@ -68,16 +84,21 @@ export function MissionComplete({
 
   return (
     <div className="animate-rise space-y-6 py-4">
+      {/*
+        Reward order, deliberately. What happened, then what you got, then what
+        next, and the passport detail last behind a disclosure. It used to open
+        with a tick and then spend four of its first five elements on numbers
+        about the player, which is a report rather than a reward.
+      */}
       <div className="text-center">
-        <span
-          className={cn(
-            "animate-pop mx-auto grid size-16 place-items-center rounded-3xl bg-volt-500/15",
-          )}
-        >
-          <Check aria-hidden className="size-8 text-volt-400" strokeWidth={3} />
-        </span>
+        <EchoMascot
+          expression="pleased"
+          style={ready ? resolveEchoStyle(profile).id : "core"}
+          size={72}
+          className={cn("mx-auto text-quest-300", !reduced && "animate-pop")}
+        />
 
-        <h1 className="mt-5 font-display text-3xl font-extrabold tracking-tight text-chalk">
+        <h1 className="mt-4 font-display text-3xl font-extrabold tracking-tight text-chalk">
           Mission complete
         </h1>
         {summary ? <p className="mt-2 text-sm text-mist">{summary}</p> : null}
@@ -100,13 +121,16 @@ export function MissionComplete({
         ) : null}
       </div>
 
-      {/* Capability, not points. */}
+      {newlyUnlocked ? <EchoUnlock style={newlyUnlocked} /> : null}
+
+      {/*
+        Capability, not points, and now behind a disclosure. The passport data
+        is genuinely useful to a school or a partner and is one of the honest
+        things about this product. It just does not go second.
+      */}
       {result.awarded && mission.skillRewards.length ? (
-        <section className="sq-card p-4">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.1em] text-faint">
-            Added to your Safety Passport
-          </h2>
-          <ul className="mt-3 space-y-2.5">
+        <WhyThisWorks label="What this added to your passport">
+          <ul className="space-y-2.5">
             {mission.skillRewards.map((award) => {
               const skill = getSkill(award.skillId);
               if (!skill) return null;
@@ -123,7 +147,7 @@ export function MissionComplete({
               );
             })}
           </ul>
-        </section>
+        </WhyThisWorks>
       ) : null}
 
       {/* Information to action, in the other direction. */}
