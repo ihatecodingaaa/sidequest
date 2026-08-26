@@ -192,10 +192,21 @@ export function CampaignDetail({ campaign }: { campaign: Campaign }) {
           Chapters
         </h2>
 
+        {/*
+          The spine carries state rather than sitting behind it. A list says
+          "item 2 of 4"; a path says "that is behind you, this is where you are,
+          that is ahead". Two layers: a dim track for the whole journey and a
+          lit segment for the distance already travelled.
+        */}
         <ol className="relative space-y-2.5 pl-7">
           <span
             aria-hidden
-            className="absolute top-3 bottom-10 left-[0.6875rem] w-px bg-white/10"
+            className="absolute top-3 bottom-10 left-[0.65rem] w-[3px] rounded-full bg-white/8"
+          />
+          <span
+            aria-hidden
+            className="absolute top-3 left-[0.65rem] w-[3px] rounded-full bg-gradient-to-b from-volt-500 to-quest-500 transition-[height] duration-700 ease-out"
+            style={{ height: `${Math.max(0, Math.min(1, done / stations.length)) * 82}%` }}
           />
           {route.orderedChapterIds.map((chapterId, index) => {
             const chapter = campaign.chapters.find((entry) => entry.id === chapterId);
@@ -290,9 +301,9 @@ export function CampaignDetail({ campaign }: { campaign: Campaign }) {
             {finaleReady ? (
               <Link
                 href={`/campaigns/${campaign.slug}/finale`}
-                className="sq-card sq-pressable block border-coral-500/30 bg-coral-500/8 p-4"
+                className="sq-card sq-pressable block border-coral-500/40 bg-gradient-to-br from-coral-500/16 to-quest-500/10 p-5"
               >
-                <p className="font-display text-base font-bold text-chalk">
+                <p className="font-display text-lg font-extrabold text-chalk">
                   {progress.finaleCompleted ? "Finale, replay" : "Finale"}
                 </p>
                 <p className="mt-0.5 text-sm text-mist">
