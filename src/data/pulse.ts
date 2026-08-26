@@ -299,6 +299,7 @@ export const DISCOVERY_LINKS: DiscoveryLink[] = [
     url: "https://www.channelnewsasia.com/singapore",
     publisher: "CNA",
     accent: "pulse",
+    provenance: "reported",
   },
   {
     id: "discover-cna-scams",
@@ -307,6 +308,7 @@ export const DISCOVERY_LINKS: DiscoveryLink[] = [
     url: "https://www.channelnewsasia.com/topic/scams",
     publisher: "CNA",
     accent: "gold",
+    provenance: "reported",
   },
   {
     id: "discover-spf",
@@ -315,6 +317,7 @@ export const DISCOVERY_LINKS: DiscoveryLink[] = [
     url: "https://www.police.gov.sg/Advisories",
     publisher: "Singapore Police Force",
     accent: "quest",
+    provenance: "official-source",
   },
   {
     id: "discover-scamshield",
@@ -323,6 +326,7 @@ export const DISCOVERY_LINKS: DiscoveryLink[] = [
     url: "https://www.scamshield.gov.sg",
     publisher: "ScamShield",
     accent: "volt",
+    provenance: "official-source",
   },
 ];
 

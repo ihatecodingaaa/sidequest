@@ -57,4 +57,10 @@ export interface DiscoveryLink {
   url: string;
   publisher: string;
   accent: "quest" | "pulse" | "volt" | "coral" | "gold";
+  /**
+   * Required, so the discovery list is labelled exhaustively rather than
+   * selectively. A news publisher and a government agency are not the same
+   * kind of source and the interface should not imply that they are.
+   */
+  provenance: DataProvenance;
 }

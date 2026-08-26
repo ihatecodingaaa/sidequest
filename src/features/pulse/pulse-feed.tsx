@@ -7,6 +7,7 @@ import { ArrowRight, Bookmark, BookmarkCheck, ChevronRight, Play, Radio } from "
 import { cn } from "@/lib/cn";
 import { ACCENT_TEXT } from "@/lib/accent";
 import { DISCOVERY_LINKS, PULSE_ITEMS } from "@/data/pulse";
+import type { DiscoveryLink } from "@/types/content";
 import { getMission } from "@/data/missions";
 import { PageHeader } from "@/components/layout/app-shell";
 import { ExternalLink, ProvenanceTag } from "@/components/ui/primitives";
@@ -87,6 +88,9 @@ export function PulseFeed() {
 
   const [lead, ...rest] = items;
 
+  const officialLinks = DISCOVERY_LINKS.filter((link) => link.provenance === "official-source");
+  const reportedLinks = DISCOVERY_LINKS.filter((link) => link.provenance === "reported");
+
   return (
     <div>
       <PageHeader title="Updates" lede="What is worth knowing, and what you can do about it." />
@@ -162,25 +166,34 @@ export function PulseFeed() {
         </>
       )}
 
-      {/* Discovery, below the product's own content rather than above it. */}
+      {/*
+        Discovery, below the product's own content rather than above it.
+
+        Split by who publishes it. A government advisory and a newsroom are not
+        the same kind of source, and one subheading each labels every row in the
+        group without hanging a chip on all six. Exhaustive, not loud.
+      */}
       <section className="mt-8">
         <h2 className="mb-3 text-sm font-bold uppercase tracking-[0.1em] text-faint">Elsewhere</h2>
+
+        <p className="mb-2 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-faint">
+          Official services
+        </p>
         <ul className="divide-y divide-white/6 overflow-hidden rounded-2xl border border-white/8">
-          {DISCOVERY_LINKS.map((link) => (
+          {officialLinks.map((link) => (
             <li key={link.id}>
-              <ExternalLink
-                href={link.url}
-                showIcon={false}
-                className="flex min-h-14 items-center gap-3 px-4 py-3 transition-colors hover:bg-white/4"
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold text-chalk">{link.label}</span>
-                  <span className="block truncate text-xs text-muted">{link.description}</span>
-                </span>
-                <span className={cn("shrink-0 text-xs font-bold", ACCENT_TEXT[link.accent])}>
-                  {link.publisher}
-                </span>
-              </ExternalLink>
+              <DiscoveryRow link={link} />
+            </li>
+          ))}
+        </ul>
+
+        <p className="mt-5 mb-2 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-faint">
+          News reporting, written by the publisher
+        </p>
+        <ul className="divide-y divide-white/6 overflow-hidden rounded-2xl border border-white/8">
+          {reportedLinks.map((link) => (
+            <li key={link.id}>
+              <DiscoveryRow link={link} />
             </li>
           ))}
           <li>
@@ -262,5 +275,24 @@ function LeadStory({
         </Link>
       ) : null}
     </article>
+  );
+}
+
+/** One outbound row. Its provenance comes from the group it is rendered in. */
+function DiscoveryRow({ link }: { link: DiscoveryLink }) {
+  return (
+    <ExternalLink
+      href={link.url}
+      showIcon={false}
+      className="flex min-h-14 items-center gap-3 px-4 py-3 transition-colors hover:bg-white/4"
+    >
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-semibold text-chalk">{link.label}</span>
+        <span className="block truncate text-xs text-muted">{link.description}</span>
+      </span>
+      <span className={cn("shrink-0 text-xs font-bold", ACCENT_TEXT[link.accent])}>
+        {link.publisher}
+      </span>
+    </ExternalLink>
   );
 }

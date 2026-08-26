@@ -59,6 +59,16 @@ const PROVENANCE_COPY: Record<DataProvenance, { label: string; title: string; ac
     title: "Links out to the agency that owns this service.",
     accent: "pulse",
   },
+  reported: {
+    label: "News report",
+    title: "Opens reporting by a news publisher. SIDEQUEST did not write it and does not host it.",
+    accent: "pulse",
+  },
+  pilot: {
+    label: "Pilot data",
+    title: "Measured during a real SIDEQUEST pilot.",
+    accent: "volt",
+  },
   seeded: {
     label: "Prototype content",
     title: "Written by the SIDEQUEST team from public advisories. Not a live feed.",
@@ -80,6 +90,12 @@ const PROVENANCE_COPY: Record<DataProvenance, { label: string; title: string; ac
  * The single component responsible for keeping prototype data distinguishable
  * from real data. If content is seeded, invented or unconfirmed, it wears one
  * of these.
+ *
+ * The rule is exhaustive-within-a-class: a screen may declare provenance once
+ * for a dense list instead of once per row, but only when the declaration is
+ * true of every row on it. Labelling some rows and not others is worse than
+ * labelling none, because the unlabelled ones then read as verified. See
+ * `DataProvenance` for the evidence.
  */
 export function ProvenanceTag({
   provenance,
