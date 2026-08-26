@@ -22,13 +22,13 @@ the same tap.
 
 | Pillar      | Question it answers        | What it contains                                                     |
 | ----------- | -------------------------- | -------------------------------------------------------------------- |
-| **Pulse**   | What is happening?         | Safety stories, discovery links, radio, everything linked to a mission |
+| **Pulse**   | What is happening?         | Safety stories, discovery links, radio, everything linked to a mission. Labelled **Updates** in the navigation. |
 | **Missions**| What can I do about it?    | Quick, Crew, Field, Build, Service and Boss quests                     |
 | **Safe**    | I need help now.           | Direct handoff to official Singapore services                          |
 
 Plus **Home** (one thing to do next) and **You** (the Safety Passport).
 
-Five destinations, in this order: Home, Pulse, **Safe**, Missions, You. Safe is
+Five destinations, in this order: Home, Updates, **Safe**, Missions, You. Safe is
 the elevated centre tab. It carries the brand mark and a label, it sits in the
 same place on every screen, and it never pulses or demands attention. It is a
 destination, not an action: tapping it opens a screen and does nothing else. It
@@ -155,6 +155,7 @@ Zustand, Zod, Lucide, Vitest, Playwright.
 | `docs/SESSION_STATE.md`  | Current build status, tests, known issues, next actions |
 | `docs/UX_RESEARCH.md`    | Interface research, sources, and the decisions each one drove |
 | `docs/UX_AUDIT.md`       | Consumer UX problem inventory, severity, and Track B alignment |
+| `docs/SIGNATURE_EXPERIENCE_RESEARCH.md` | Comparison, peer influence, provenance and PWA install decisions |
 | `CLAUDE.md`              | Engineering rules for anyone working in this repo       |
 
 ## What SIDEQUEST deliberately does not do

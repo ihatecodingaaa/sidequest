@@ -238,13 +238,23 @@ markedly less patience than adults.
 **Recommended change:** Rename the tab to a concrete word. "Know" or "News"
 would both carry scent. The route, the section brand and the documentation
 could keep "Pulse" if that name matters to the pitch.
-**Implemented:** **No, and deliberately.** "Pulse" is an established product
-pillar that runs through the route, every document and the submission
-narrative. Renaming it is a brand decision with reach well beyond a UX pass,
-and it belongs to the product owner rather than to this audit. It is recorded
-here as the single highest-confidence finding that was not acted on, and it
-should be the first thing tested if any user testing happens. **Safe** and
-**Missions** are milder cases of the same issue and were kept.
+**Implemented:** **Yes, in the following pass.** This was originally recorded
+as the single highest-confidence finding that was *not* acted on, because
+renaming a product pillar is a brand decision rather than a UX one. The product
+owner then made that decision, and the tab now reads **Updates**.
+
+Scope of the change: the navigation label, the page heading and the route
+metadata title. The route stays `/pulse`, because renaming URLs for cosmetic
+consistency breaks links that have already been shared, and "Pulse" survives as
+the pillar name in `docs/PRODUCT_SPEC.md` and in the pitch. The navigation
+label's job is prediction; the brand's job is elsewhere.
+
+The page heading moved too, not just the tab. A destination that answers to a
+different name than the control you tapped leaves the user checking whether
+they arrived.
+
+**Safe** and **Missions** are milder cases of the same issue and were kept:
+both are ordinary words that describe what is behind them.
 
 ---
 

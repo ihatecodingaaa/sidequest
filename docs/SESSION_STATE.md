@@ -4,7 +4,7 @@ Kept current so another session can pick this up cold. Update after every major
 stage.
 
 **Last updated:** 26 August 2026
-**Status:** Consumer UX pass complete and verified. Feature complete overall.
+**Status:** Signature experience pass complete and verified. Feature complete overall.
 **Repository:** https://github.com/ihatecodingaaa/sidequest
 **Deployment:** not yet deployed to Vercel. CLI installed, not authenticated.
 
@@ -20,7 +20,7 @@ The full judge journey runs end to end, repeatedly, with a one-tap reset.
 | ---- | ----- |
 | Onboarding | Four steps: welcome, age band and name, interests, area. All optional except age band, which defaults. |
 | Home | One hero (continue or start the Campaign), then the three signature missions, crew, one story worth knowing with its mission handoff, and radio. Level and XP live in a compact chip. |
-| Pulse | One lead story with its mission handoff, then a compact list of seven. Filters, save, outbound discovery below the product's own content. Detail pages carry signals, actions, primary source and the route into the mission. |
+| Pulse, labelled Updates | One lead story with its mission handoff, then a compact list of seven. Filters, save, and outbound discovery grouped by publisher: official services separately from news reporting. Detail pages carry signals, actions, primary source and the route into the mission. |
 | Radio | Six stations, all linking out to meLISTEN. No streaming. |
 | Missions | Campaign hero, "Start here" for the signature three, then short scenarios as compact rows and bigger commitments as cards. Five filters. Detail pages state the behavioural mechanism. |
 | REWIND | Full branching scenario, five pivot options, rewind mechanic, second run with the first choice locked out, side-by-side comparison, debrief. |
@@ -49,7 +49,7 @@ The full judge journey runs end to end, repeatedly, with a one-tap reset.
 | Chapter 1 | The favour. Runs on REWIND. Ken asks Ilyas for his account in front of the group: peer pressure as the mechanism, not a background detail. |
 | Chapter 2 | Everyone would do it. Runs on Norm Mirror with a new three-question set. |
 | Chapter 3 | Design the moment. Runs on BREAKSAFE. |
-| Chapter 4 | Crew Shift. New mechanic: pass the phone, private answers, reveal, timed discussion, group decision, shift report. Solo supported. |
+| Chapter 4 | Crew Shift. Pass the phone, private answers, reveal, timed discussion, **a second private round**, then a before-and-after distribution. The second round is also the decision; a tie is broken by the crew. Solo supported. |
 | Finale | One decision, four themed options, four outcomes plus a shared closing. |
 | Follow-ups | Aftermath at 20h, One week later at 168h. Elapsed-time unlock, no backend, no push. |
 | Station signs | `/campaigns/[slug]/stations`. Real QR codes generated in-browser, printable, with codes and sign text. |
@@ -82,18 +82,37 @@ Two findings were surfaced rather than acted on, both recorded in the audit:
 renaming the "Pulse" tab (H8, a brand decision for the product owner) and light
 mode (deferred feature scope).
 
+## Signature experience pass
+
+Ran after the consumer UX pass. No new features, no new navigation destination,
+no backend. Research in `docs/SIGNATURE_EXPERIENCE_RESEARCH.md`.
+
+| Change | Effect |
+| ------ | ------ |
+| "Pulse" tab relabelled **Updates** | Closes UX_AUDIT H8, the highest-confidence finding the previous pass left unactioned. Route stays `/pulse`; the pillar keeps its name in the docs. |
+| One shared reveal grammar | REWIND, Norm Mirror, BREAKSAFE and Crew Shift now all end in a labelled before state, a connector, and a labelled after state, via `ShiftReveal`. Four games, one grammar. |
+| Crew Shift runs two private rounds | The second round produces the "after" distribution and *is* the crew's decision. Previously one private round, and then whoever held the phone chose for everyone. |
+| Peer shift is shown, not asserted | Two bar distributions on a shared baseline, in fixed option order, plus a count of how many answers changed. Never a seat, never a persuader. |
+| "What changed the outcome?" | One to three protective factors resolved from the path taken, from a shared closed vocabulary. Story language on screen, behavioural terms internal. |
+| Provenance vocabulary completed | `reported` added for journalism, `pilot` added and guarded. Required on every Pulse item, discovery link and reward. |
+| Content integrity guardrails | 14 unit tests that fail the build on partnership language, an unlabelled record, a duplicated emergency number, or a `pilot` claim. |
+| Install invitation | One placement, after the Campaign finale, next to the delayed follow-ups that are the reason. Dismissible, remembered, gates nothing. Real button on Chromium, real instructions elsewhere, nothing in standalone. |
+| Campaign warm-up | `router.prefetch` for the four chapters and the finale once the Campaign screen mounts. Skipped under `saveData`. |
+| Onboarding skip | "Skip, I will pick later" now appears from the interests step rather than only the last one. Shortest honest path is welcome, age band, skip. |
+| Offline copy | Says progress is saved on this device, which is true because there is no backend. |
+
 ## Verification
 
 Baseline before this stage, then after.
 
-| Check | Start of project | After Campaigns | After UX pass |
-| ----- | ---------------- | --------------- | ------------- |
-| `npm run lint` | clean | clean | clean |
-| `npm run typecheck` | clean | clean | clean |
-| `npm run test` | 65 | 129 | **129** |
-| `npx playwright test` | 79 (+1 skip) | 135 (+1 skip) | **149 (+7 skip)** |
-| `npm run build` | passes | passes | passes |
-| client JS | ~1.3 MB | ~1.6 MB | **1559 KB** |
+| Check | Start | After Campaigns | After UX pass | After signature pass |
+| ----- | ----- | --------------- | ------------- | -------------------- |
+| `npm run lint` | clean | clean | clean | clean |
+| `npm run typecheck` | clean | clean | clean | clean |
+| `npm run test` | 65 | 129 | 129 | **143** |
+| `npx playwright test` | 79 (+1) | 135 (+1) | 149 (+7) | **175 (+7)** |
+| `npm run build` | passes | passes | passes | passes |
+| client JS | ~1.3 MB | ~1.6 MB | 1559 KB | **1574 KB** |
 
 The seven skips are the new bottom-bar geometry tests, which are phone-only by
 design and skip on the desktop project. Six existing assertions were updated
@@ -119,18 +138,18 @@ Accessibility: axe at WCAG AA across 17 routes including five Campaign routes,
 plus accessible names, touch target sizes, skip link and reduced motion. All
 pass.
 
-Bundle: 1559 KB of JavaScript across 33 chunks, uncompressed, for the whole
-product. Measure it with:
+Bundle: 1574 KB of JavaScript across 34 chunks, uncompressed, for the whole
+product, up 15 KB across the signature experience pass. No dependency was
+added: the increase is the reveal components, the protective factor data and
+the install hook. Measure it with:
 
     find .next/static/chunks -name '*.js' -printf '%s
 ' | awk '{s+=$1} END {print s/1024" KB"}'
 
-The two earlier figures in the table above were taken with a different command
-and are approximate; this one is exact and is the measure to use from now on.
-The UX pass added no dependencies and deleted one component, so its own effect
-on this number is close to nothing. The QR encoder is roughly 50 KB, code-split
-into chunks referenced only by the organiser station signs page and never
-loaded by a participant.
+The two earliest figures in the table above were taken with a different command
+and are approximate. The last two are exact and comparable. The QR encoder is
+roughly 50 KB, code-split into chunks referenced only by the organiser station
+signs page and never loaded by a participant.
 
 ## Known limitations
 
@@ -174,6 +193,9 @@ Deliberate, and mostly stated in the product itself.
   including two corrections to reasoning the pass started with.
 - `docs/UX_AUDIT.md`: the problem inventory with severity, and a Track B
   alignment section.
+- `docs/SIGNATURE_EXPERIENCE_RESEARCH.md`: the comparison, peer influence,
+  motivation, provenance, install and prefetch questions, each with its
+  evidence, decision and a stated confidence level.
 - `npm run shots:audit`: renders every screen at 390, 430, 768 and 1440 into
   `artifacts/`, and reports horizontal overflow and content hidden under the
   bottom bar. Not committed; the numbers drawn from it are in the audit.

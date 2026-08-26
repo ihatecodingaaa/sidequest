@@ -46,8 +46,14 @@ notice when adults perform youth.
 
 ## 4. Pillars and navigation
 
-Five destinations, in this order: **Home**, **Pulse**, **Safe**, **Missions**,
+Five destinations, in this order: **Home**, **Updates**, **Safe**, **Missions**,
 **You**.
+
+The second pillar is still called **Pulse** in this document, in the codebase
+and at `/pulse`. Its navigation label is "Updates", because a tab label's job
+is prediction and an invented word has no information scent for someone who has
+not used the app. The route was left alone: renaming URLs for cosmetic
+consistency breaks links people have already shared. See `docs/UX_AUDIT.md` H8.
 
 Safe sits in the centre as an elevated, branded tab. That placement buys
 recognition and muscle memory rather than speed, since the centre of a
@@ -57,9 +63,36 @@ and never an action: tapping it opens a screen and nothing else happens, and it
 is exempt from onboarding so a first-time visitor can reach it. The reasoning
 and its sources are in `docs/UX_RESEARCH.md`.
 
-**Pulse** is the everyday utility layer: safety stories in plain language,
-outbound discovery to CNA and official sources, radio discovery through
-meLISTEN, and a route into a mission from most items.
+**Pulse**, labelled Updates, is the everyday utility layer: safety stories in
+plain language, outbound discovery to CNA and official sources, radio discovery
+through meLISTEN, and a route into a mission from most items. Outbound
+discovery is grouped by who publishes it, official services separately from
+news reporting, so every row is labelled by the group it sits in.
+
+### The reveal grammar
+
+All four signature mechanics end by comparing two states, and since the
+signature experience pass they share one visual grammar: a labelled before
+state, a connector, a labelled after state, both permanently on screen.
+
+| Mechanic | Before | After |
+| -------- | ------ | ----- |
+| REWIND | First run | After the rewind |
+| Norm Mirror | You predicted | Prototype aggregate |
+| BREAKSAFE | Before | After |
+| Crew Shift | Before discussion | After discussion |
+
+They stay four different games. What is shared is the grammar, not the layout:
+`ShiftReveal` is a frame, renders no card of its own, and each mechanic supplies
+its own content. Distributions are bars on one shared baseline in fixed option
+order, never re-sorted, because a row that moves is the signal. Nothing is
+revealed by motion and nothing is hidden without it.
+
+Selected endings also carry **"What changed the outcome?"**: one to three
+protective factors resolved from the path the player took, drawn from a shared
+closed vocabulary in `src/data/protective-factors.ts`. They describe the story
+rather than grading the player, and the behavioural term each is drawn from is
+internal and never rendered.
 
 **Missions** is where prevention becomes participation. Six formats:
 
@@ -169,7 +202,7 @@ change direction.
 
 | Chapter | Mechanic | Behavioural point |
 | ------- | -------- | ----------------- |
-| Quick money | REWIND | Rehearse a low-conflict intervention before it is needed |
+| The favour | REWIND | Rehearse a low-conflict intervention before it is needed |
 | Everyone would do it | Norm Mirror | Separate what people assume from what they report |
 | Design the moment | BREAKSAFE | Change the system rather than watch the person |
 | Crew Shift | New | Make peer influence visible to the people in it |

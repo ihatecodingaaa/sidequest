@@ -15,7 +15,7 @@ this and we do not know.
 
 ---
 
-## Chapter 1: Quick money (REWIND)
+## Chapter 1: The favour (REWIND)
 
 **Mechanism.** Decision rehearsal and implementation intentions, combined with
 bystander intervention.
@@ -132,9 +132,16 @@ choices matter; it does not show that any particular patch would work.
 collective decision-making.
 
 **Hypothesis.** Peer influence is normally invisible, including to the people
-being influenced. Making everyone commit privately before anyone speaks
-produces a clean before and after on the same group, and lets a group see its
-own movement.
+being influenced. Making everyone commit privately before anyone speaks, and
+again after, produces a clean before and after on the same group and lets that
+group see its own movement.
+
+Gardner and Steinberg (2005, *Developmental Psychology* 41(4):625-635) is the
+closest experimental support. Across 306 participants they found riskier
+decisions in peer groups than alone, with the effect strongest among
+adolescents and youths, and the manipulation was **peer presence**, not
+persuasion. That is the specific thing this chapter renders visible: the group
+changes the decision without anybody arguing for it.
 
 **Objective.** Make peer influence visible, and practise disagreeing with
 friends constructively.
@@ -145,9 +152,28 @@ is a prompt rather than a constraint: it is skippable, and running out does
 nothing. If the timer had teeth it would push groups towards whoever talks
 fastest, which is the opposite of the point.
 
-**Measurement opportunity.** The proportion of groups whose final decision
-differs from the majority of their private answers, and in which direction.
-Also whether group size correlates with movement.
+**Two private rounds, not one.** The chapter previously took one private round
+and then let whoever was holding the phone tap a single decision for everyone.
+That had two problems. It produced no "after" distribution, so the shift had to
+be asserted in prose rather than shown. And it handed the group's decision to
+whoever happened to be holding the phone, which is a strange thing for a
+chapter about peer influence to do by accident.
+
+Now everyone answers privately again after the discussion, and that second
+round *is* the decision. A tie is resolved by the crew tapping once, out loud,
+rather than silently by declaration order: a genuine two-two split is a real
+result and worth surfacing.
+
+**What the reveal is allowed to say.** Only what was captured: the two
+distributions by option, and how many answers changed. Never which seat
+changed, never in what order, never who convinced anyone. The system does not
+record any of that, and displaying it would point at a person in a product
+whose first rule is that it does not profile people.
+
+**Measurement opportunity.** The proportion of groups whose second-round
+distribution differs from the first, the number of individual changes per
+group, and whether group size correlates with movement. All of it anonymous
+and aggregate.
 
 **Evidence status.** Grounded for the underlying phenomena (conformity, group
 polarisation, the effect of private versus public commitment). Untested as an
@@ -160,7 +186,15 @@ outcome, and the product deliberately does not score it as one. A group could
 just as easily talk itself into the passive option, and the copy for that
 option is written to be honest about what it is rather than to punish it.
 
-It also cannot tell who influenced whom, and does not pretend to.
+It also cannot tell who influenced whom, and does not pretend to. Two rounds
+give the size of the movement, not its cause.
+
+**Protective factors.** Each outcome names one to three factors from
+`src/data/protective-factors.ts` under "What changed the outcome?". They
+describe the fictional scenario, not the player, and the internal `mechanism`
+field that names the underlying idea is never rendered. A branching scenario
+can illustrate a mechanism; it cannot demonstrate one, and the interface should
+not blur that.
 
 ---
 

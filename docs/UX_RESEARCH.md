@@ -13,6 +13,15 @@ with. They are marked. Research that only ever confirms you is not research.
 Confidence key: **High** = primary source with quoted figures. **Medium** =
 reputable secondary source, or well established convention. **Low** = inference.
 
+> **Later work.** The signature experience pass extends this research rather
+> than replacing it: comparison and reveal design, peer influence
+> visualisation, motivation, provenance labelling, and PWA install behaviour
+> are in `docs/SIGNATURE_EXPERIENCE_RESEARCH.md`. One finding there revises a
+> decision recorded here: the anti-fatigue rule allowing a screen-level
+> provenance declaration is only safe when that declaration is exhaustive for
+> the screen, because labelling a subset raises the perceived accuracy of
+> whatever is left unlabelled.
+
 ---
 
 ## 1. Target size

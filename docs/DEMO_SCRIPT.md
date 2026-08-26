@@ -1,10 +1,12 @@
 # Demo script
 
-Target: about five minutes with the Campaign section, three to four without it.
-Practise it twice before judging.
+Target: about six minutes with the Campaign section (365 seconds across nine
+moments), three to four without it. Practise it twice before judging.
 
 If you only have three minutes, cut Moments 5 and 7 and keep Campaigns. It is
-the part judges have not seen from anybody else.
+the part judges have not seen from anybody else, and Moment 6 now carries the
+Crew Shift before-and-after reveal, which is the single clearest demonstration
+of what SIDEQUEST is for.
 
 ## Before you start
 
@@ -29,7 +31,10 @@ on the network.
 
 ## Moment 1: onboarding, 20 seconds
 
-Run through onboarding live. It is four short steps and it makes the age
+Run through onboarding live. It is four short steps, and from the third one
+there is a persistent **Skip, I will pick later**, so the shortest honest path
+to the product is welcome, age band, skip. Mention that: setup is not the
+price of entry. It makes the age
 adaptation visible without a slide.
 
 > "Four questions. Age band, interests, area. All of it stays on the device,
@@ -112,7 +117,7 @@ Point at the label.
 If time allows, open **Partner studio** at `/partner` for ten seconds to show
 that the mission formats are templates an organisation could author themselves.
 
-## Moment 6: Campaigns, 90 seconds
+## Moment 6: Campaigns, 120 seconds
 
 This is the strongest thing in the build. Give it the time.
 
@@ -135,19 +140,59 @@ The chapter opens on:
 > "That instruction is the whole congestion strategy. The station is busy for
 > the two seconds a scan takes, not the four minutes the chapter takes."
 
-### One chapter
+### One chapter, and the moment that carries the pitch
 
-Play **Crew Shift** if there are two or more people watching, because it is
-the only mechanic that needs them. Set the player count, let each person answer
-privately, then show the reveal.
+Play **Crew Shift** if there are two or more people watching, because it is the
+only mechanic that needs them. This is the single most important sixty seconds
+of the walkthrough. Run it in four beats and narrate each one.
 
-> "Nobody saw anyone else's answer until all of them were in. Then they get
-> forty-five seconds to argue, and one decision together. At the end it tells
-> them whether the group moved. That is peer influence, made visible to the
-> people who are in it."
+**1. Everyone answers privately.** Set the player count and pass the phone.
+
+> "Nobody sees anyone else's answer. That is the point: this is what each of
+> them actually thinks, before the room gets a vote."
+
+**2. Show the first distribution.** Let it sit on screen.
+
+> "There it is. They are split."
+
+**3. Now they discuss.** Start the timer and stop talking. Let them argue.
+
+> "Forty-five seconds. The timer is skippable and running out does nothing.
+> If it had teeth it would just reward whoever talks fastest."
+
+**4. Everyone answers privately again, then the reveal.**
+
+Point at the two stacks of bars.
+
+> "Before discussion. After discussion. Same four people, same question, and
+> the group has moved."
+
+Then the line that is the whole submission:
+
+> "Peer influence normally happens invisibly, and that is exactly why it works.
+> SIDEQUEST lets young people see it, argue about it, and practise using it in
+> the direction they choose."
+
+If nobody moved, that is not a failed demo. The screen says "Your crew held its
+position", and the line is:
+
+> "Holding a position after an argument is a different thing from holding it
+> before one. There is no score here and no correct answer."
+
+**What not to claim.** This demonstrates the intended behavioural intervention.
+It is not evidence of crime reduction and nobody should say it is. If a judge
+asks, the honest answer is that the mechanism is grounded (Gardner and
+Steinberg 2005 found peer *presence* alone produces riskier decisions, strongest
+in this age band) and the intervention is untested in this form. That is in
+`docs/CAMPAIGN_BEHAVIOUR.md`.
+
+Note also what the reveal never shows: no names, no seat numbers, no "player 3
+changed everyone's mind". It reports how many answers changed, and nothing
+about who.
 
 If you are short of time, or alone, run **BREAKSAFE** at Chapter 3 instead:
-the judge already understands it from Moment 4, so it needs no setup.
+the judge already understands it from Moment 4, so it needs no setup. Crew
+Shift does run solo, but solo removes the only thing worth showing.
 
 ### The map
 
@@ -218,8 +263,9 @@ Then go straight back to the fun part. Twenty seconds, no longer.
 
 Tap **You**.
 
-> "Seven capability areas. Not badges. What this person can actually do, which
-> is the thing a school or a partner would want to read."
+> "The capabilities they are actually building. Not badges, and not a score.
+> What this person can do, which is the thing a school or a partner would want
+> to read."
 
 Tap **Rewards**.
 

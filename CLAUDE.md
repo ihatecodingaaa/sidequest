@@ -21,6 +21,15 @@ a deliberate anti-fatigue decision, not permission to remove labels. Norm
 Mirror percentages are placeholders and every reveal says so. Never label
 seeded content "live".
 
+A screen-level declaration must be **exhaustive for that screen**. Labelling
+some rows and not others is worse than labelling none: warning a subset raises
+the perceived accuracy of whatever is left unwarned (Pennycook et al. 2020, the
+implied truth effect). `DataProvenance` is therefore required, never optional
+and never defaulted, on every record of a labelled type. `pilot` may not be
+used until real pilot data exists, and `tests/unit/integrity.test.ts` fails the
+build if it appears. There is no `verified` status, because there is no
+verification procedure to give it meaning.
+
 **No fake partnerships.** SPF, NCPC, Mediacorp, CNA, FairPrice, banks, schools
 and hackathon sponsors are named only as sources or as *potential* partners.
 `isConfirmedPartner` and `isPartnerConfirmed` stay `false` until a real
@@ -58,6 +67,37 @@ work fully with location denied.
 - Every tab keeps a text label. The label carries the meaning; the icon does
   not rescue an unclear one.
 - Exactly one element on Safe is red. If everything is urgent, nothing is.
+
+## Reveals
+
+- All four signature mechanics end in the same grammar: a labelled before
+  state, a connector, a labelled after state, both permanently on screen. Use
+  `ShiftReveal`; do not invent a fifth private layout.
+- `ShiftReveal` renders no card. The comparison is typography, spacing and a
+  hairline. A comparison nested in a card inside a card is how card soup comes
+  back.
+- Distributions are bars on one shared baseline, in fixed option order, never
+  re-sorted by count. If a row moves, the movement is the signal. Counts are
+  integers: four people are counts, not percentages.
+- Nothing is revealed by motion and nothing is hidden without it. The reduced
+  motion path must be identical, not merely acceptable.
+- No scores in a reveal. None of these mechanics has a correct answer.
+- "What changed the outcome?" resolves ids from `src/data/protective-factors.ts`
+  against the path taken. `label` and `description` describe the story; the
+  `mechanism` field is internal and must never render.
+
+## Crew Shift
+
+- Two private rounds, one either side of the discussion. The second round is
+  both the "after" distribution and the crew's decision. Never let one person
+  choose on the group's behalf.
+- A tie is resolved by the crew tapping once, never silently by declaration
+  order.
+- The reveal may state the two distributions and how many answers changed. It
+  may never name a seat, order the seats, or infer who persuaded whom, because
+  none of that is captured and all of it points at a person.
+- "Your crew held its position" is a result, not a failure. No confetti, no
+  winner, no correct option.
 
 ## Track B alignment
 
@@ -98,6 +138,16 @@ belong under Safe as utility, not in discovery.
 - Outbound links go through `ExternalLink`, which enforces http(s) and
   `rel="noopener noreferrer"`.
 - No `dangerouslySetInnerHTML`. Sanitise and validate anything a user types.
+- The install invitation appears only where its reason is true, is dismissible,
+  remembers the dismissal, and gates nothing. `beforeinstallprompt` does not
+  exist on Safari or Firefox, so never render anything resembling a system
+  install dialog there: describe the real Share menu step instead. Detect
+  standalone with `(display-mode: standalone)`, which Safari has supported
+  since 13.
+- No push infrastructure. Follow-up copy says the chapter is waiting, never
+  that the phone will buzz.
+- Campaign warm-up uses `router.prefetch` on already-static routes and is
+  skipped under `saveData`. Do not add a service-worker framework for it.
 
 ## Writing
 

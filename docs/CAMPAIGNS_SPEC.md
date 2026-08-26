@@ -78,7 +78,7 @@ Only Crew Shift is new.
 
 | # | Chapter | Mechanic | Code | XP |
 | - | ------- | -------- | ---- | -- |
-| 1 | Quick money | REWIND | A7 | 70 |
+| 1 | The favour | REWIND | A7 | 70 |
 | 2 | Everyone would do it | Norm Mirror | B4 | 60 |
 | 3 | Design the moment | BREAKSAFE | C9 | 80 |
 | 4 | Crew Shift | Crew Shift | D2 | 90 |
@@ -250,7 +250,7 @@ Chapters award existing skills. No new skill ids were introduced.
 
 | Chapter | Skills |
 | ------- | ------ |
-| Quick money | Peer Intervention, Decision Making |
+| The favour | Peer Intervention, Decision Making |
 | Everyone would do it | Decision Making, Communication |
 | Design the moment | Safety Design, Decision Making |
 | Crew Shift | Peer Intervention, Leadership, Communication |
