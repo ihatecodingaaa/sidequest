@@ -285,3 +285,54 @@ personality.
 Routes, QR generation, station codes, progress, XP, the finale gate, follow-up
 timing, the map, the station signs and the demo controls all work from the data.
 No component knows anything about ONE BAD MINUTE specifically.
+
+---
+
+## The Campaign map
+
+The chapter list became a map, because a list was arguing against the rules.
+
+**The model.** Four physical chapters sit as a constellation under one
+destination. No chapter connects to another chapter. Every connector runs
+upward from a chapter to the finale, and that is the whole reason the layout
+works: with no edge between chapter one and chapter two, there is nothing to
+read as "then". The shape states the actual rule, which is four ways in and one
+destination.
+
+**Node states.** Four, each carried by shape, icon, colour and a word, so any
+one of the four is enough to read it.
+
+| State | Icon | Word | Means |
+| ----- | ---- | ---- | ----- |
+| done | tick, filled | Done | Completed on this device |
+| current | play, filled, Echo alongside | Up next | The route's recommendation |
+| available | index number | Open | Unlocked, not recommended, still valid |
+| locked | padlock, dashed border | Scan at the station | Not yet unlocked on this device |
+
+**Non-linear routing.** Tiles render in campaign order; the recommendation
+comes from the participant's assigned route. Two participants on different
+routes see the same four tiles with a different one marked current. Nothing in
+the layout implies the others were skipped or failed.
+
+**Three of four.** The finale node states what is still needed as a count, and
+opens at three. A chapter still outstanding at that point drops from "Up next"
+to "Open", because the finale has become the recommendation and two answers to
+one question on one screen is worse than a slightly emptier tile.
+
+**All four** reads as "Full route complete" on the finale node. It is a
+distinction, not a higher pass mark: three of four is deployment resilience and
+the language never grades it.
+
+**Station identity.** The code sits inside the node it belongs to, so A7 is
+what The favour *is* rather than a detail listed underneath it. It never
+outweighs the chapter title.
+
+**What the map does not know.** It reads no sensor. "Scan at the station" is a
+statement about this device's stored state, never about where a person is
+standing, and nothing in the UI claims to know that a station is busy. That
+stays the participant's judgement, and the map's only job is to keep an
+alternative visibly open at the moment it is needed.
+
+**QR entry is unaffected.** A chapter URL still unlocks and plays on a cold
+device. The map is progress and navigation, never a gate in front of a scan.
+

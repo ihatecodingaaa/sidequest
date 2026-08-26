@@ -130,8 +130,22 @@ export function ChapterRunner({
           screen, which is where the Campaign is described and where the rule
           about declaring once per screen is satisfied.
         */}
-        <div className="animate-rise py-4">
-          <p className="animate-pop inline-flex items-center gap-2 rounded-full bg-volt-500/15 px-4 py-2 font-display text-sm font-extrabold uppercase tracking-[0.1em] text-volt-300">
+        {/*
+          The leftover space was structural, not a missing picture.
+
+          MissionShell is a min-h-dvh column whose main is flex-1, so main
+          always fills the viewport and its content was simply top aligned
+          inside it. That left roughly 350px of nothing between the last
+          element and the footer on a 390px phone, and no amount of artwork
+          fixes a layout that is reserving space it does not use.
+
+          Making the wrapper a full height column and letting the scene band
+          take the slack spends that space instead of leaving it: the copy
+          stays exactly where it was, the band sits down near the control it
+          precedes, and nothing was added to the screen to achieve it.
+        */}
+        <div className="animate-rise flex flex-1 flex-col py-4">
+          <p className="animate-pop inline-flex items-center gap-2 self-start rounded-full bg-volt-500/15 px-4 py-2 font-display text-sm font-extrabold uppercase tracking-[0.1em] text-volt-300">
             <Check aria-hidden className="size-4" strokeWidth={3} />
             Chapter {chapter.chapterNumber} unlocked
           </p>
@@ -159,7 +173,7 @@ export function ChapterRunner({
 
           <Link
             href={campaignHref}
-            className="mt-6 inline-flex min-h-11 items-center text-sm font-semibold text-quest-300 hover:text-quest-400"
+            className="mt-6 inline-flex min-h-11 items-center self-start text-sm font-semibold text-quest-300 hover:text-quest-400"
           >
             See the whole Campaign first
           </Link>
@@ -192,7 +206,7 @@ export function ChapterRunner({
             moved, which is the same rule the mission itself follows.
           */}
           {chapter.config.mechanic === "crew-shift" ? (
-            <div className="mt-10">
+            <div className="mt-auto mb-2 pt-8">
               <MissionWorld art="crew-shift" accent={chapter.accent} scale="intro" />
               {chapter.intro?.slug ? (
                 <p className="mt-4 text-center text-[0.7rem] font-bold uppercase tracking-[0.18em] text-faint">
@@ -201,7 +215,7 @@ export function ChapterRunner({
               ) : null}
             </div>
           ) : chapter.intro?.slug ? (
-            <div className="mt-10">
+            <div className="mt-auto mb-2 pt-8">
               <div className="relative overflow-hidden rounded-3xl border border-white/8 bg-white/[0.03] px-5 py-10">
                 <div
                   aria-hidden
@@ -253,7 +267,7 @@ export function ChapterRunner({
           </Button>
         }
       >
-        <div className="animate-rise py-2">
+        <div className="animate-rise flex flex-1 flex-col py-2">
           <StoryView segment={chapter.intro} beat={introBeat} />
           {/* Echo waits until the scene has finished rather than talking over it. */}
           {introBeat.complete ? (

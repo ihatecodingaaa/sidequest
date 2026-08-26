@@ -58,9 +58,22 @@ export function MissionShell({
         ) : null}
       </header>
 
+      {/*
+        A column, not a block.
+
+        This element already grew to fill the viewport, because it is flex-1 in
+        a min-h-dvh column. What it could not do was let anything inside it use
+        that height: a percentage height on a child of a block does not resolve
+        against a flex derived height, so screens with little content left a
+        few hundred pixels of reserved but unusable space above the footer.
+
+        As a column it stacks and stretches its children exactly as a block
+        did, and a child that asks for flex-1 can now take the slack. Nothing
+        that does not ask for it moves.
+      */}
       <main
         id="main"
-        className="mx-auto w-full max-w-2xl flex-1 px-4 py-6"
+        className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 py-6"
         style={{ paddingBottom: footer ? "1rem" : "calc(2rem + var(--safe-bottom))" }}
       >
         {children}

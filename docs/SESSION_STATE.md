@@ -197,6 +197,31 @@ Verified by rendering, not by inspection: speaker beats now confirmed to show
 the portrait, the name and the expression together, which the previous audit
 could not confirm.
 
+### Campaign map pass
+
+The last remaining PARTIAL. Chapter progress was a vertical list of four full
+width cards on a spine: every state modelled correctly, and still a task
+manager, because a single column reads as a sequence whatever is drawn beside
+it.
+
+| Change | Effect |
+| ------ | ------ |
+| Constellation, not a column | Four tiles under one destination, with connectors running only chapter to finale. No edge between chapters means nothing reads as "then". |
+| Station codes moved into nodes | A7 is what The favour is, not a detail underneath it. |
+| The progress card went | Its heading, count, bar and sentence are all stated by the map's own nodes. Keeping it pushed the map below the fold at 390px. |
+| Echo marks position | On the recommended chapter, moving to the finale when the finale opens. |
+| Chapter intro void, fixed structurally | MissionShell's main is now a column, so a child can take the slack it was already reserving. Nothing was added to the screen. |
+| Story beats fill their height | `flex-1` is what made the earlier centring real. |
+
+Page height fell from 2234px to 1920px while gaining the map. Bundle moved
+1,699,466 to 1,700,117 bytes, because removing `chapter-node.tsx` and the
+progress card paid for most of the map.
+
+**Not done, and honest about it:** the typed narration scene system
+(`scene`, `objectMotif`, `castComposition`) described in the brief was not
+built. Narration beats are better balanced but still carry no contextual
+visual. That is the largest remaining gap in the story layer.
+
 ## Verification
 
 Baseline before this stage, then after.

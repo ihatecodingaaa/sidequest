@@ -299,3 +299,28 @@ because a story is read rather than scanned.
   hand-drawn SVG rather than icons pressed into service as illustration.
 - Anything that makes the product look childish. The audience is 13 to 25 and
   the subject is real offences.
+
+---
+
+## Campaign map
+
+A constellation, not a path. Four chapter tiles in a two by two grid under a
+full width finale node, with four connectors fanning from the finale into the
+gap above the grid.
+
+The connectors stop short of the tiles on purpose. Drawing them to each node
+centre put both lower connectors straight through the upper tiles, which struck
+out the text and invented an edge between two chapters. A short fan says the
+same true thing and crosses nothing.
+
+Geometry is percentage based inside one stretched SVG with
+`preserveAspectRatio="none"` and `vectorEffect="non-scaling-stroke"`. No
+measurement in JavaScript, no resize observer, and the connectors stay attached
+at any width.
+
+Echo appears exactly once on the map: on the recommended chapter, or on the
+finale once the finale is open. It is a "you are here" marker and never repeats
+a label already on screen.
+
+No legend. If a node needed a key, the node would be the thing to fix.
+

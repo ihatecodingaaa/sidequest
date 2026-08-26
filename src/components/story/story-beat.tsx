@@ -139,7 +139,15 @@ export function StoryBeat({
     <div
       className={cn(
         "relative flex min-h-[62vh] flex-col",
-        !inlineAdvance && "justify-center",
+        /*
+          `flex-1` is what makes the centring real. Without it the beat is only
+          as tall as 62vh inside a column that fills the whole viewport, so
+          "centred" meant centred in a box that itself sat near the top: the
+          text landed around 40% down with uneven space above and below. Now
+          the beat takes the height that was already reserved for it and the
+          scene sits where the eye expects a line of dialogue to be.
+        */
+        !inlineAdvance && "flex-1 justify-center",
         className,
       )}
     >

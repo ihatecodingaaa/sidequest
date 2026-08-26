@@ -310,3 +310,24 @@ Tap **Rewards**.
 ## Between judges
 
 `/?demo=reset` then hand it over. Two seconds.
+
+---
+
+## Showing the roadshow mechanism on the map
+
+The Campaign map is now the shortest way to explain Scan and Scatter, because
+the states are visible rather than described.
+
+1. **"Different groups start at different stations."** Open the Campaign. One
+   tile carries Echo and the words "Up next". Note that a participant on
+   another route sees a different tile marked, from the same four.
+2. **"If one station is busy, they take another."** Point at any tile reading
+   "Open". It is tappable now, and taking it costs nothing.
+3. **"Any three of the four open the finale."** Point at the finale node. It
+   states what is still needed as a count, and turns from a dashed outline into
+   a solid destination at three.
+4. **"Finishing all four is a distinction, not a requirement."** At four the
+   finale node reads "Full route complete".
+
+No paragraph of routing explanation is needed at any point.
+
