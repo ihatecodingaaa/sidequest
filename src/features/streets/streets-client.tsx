@@ -9,6 +9,7 @@ import { usePrefersReducedMotion } from "@/hooks/use-profile";
 import { useAppStore } from "@/store/app-store";
 import { useStreetsBridge } from "@/features/streets/game/quest-bridge";
 import { useStreetsLayout } from "@/features/streets/game/use-orientation";
+import { recallPlace, rememberPlace } from "@/features/streets/game/streets-return";
 import { DialogueOverlay } from "@/features/streets/components/dialogue-overlay";
 import { Minimap } from "@/features/streets/components/minimap";
 import { CrewHub } from "@/features/streets/components/crew-hub";
@@ -43,7 +44,9 @@ import type { EngineOptions, WorldEngine } from "@/features/streets/game/world-e
  */
 export function StreetsClient() {
   const reduced = usePrefersReducedMotion();
-  const { ref: rootRef, overlay: landscape, height: viewportHeight } = useStreetsLayout();
+  const { ref: rootRef, metrics } = useStreetsLayout();
+  const landscape = metrics.overlay;
+  const compact = metrics.compact;
   const bridge = useStreetsBridge();
   /*
    * Destructured because the effects below depend on these two specifically,
@@ -132,6 +135,22 @@ export function StreetsClient() {
         onTile: setTile,
         onMap: (map) => setPlaceId(map.id),
       });
+
+      /*
+       * Come back to where you were, not to the spawn point.
+       *
+       * Somebody who walked up to a neighbour, played what that neighbour
+       * offered and returned should be standing next to them watching the
+       * world react. Restoring before `start()` means the first painted frame
+       * is already in the right place, with no visible jump from spawn.
+       */
+      const here = recallPlace();
+      if (here) {
+        engine.restore(here.mapId, here.x, here.y, here.facing);
+        setPlaceId(engine.place.id);
+        setTile(engine.tile);
+      }
+
       engineRef.current = engine;
       engine.start();
       setEngineReady(true);
@@ -145,23 +164,22 @@ export function StreetsClient() {
   }, [bridgeReady, needsAvatar]);
 
   /*
-   * Resize with the viewport, and reframe when the phone turns.
+   * The camera reframes from the same measurement the layout uses.
    *
-   * The camera takes its shape from the container, so a rotation is a resize
-   * as far as the engine is concerned. `landscape` is in the dependency list
-   * because the layout around the canvas changes first and the canvas has to
-   * measure itself again afterwards.
+   * There used to be a second path here: window `resize` and
+   * `orientationchange` listeners calling `engine.resize()`, which read the
+   * canvas rect at whatever moment the event happened to fire. On iOS that can
+   * be before the layout has settled, so the camera could be sized from a
+   * viewport that no longer existed while the HUD was sized from another.
+   *
+   * Now there is one measurement. `metrics` changes only when the observed box
+   * actually changes, which is after the browser has laid out, and every
+   * consumer reads the same numbers.
    */
   useEffect(() => {
-    const onResize = () => engineRef.current?.resize();
-    onResize();
-    window.addEventListener("resize", onResize);
-    window.addEventListener("orientationchange", onResize);
-    return () => {
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("orientationchange", onResize);
-    };
-  }, [landscape, engineReady]);
+    if (!engineReady || metrics.width === 0) return;
+    engineRef.current?.resize();
+  }, [engineReady, metrics]);
 
   /* ------------------------------------------------------------- Input */
 
@@ -261,6 +279,21 @@ export function StreetsClient() {
     }
   }, [busy]);
 
+  /*
+   * Remember where the player is, on every tile they cross.
+   *
+   * The tile callback already fires only when the tile actually changes, so
+   * this is a handful of small session-storage writes per second of walking
+   * and nothing at all while standing still. Doing it here rather than at the
+   * moment of leaving means every exit is covered: a mission, a campaign,
+   * Safe, the browser back button, or a refresh.
+   */
+  useEffect(() => {
+    const engine = engineRef.current;
+    if (!engineReady || !engine) return;
+    rememberPlace({ mapId: placeId, x: tile.x, y: tile.y, facing: engine.heading });
+  }, [engineReady, placeId, tile]);
+
   /** The Quest List's shortcut. Interiors open their door on the way. */
   const walkTo = useCallback((npc: Npc) => {
     const engine = engineRef.current;
@@ -315,33 +348,66 @@ export function StreetsClient() {
           : "relative pt-[max(0.6rem,env(safe-area-inset-top))] pb-2",
       )}
     >
-      <Link
-        href="/"
-        aria-label="Leave Streets"
+      {/*
+        On a short landscape screen the exit and the XP share one pill.
+
+        The rule for compact is **remove duplicate chrome before shrinking the
+        world**: two pills side by side spend two backgrounds, two blurs and
+        two sets of padding to show two small things. One pill shows the same
+        two things and gives the difference back to the district.
+      */}
+      <div
         className={cn(
-          "sq-pressable grid size-11 place-items-center rounded-full bg-black/45 text-chalk backdrop-blur",
+          "flex items-center",
+          compact
+            ? "gap-1 rounded-full bg-black/45 pr-3 backdrop-blur"
+            : "gap-2",
           landscape && "pointer-events-auto",
         )}
       >
-        <X aria-hidden className="size-5" />
-      </Link>
+        <Link
+          href="/"
+          aria-label="Leave Streets"
+          className={cn(
+            "sq-pressable grid size-11 place-items-center rounded-full text-chalk",
+            compact ? "" : "bg-black/45 backdrop-blur",
+          )}
+        >
+          <X aria-hidden className="size-5" />
+        </Link>
 
-      <p className="shrink-0 rounded-full bg-black/45 px-3 py-1.5 text-sm font-bold whitespace-nowrap text-volt-300 backdrop-blur tabular-nums">
-        {bridge.xp} XP
-      </p>
+        <p
+          className={cn(
+            "shrink-0 font-bold whitespace-nowrap text-volt-300 tabular-nums",
+            compact
+              ? "text-sm"
+              : "rounded-full bg-black/45 px-3 py-1.5 text-sm backdrop-blur",
+          )}
+        >
+          {bridge.xp} XP
+        </p>
+      </div>
 
       <div className="flex-1" />
 
       <button
         type="button"
         onClick={() => setListOpen(true)}
+        /*
+         * Compact hides the word but must not change what the button is
+         * called. An aria-label overrides the text content entirely, so
+         * spelling it differently here would silently rename the control for
+         * screen readers and for every test that addresses it by name.
+         */
+        aria-label={compact ? "Quests" : undefined}
         className={cn(
-          "sq-pressable flex min-h-11 items-center gap-2 rounded-full bg-black/45 px-3.5 text-sm font-bold text-chalk backdrop-blur",
+          "sq-pressable flex min-h-11 items-center gap-2 rounded-full bg-black/45 text-sm font-bold text-chalk backdrop-blur",
+          compact ? "w-11 justify-center px-0" : "px-3.5",
           landscape && "pointer-events-auto",
         )}
       >
         <List aria-hidden className="size-4" />
-        Quests
+        {compact ? null : "Quests"}
       </button>
     </div>
   );
@@ -349,18 +415,19 @@ export function StreetsClient() {
   return (
     <div
       ref={rootRef}
-      className={cn("fixed inset-0 flex flex-col bg-[#1a2a1e]", landscape && "block")}
       /*
-       * The height a person can actually see.
+       * The height is CSS, not JavaScript.
        *
-       * `fixed inset-0` sizes to the layout viewport, which on iOS Safari is
-       * taller than the visible area, so anything anchored to the bottom ends
-       * up under the browser chrome. `100dvh` is the fallback for browsers
-       * with no visualViewport.
+       * `fixed inset-0` alone sizes to the layout viewport, which on iOS is
+       * taller than the visible area, so anything anchored to the bottom hides
+       * under the browser chrome. `100dvh` is the dynamic viewport: it already
+       * excludes that chrome, the browser keeps it correct, and unlike a value
+       * read from an event it cannot be left stale by a rotation.
        */
-      style={{ height: viewportHeight ? `${viewportHeight}px` : "100dvh" }}
+      className={cn("fixed inset-0 h-[100dvh] flex flex-col bg-[#1a2a1e]", landscape && "block")}
       data-testid="streets-root"
       data-orientation={landscape ? "landscape" : "portrait"}
+      data-compact={compact ? "true" : "false"}
     >
       {topBar}
 
@@ -388,11 +455,23 @@ export function StreetsClient() {
           phone the bar already carries three controls, and "Corner kopiti..."
           is not a place name.
         */}
+        {/*
+          Where you are.
+
+          On a short landscape screen this drops to plain text with a shadow
+          rather than a pill. It is the lowest value persistent chrome on the
+          screen: useful the moment you walk into a shop, and mostly furniture
+          after that. Losing the pill keeps the information and returns the
+          background.
+        */}
         {engineReady ? (
           <p
             className={cn(
-              "pointer-events-none absolute left-2 max-w-[52%] truncate rounded-full bg-black/45 px-3 py-1.5 text-sm font-semibold text-chalk backdrop-blur",
-              landscape ? "top-14" : "top-2",
+              "pointer-events-none absolute left-3 max-w-[52%] truncate font-semibold text-chalk",
+              compact
+                ? "top-12 text-xs [text-shadow:0_1px_3px_rgba(0,0,0,0.9)]"
+                : "rounded-full bg-black/45 px-3 py-1.5 text-sm backdrop-blur",
+              landscape && !compact ? "top-14" : compact ? "" : "top-2",
             )}
           >
             {place?.name ?? "District 01"}
@@ -409,7 +488,10 @@ export function StreetsClient() {
             tile={tile}
             npcs={NPCS.filter((npc) => !npc.mapId).map((npc) => ({ npc, done: isNpcDone(npc) }))}
             signals={signals}
-            className={cn("absolute right-2", landscape ? "top-14 w-24" : "top-2 w-28")}
+            className={cn(
+              "absolute right-2",
+              compact ? "top-12 w-20 p-0.5" : landscape ? "top-14 w-24" : "top-2 w-28",
+            )}
           />
         ) : null}
 
@@ -426,6 +508,7 @@ export function StreetsClient() {
             near={near}
             door={doorway}
             layout={landscape ? "edges" : "stacked"}
+            compact={compact}
             onMove={(x, y) => {
               engineRef.current?.setInput(x, y);
               if (x !== 0 || y !== 0) setHint(false);

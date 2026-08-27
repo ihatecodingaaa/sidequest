@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { useAppStore } from "@/store/app-store";
 import { clearInstallDismissal } from "@/hooks/use-install";
+import { forgetPlace } from "@/features/streets/game/streets-return";
 
 /**
  * Demo shortcuts, driven by the URL so they can be bookmarked before judging.
@@ -29,6 +30,9 @@ export function DemoModeParam() {
       // Same reason as the Settings reset: the dismissal is device state and
       // has to go too, or the next judge sees a different app.
       clearInstallDismissal();
+      // Where somebody was standing is device state too, and a judge who
+      // resets should start from the same corner as the last one.
+      forgetPlace();
       resetDemo();
     } else {
       loadDemoProgress();

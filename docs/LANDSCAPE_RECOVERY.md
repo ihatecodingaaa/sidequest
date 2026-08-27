@@ -3,7 +3,8 @@
 A P0 corrective pass driven by real device evidence: a rotated iPhone, where
 the world collapsed and the controls took the screen.
 
-Investigated 27 August 2026 against commit `aa6c6a8`.
+Investigated 27 August 2026 against commit `aa6c6a8`, then revisited the
+same day against `9c2d4e6` after a second round of real device testing.
 
 ---
 
@@ -150,13 +151,17 @@ it at the edges, translucent, with the middle of the screen kept clear. Target:
 the world owns effectively all of the usable height, with controls overlapping
 rather than displacing it.
 
-### 4. Height comes from the visual viewport where the browser offers one
+### 4. Height comes from the browser, not from JavaScript
 
 `position: fixed; inset: 0` sizes to the layout viewport, which on iOS Safari
-is taller than what the person can see. The root now takes its height from
-`window.visualViewport.height` when that API exists, falling back to `100dvh`
-and then to `100vh`. That keeps the interact button and the pad above the home
-indicator and out from under the browser chrome.
+is taller than what the person can see, so anything anchored to the bottom
+hides under the browser chrome.
+
+The first version of this fix read `window.visualViewport.height` and set the
+root's height from it. **That was wrong, and the second real-Safari failure
+below is what it caused.** The root now uses `h-[100dvh]`: the dynamic viewport
+already excludes browser chrome, the browser keeps it correct, and unlike a
+value read from an event it cannot be left stale by a rotation.
 
 ---
 
@@ -181,6 +186,109 @@ must still be moving, and the player must not have moved.
 
 ---
 
+# Second real-Safari failure
+
+Found on hardware after the fix above shipped. The catastrophic bug was gone,
+and a quieter one was underneath it.
+
+## Observed
+
+On a real iPhone:
+
+1. Portrait looks correct.
+2. Rotate to landscape. The world renders and is playable.
+3. Rotate back to portrait. **Portrait stays visually compressed**, using the
+   landscape geometry.
+4. Refreshing the browser recovers it.
+
+That last line is the diagnosis in one sentence. Refresh fixing something means
+a value that was correct at load has since gone stale, and nothing corrects it.
+
+## Root cause
+
+`root.style.height` was set from `visualViewport.height` in JavaScript, and it
+was the **only** geometry value in the system that JavaScript owned. Everything
+downstream came from it: the observed box, the layout mode, the camera scale,
+the canvas buffer.
+
+Two things made it stale.
+
+**`orientationchange` fires before the viewport settles on iOS.** The handler
+read `visualViewport.height` synchronously inside that event, which returns the
+pre-rotation height, and committed it.
+
+**An event value has no self-correction.** If the later `visualViewport.resize`
+that would have fixed it never arrives, or arrives with an intermediate value
+while Safari is still animating its toolbar, the stale number simply stays.
+The root keeps the landscape height in portrait, and every geometry derived
+from it is squeezed to match.
+
+Instrumented in Chromium across five transitions for comparison: `styleH`
+tracked `visualViewport.height` exactly at every step, and the post-rotation
+state was identical to the post-refresh state. Chromium does not reproduce it,
+which is the point. Chromium is what missed both of these.
+
+## Why refresh fixed it
+
+The first read on load happens after the viewport has settled, so it is always
+correct. Refreshing was not repairing anything. It was taking a fresh correct
+measurement in place of a stale one.
+
+## Chosen fix
+
+**The height is CSS again.** `h-[100dvh]` on the root. The dynamic viewport
+already excludes browser chrome, the browser keeps it correct, and it cannot be
+stale because nothing is holding a copy of it.
+
+JavaScript now only ever **observes the result**, which is the direction that
+cannot drift:
+
+- One `ResizeObserver` on the world container produces one `ViewportMetrics`
+  object, and the layout mode, the compact tier and the engine's own resize all
+  read that same object. There used to be two independent paths here, and the
+  camera could be sized from one moment while the HUD was sized from another.
+- A `ResizeObserver` is **self-correcting**: an intermediate size during a
+  rotation is followed by the settled one, because both are box changes. That
+  is the property the event listener did not have, and it is why there is no
+  timer anywhere in the fix.
+- `visualViewport.resize` and `orientationchange` are still subscribed to, but
+  only as **extra triggers to re-measure the element**, never as sources of
+  truth. Safari can settle its toolbar after the last box change, and this
+  catches that without introducing a number that can disagree with the box.
+
+## Rejected fixes
+
+**A refresh, a reload, or a forced remount.** Explicitly out. Requiring a
+refresh to recover a layout is the bug, not a workaround for it.
+
+**A `setTimeout` after rotation.** Every value in the range is either too short
+on a slow device or a visible pause on a fast one, and it would have hidden the
+fact that the real problem was a value that could not correct itself.
+
+**More listeners on the same stale read.** Piling `resize`, `pageshow` and
+`focus` onto a handler that reads `visualViewport.height` would raise the odds
+of catching the settled value without ever removing the possibility of missing
+it.
+
+**Double `requestAnimationFrame` settling.** Considered, and unnecessary once
+the height stopped being a JavaScript value. It would have been machinery to
+work around a design rather than a fix for it.
+
+## Acceptance
+
+Measured at 375x667, an iPhone SE, which is the smallest case:
+
+| | Layout |
+| - | ------ |
+| Fresh portrait | `portrait/false root 375x667 world 375x469 buf 750x939` |
+| After portrait to landscape to portrait | **identical** |
+| After a refresh on top of that | **identical** |
+
+Refresh makes no difference because there is nothing left for it to fix. A test
+asserts all three strings are equal.
+
+---
+
 ## Remaining physical-device risks
 
 Honestly stated, because emulation is what missed this in the first place.
@@ -195,9 +303,16 @@ Honestly stated, because emulation is what missed this in the first place.
    split-view pane close to square will flip between layouts. Nothing breaks,
    but it will look indecisive.
 4. **Chromium is not Safari.** Every measurement in this document was taken in
-   Chromium. The bug it found is a React reconciliation bug and is not
-   engine-specific, but the layout numbers should still be confirmed on
-   hardware.
+   Chromium, and Chromium has now missed two real defects in a row. A WebKit
+   project exists for the three specs where the engine and the browser meet,
+   opt in with `SQ_WEBKIT=1`, because the WebKit binary cannot launch on the
+   development machine: it reports `libxslt.dll` missing, and
+   `npx playwright install-deps webkit` is a no-op on Windows. On a machine
+   that can run it, `SQ_WEBKIT=1 npx playwright test` adds 57 WebKit tests.
+5. **The compact tier boundary.** Landscape under 480 CSS pixels tall switches
+   to the compact HUD. Chosen because every iPhone in landscape is at most 430
+   tall and the smallest tablet in landscape is 744, but it has not been seen
+   on a device where Safari's chrome puts the height near the line.
 
 **The next action after this pass is real iPhone testing.** Rotation during
 play is the specific thing to try first.

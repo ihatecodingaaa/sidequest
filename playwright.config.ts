@@ -29,6 +29,31 @@ export default defineConfig({
       name: "desktop",
       use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
     },
+    /*
+     * WebKit, opt in with SQ_WEBKIT=1.
+     *
+     * Two P0 defects reached a real iPhone that this Chromium suite could not
+     * see, so a WebKit project is worth having. It is opt in rather than
+     * default because the WebKit binary cannot launch on every machine: this
+     * one is missing libxslt.dll, and a suite that fails to start is worse
+     * than one that has to be asked for.
+     *
+     * It runs the three specs where engine and browser meet, not the whole
+     * suite. The rest is React and DOM behaviour that does not vary by engine,
+     * and duplicating four hundred tests to find out would cost more than it
+     * returns.
+     *
+     * On a machine that can run it:  SQ_WEBKIT=1 npx playwright test
+     */
+    ...(process.env.SQ_WEBKIT === "1"
+      ? [
+          {
+            name: "webkit-streets",
+            testMatch: /(orientation|navigation-return|streets)\.spec\.ts/,
+            use: { ...devices["iPhone 13"] },
+          },
+        ]
+      : []),
   ],
   webServer: {
     command: `npx next start --port ${PORT}`,

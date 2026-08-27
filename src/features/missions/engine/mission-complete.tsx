@@ -18,6 +18,7 @@ import { EchoUnlock } from "@/components/echo/echo-unlock";
 import { WhyThisWorks } from "@/components/reveal/why-this-works";
 import { resolveEchoStyle, styleUnlockedByMission, unlockedEchoStyles } from "@/data/echo-styles";
 import type { Mission } from "@/types/mission";
+import type { ExperienceOrigin } from "@/lib/experience-origin";
 import type { AwardResult } from "@/lib/xp";
 
 /**
@@ -31,10 +32,13 @@ export function MissionComplete({
   result,
   /** Optional extra line summarising what the player specifically did. */
   summary,
+  /** Where this was opened from. Absent means the old default. */
+  origin,
 }: {
   mission: Mission;
   result: AwardResult;
   summary?: string;
+  origin?: ExperienceOrigin;
 }) {
   const reduced = usePrefersReducedMotion();
   const [countedXp, setCountedXp] = useState(0);
@@ -181,8 +185,15 @@ export function MissionComplete({
       </section>
 
       <div className="flex flex-col gap-2.5 pt-1">
-        <ButtonLink href="/missions" size="lg" full>
-          Next mission
+        {/*
+          Back to wherever this was opened from.
+
+          A person who walked up to somebody in Streets and played what they
+          offered should land back next to them, not in a directory. The label
+          changes with the destination so the button says where it goes.
+        */}
+        <ButtonLink href={origin?.finishTo ?? "/missions"} size="lg" full>
+          {origin?.finishLabel ?? "Next mission"}
           <ArrowRight aria-hidden className="size-4" />
         </ButtonLink>
         <ButtonLink href="/you" size="lg" variant="secondary" full>

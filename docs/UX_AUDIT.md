@@ -516,6 +516,28 @@ change classes, not trees. Anything holding an imperative resource, a canvas,
 a video, a map, a chart, must sit at a stable position in the tree or it will
 be silently recreated under the thing that holds it.
 
+## Round two, from the same phone
+
+Added 27 August 2026, after the landscape fix shipped and hardware was tried
+again. The catastrophic bug was gone and two more were underneath it.
+
+**The world loop ended in a directory.** Walk up to a neighbour, play what they
+offer, tap finish, and land on the generic missions page. The world loop is
+explore, meet somebody, play, **come back to the same world**, and see it
+react. This broke it at the last step, and it broke it invisibly: every screen
+in the chain was correct on its own.
+
+**Portrait stayed compressed after a round trip.** Rotate out and back and
+portrait kept the landscape geometry until the browser was refreshed. Needing a
+refresh to recover a layout is not a workaround, it is the diagnosis: something
+correct at load had gone stale and nothing corrected it.
+
+**The lesson worth keeping from both:** a value read from an event can be
+stale, and a value derived from an observation cannot. The first bug was a
+canvas reference that outlived the element; the second was a height that
+outlived the viewport. Both were fixed by making JavaScript observe rather than
+remember.
+
 **Three smaller things came out of the same screenshots:**
 
 - The interact control was a large circle reading "Nobody nearby", spending

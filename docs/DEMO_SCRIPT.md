@@ -79,6 +79,12 @@ Then the important sentence:
 > "That opens the Campaign. The world does not rebuild any of the missions, it
 > is a way of arriving at them."
 
+**When you finish one, you come back to the block, standing next to the person
+who sent you.** Worth saying out loud, because it is the difference between a
+world and a menu:
+
+> "It puts me back where I was, and the thing I just dealt with is dealt with."
+
 **If the walking is not going well, tap Quests instead.** The list opens the
 identical experiences and is a peer of the map, not a fallback. Say so:
 

@@ -96,10 +96,17 @@ would turn every scenario into an obstacle in front of a number.
 Three Street Checks sit around the district, sourced to SPF and ScamShield
 guidance and worth XP once each.
 
-**Both orientations are first class.** The camera reframes when the phone
-turns, and the controls move from below the world to the outer edges where the
-thumbs already are. A defect found on a real iPhone on 27 August 2026 is
-recorded in `docs/SESSION_STATE.md` and is the next thing to fix.
+**Both orientations are first class,** in three tiers. Portrait keeps the world
+above reachable controls. Landscape gives the world the whole screen with the
+controls floating at the outer edges. **Compact landscape**, a sideways phone
+with little height, additionally merges the exit and XP into one pill, drops
+the Quests label to an icon, turns the place name into plain text and quietens
+the controls. The rule is remove duplicate chrome before shrinking the world.
+
+**Leaving and coming back is part of the loop.** A mission opened from the
+world returns to the world, standing where you left off, with the situation you
+just resolved visibly resolved. A mission opened from anywhere else behaves
+exactly as it did before.
 
 **Prevention Signals** mark situations, in four modes that name the response
 needed rather than the seriousness: **Connect**, **Prevent**, **Redirect**,

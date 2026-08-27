@@ -16,6 +16,7 @@ import {
   type ThreadStep,
 } from "@/data/prevention-threads";
 import { crewRole, type CrewRole } from "@/lib/crew-roles";
+import { withOrigin } from "@/lib/experience-origin";
 import type { SignalMarker } from "@/features/streets/game/world-engine";
 import type { AwardResult } from "@/lib/xp";
 import type { EchoStyleId } from "@/data/echo-styles";
@@ -149,9 +150,16 @@ export function useStreetsBridge(): StreetsBridge {
     (action: NpcAction) => {
       switch (action.kind) {
         case "mission": {
-          // `/play/:id` is the existing full-screen player. Nothing is rebuilt.
+          /*
+           * `/play/:id` is the existing full-screen player. Nothing is rebuilt.
+           *
+           * The origin travels with it so finishing comes back here rather
+           * than to the missions directory, which is what broke the world
+           * loop. It is a key, not a path: nothing from the URL is ever
+           * navigated to.
+           */
           const mission = getMission(action.missionId);
-          router.push(mission ? `/play/${mission.id}` : "/missions");
+          router.push(mission ? withOrigin(`/play/${mission.id}`, "streets") : "/missions");
           break;
         }
         case "campaign":

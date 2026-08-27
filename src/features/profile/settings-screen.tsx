@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/primitives";
 import { clearInstallDismissal } from "@/hooks/use-install";
+import { forgetPlace } from "@/features/streets/game/streets-return";
 import { useAppStore } from "@/store/app-store";
 import { useProfile } from "@/hooks/use-profile";
 
@@ -32,6 +33,7 @@ export function SettingsScreen() {
    */
   const resetDemo = () => {
     clearInstallDismissal();
+    forgetPlace();
     resetStore();
   };
 

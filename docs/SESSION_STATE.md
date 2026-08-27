@@ -8,16 +8,32 @@ stage.
 moving residents, the Community Safety Crew, Solo Preview and the rubric
 evidence set.
 
-**The landscape defect is fixed, and it was not a layout problem.** Rotating
-the phone was destroying the canvas: the two orientations rendered different
-JSX trees, React reconciles children by position, so a rotation unmounted the
-whole subtree and mounted a fresh canvas while the engine went on drawing into
-the old detached one. The world was not thin, it was dead. Full write-up in
-`docs/LANDSCAPE_RECOVERY.md`.
+**Two rounds of real iPhone testing, and four defects it found.** All fixed,
+all written up in `docs/LANDSCAPE_RECOVERY.md`.
 
-**The next action is real iPhone testing**, and rotation during play is the
-first thing to try. Everything here was measured in Chromium, which is what
-missed the bug in the first place.
+Round one: rotating destroyed the canvas. The two orientations rendered
+different JSX trees, React reconciles children by position, so a rotation
+unmounted the subtree and mounted a fresh canvas while the engine went on
+drawing into the old detached one. The world was not thin, it was dead. Also:
+an iPad held sideways got the one-handed portrait layout, because the
+orientation rule was a media query about device class rather than a
+measurement.
+
+Round two: finishing a mission opened from Streets landed on the missions
+directory, breaking the world loop at its last step. And rotating out and back
+left portrait compressed until a refresh, because the root's height was read
+from `visualViewport` inside `orientationchange`, which on iOS fires before the
+viewport settles.
+
+**The pattern in all four:** something read once and remembered outlived the
+thing it described. The fixes all move in the same direction, from remembering
+to observing.
+
+**The next action is real Safari testing again.** Everything here was measured
+in Chromium, which has now missed four defects in a row. A WebKit project
+exists behind `SQ_WEBKIT=1` and cannot run on this machine: the WebKit binary
+reports `libxslt.dll` missing, and `npx playwright install-deps webkit` is a
+no-op on Windows.
 **Repository:** https://github.com/ihatecodingaaa/sidequest
 **Deployment:** not yet deployed to Vercel. CLI installed, not authenticated.
 
@@ -292,14 +308,14 @@ Campaign.
 
 Baseline before this stage, then after.
 
-| Check | Start | Campaigns | UX | Signature | Game feel | Delight | Streets | World | Prevention | Landscape |
-| ----- | ----- | --------- | -- | --------- | --------- | ------- | ------- | ----- | ---------- | --------- |
-| `npm run lint` | clean | clean | clean | clean | clean | clean | clean | clean | clean | clean |
-| `npm run typecheck` | clean | clean | clean | clean | clean | clean | clean | clean | clean | clean |
-| `npm run test` | 65 | 129 | 129 | 143 | 143 | 143 | 143 | 143 | 161 | **161** |
-| `npx playwright test` | 79 (+1) | 135 (+1) | 149 (+7) | 177 (+7) | 207 (+7) | 239 (+7) | 273 (+7) | 295 (+7) | 329 (+7) | **357 (+7)** |
-| `npm run build` | passes | passes | passes | passes | passes | passes | passes | passes | passes | passes |
-| client JS | ~1.3 MB | ~1.6 MB | 1559 KB | 1574 KB | 1611 KB | 1660 KB | 1733 KB | 1763 KB | 1809 KB | **1810 KB** |
+| Check | Start | Campaigns | UX | Signature | Game feel | Delight | Streets | World | Prevention | Landscape | Continuity |
+| ----- | ----- | --------- | -- | --------- | --------- | ------- | ------- | ----- | ---------- | --------- | ---------- |
+| `npm run lint` | clean | clean | clean | clean | clean | clean | clean | clean | clean | clean | clean |
+| `npm run typecheck` | clean | clean | clean | clean | clean | clean | clean | clean | clean | clean | clean |
+| `npm run test` | 65 | 129 | 129 | 143 | 143 | 143 | 143 | 143 | 161 | 161 | **161** |
+| `npx playwright test` | 79 (+1) | 135 (+1) | 149 (+7) | 177 (+7) | 207 (+7) | 239 (+7) | 273 (+7) | 295 (+7) | 329 (+7) | 357 (+7) | **394 (+7)** |
+| `npm run build` | passes | passes | passes | passes | passes | passes | passes | passes | passes | passes | passes |
+| client JS | ~1.3 MB | ~1.6 MB | 1559 KB | 1574 KB | 1611 KB | 1660 KB | 1733 KB | 1763 KB | 1809 KB | 1810 KB | **1814 KB** |
 
 The world upgrade cost **30 KB** across the whole app: the renderer chunk grew
 from 8 KB to 17 KB and the world's UI chunk carries the minimap and the rewards

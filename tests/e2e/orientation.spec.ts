@@ -25,6 +25,8 @@ interface Geometry {
   worldPct: number;
   padLeft: number;
   padTop: number;
+  padRight: number;
+  padBottom: number;
   interactRight: number;
   interactTop: number;
   mapRight: number;
@@ -55,6 +57,8 @@ async function geometry(page: Page): Promise<Geometry> {
       worldPct: (w.height / r.height) * 100,
       padLeft: p.left,
       padTop: p.top,
+      padRight: p.right,
+      padBottom: p.bottom,
       interactRight: r.width - i.right,
       interactTop: i.top,
       mapRight: m ? r.width - m.right : -1,
@@ -120,8 +124,13 @@ test.describe("landscape gives the world the screen", () => {
       expect(g.interactRight).toBeLessThan(g.rootW * 0.25);
       expect(g.interactTop).toBeGreaterThan(g.rootH * 0.4);
 
-      // Nothing sits in the middle, which is where the world is.
-      expect(g.padLeft + 112).toBeLessThan(g.rootW * 0.4);
+      /*
+       * Nothing sits in the middle, which is where the world is. Measured
+       * from the control's real box rather than from an assumed size, because
+       * the compact tier makes the pad smaller and an assumed number turns
+       * that into a false failure.
+       */
+      expect(g.padRight).toBeLessThan(g.rootW * 0.4);
 
       // The minimap stays in the upper right and clear of the top bar.
       expect(g.mapRight).toBeLessThan(g.rootW * 0.2);
@@ -129,7 +138,7 @@ test.describe("landscape gives the world the screen", () => {
       expect(g.mapTop).toBeLessThan(g.rootH * 0.5);
 
       // And the controls are inside the visible area, not below it.
-      expect(g.padTop + 112).toBeLessThanOrEqual(g.rootH + 1);
+      expect(g.padBottom).toBeLessThanOrEqual(g.rootH + 1);
     });
   }
 });
@@ -274,6 +283,108 @@ test.describe("rotating never costs the player anything", () => {
 
     await expect(page.getByText("Sunrise Minimart")).toBeVisible();
     expect((await alive(page)).painted).toBeGreaterThan(0);
+  });
+});
+
+test.describe("rotation does not disturb the engine or the input", () => {
+  test("keeps the same canvas element through three rotations", async ({ page }) => {
+    /*
+     * Identity, not just presence. The bug this guards against replaced the
+     * canvas silently: a fresh element rendered correctly and the engine kept
+     * drawing into the old one, so every check for a visible canvas passed
+     * while the world was dead. Tagging the node and looking for the tag back
+     * is the only assertion that would have failed.
+     */
+    await page.setViewportSize({ width: 390, height: 844 });
+    await seedPlayer(page);
+    await page.goto("/streets");
+    await expect(page.getByTestId("streets-canvas")).toBeVisible();
+
+    await page.evaluate(() => {
+      const node = document.querySelector('[data-testid="streets-canvas"]') as HTMLElement;
+      node.dataset.identity = "original";
+    });
+
+    for (const size of [
+      { width: 844, height: 390 },
+      { width: 390, height: 844 },
+      { width: 844, height: 390 },
+    ]) {
+      await page.setViewportSize(size);
+      await page.waitForTimeout(350);
+      const identity = await page.getAttribute('[data-testid="streets-canvas"]', "data-identity");
+      expect(identity, `canvas was replaced at ${size.width}x${size.height}`).toBe("original");
+    }
+  });
+
+  test("does not leave a key stuck down", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await seedPlayer(page);
+    await page.goto("/streets");
+    const canvas = page.getByTestId("streets-canvas");
+    await expect(canvas).toHaveAttribute("data-player-tile", /\d+,\d+/);
+
+    // Hold a direction across the rotation, then let go on the other side.
+    await page.keyboard.down("ArrowLeft");
+    await page.waitForTimeout(250);
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.waitForTimeout(350);
+    await page.keyboard.up("ArrowLeft");
+    await page.waitForTimeout(400);
+
+    const settled = await canvas.getAttribute("data-player-tile");
+    await page.waitForTimeout(700);
+    // Nothing is still pressed, so the player has stopped.
+    expect(await canvas.getAttribute("data-player-tile")).toBe(settled);
+  });
+
+  test("recovers portrait geometry without a refresh", async ({ page }) => {
+    /*
+     * The acceptance test for the second real-Safari failure. Portrait after a
+     * round trip must be indistinguishable from portrait on a fresh load, and
+     * refreshing must make no difference at all. Refresh used to be the only
+     * way to recover, which is the definition of a stale value.
+     */
+    const shape = async () =>
+      page.evaluate(() => {
+        const root = document.querySelector('[data-testid="streets-root"]') as HTMLElement;
+        const world = document.querySelector('[data-testid="streets-world"]') as HTMLElement;
+        const canvas = document.querySelector('[data-testid="streets-canvas"]') as HTMLCanvasElement;
+        const r = root.getBoundingClientRect();
+        const w = world.getBoundingClientRect();
+        return [
+          root.dataset.orientation,
+          root.dataset.compact,
+          Math.round(r.width),
+          Math.round(r.height),
+          Math.round(w.width),
+          Math.round(w.height),
+          canvas.width,
+          canvas.height,
+        ].join("|");
+      });
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await seedPlayer(page);
+    await page.goto("/streets");
+    await expect(page.getByTestId("streets-canvas")).toBeVisible();
+    await page.waitForTimeout(350);
+    const fresh = await shape();
+
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.waitForTimeout(350);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForTimeout(400);
+    const returned = await shape();
+
+    expect(returned, "portrait did not recover after a round trip").toBe(fresh);
+
+    await page.reload();
+    await expect(page.getByTestId("streets-canvas")).toBeVisible();
+    await page.waitForTimeout(350);
+    // Refresh must make no visible improvement, because there is nothing left
+    // for it to fix.
+    expect(await shape()).toBe(returned);
   });
 });
 

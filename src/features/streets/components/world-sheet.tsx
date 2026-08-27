@@ -82,7 +82,13 @@ export function WorldSheet({
         className={cn(
           "relative overflow-y-auto border-white/10 bg-ink-900/97 backdrop-blur",
           landscape
-            ? "h-full w-full max-w-[26rem] rounded-l-3xl border-l px-5 pt-[max(1rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))]"
+            /*
+              A width, and a share of the screen, whichever is smaller.
+              A fixed 26rem panel is 44% of a large phone and 62% of a small
+              one, which is the difference between a panel beside the world and
+              a panel with a slice of world left over.
+            */
+            ? "h-full w-[min(23rem,55%)] rounded-l-3xl border-l px-5 pt-[max(1rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))]"
             : "max-h-[85dvh] rounded-t-3xl border-t px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]",
         )}
       >

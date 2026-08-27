@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 
 import { useAppStore } from "@/store/app-store";
+import { useExperienceOrigin } from "@/lib/experience-origin";
 import { MissionComplete } from "./mission-complete";
 import type { AwardResult } from "@/lib/xp";
 import type { Mission } from "@/types/mission";
@@ -31,17 +32,30 @@ export interface MissionHost {
 }
 
 /**
- * The standalone behaviour: award against the mission catalogue, exit to the
- * mission detail page, and show the usual completion screen.
+ * The standalone behaviour: award against the mission catalogue, and go back
+ * to wherever the player came from.
+ *
+ * **Origin aware.** Sending every completion to the missions directory is what
+ * broke the Streets loop: somebody walked up to a neighbour, played the
+ * mission that neighbour opened, and was dropped in a list. The destination
+ * now comes from a key in the URL, resolved through a table in code, with the
+ * old behaviour as the default. One mechanism, and every player that already
+ * used this host inherits it without changing.
  */
 export function useStandaloneHost(mission: Mission): MissionHost {
   const completeMission = useAppStore((state) => state.completeMission);
+  const origin = useExperienceOrigin(`/missions/${mission.id}`);
 
   return {
-    exitHref: `/missions/${mission.id}`,
+    /*
+     * The close control. It leaves without completing, which is a different
+     * thing from finishing and must never award anything: this is a link, so
+     * it cannot.
+     */
+    exitHref: origin.closeTo,
     complete: () => completeMission(mission.id),
     renderComplete: (result, summary) => (
-      <MissionComplete mission={mission} result={result} summary={summary} />
+      <MissionComplete mission={mission} result={result} summary={summary} origin={origin} />
     ),
   };
 }

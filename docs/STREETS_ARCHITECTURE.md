@@ -127,6 +127,33 @@ Two stages, and the first one is what gives the look.
 2. **Everything draws into a buffer** at world resolution, blitted up with
    `imageSmoothingEnabled = false`.
 
+### Leaving, and coming back
+
+Streets is not a destination, it is a place people leave and return to. Two
+pieces make that work, and both were added after a real device showed the loop
+breaking at the last step.
+
+**Origin aware return.** A mission opened from the world is tagged
+`?from=streets`. `src/lib/experience-origin.ts` resolves that **key** through a
+table in code, so nothing from the URL is ever navigated to and an unrecognised
+value falls back exactly as a missing one does. Every player already went
+through `useStandaloneHost`, so one change covered all of them, and the default
+is the old behaviour, which is what keeps the missions and direct-link paths
+working untouched. Campaigns are unaffected: they pass their own `MissionHost`,
+which is the same idea one layer up.
+
+Close and finish are **different destinations**. Abandoning halfway goes back
+to where you were; completing goes on. For a direct visit those have always
+differed, and collapsing them into one field quietly changed it until a test
+caught it.
+
+**Position.** `src/features/streets/game/streets-return.ts` records the map,
+tile and facing in `sessionStorage` on every tile the player crosses. It is
+transient by design: where somebody was standing is not progress, and restoring
+it on a device picked up a week later would be wrong. The engine's `restore`
+refuses a map that no longer exists or a tile that is no longer standable, so a
+stale record from an earlier build can never strand anybody in a wall.
+
 ### The camera picks a scale, not a rectangle
 
 The buffer is not a fixed size. Its scale comes from the shorter side of the
@@ -138,6 +165,20 @@ resizing anybody.
 An earlier version held the visible area constant. That collapses on a very
 tall container: the height clamps, the width shrinks to compensate, and a
 portrait phone ends up looking through a nine tile slot.
+
+### One measurement, three consumers
+
+The world container, the camera and the HUD all need the same numbers, and
+every time they worked them out separately they eventually disagreed.
+`useStreetsLayout` observes the element that holds the world and produces one
+`ViewportMetrics`. The layout mode, the compact tier and the engine's resize
+all read that object.
+
+The root's height is CSS (`100dvh`), never JavaScript. A value read from an
+event can be stale and one of them was: reading `visualViewport.height` inside
+`orientationchange` captures the pre-rotation height, and portrait stayed
+compressed until a refresh. A `ResizeObserver` is self-correcting where an
+event listener is not, which is why there is no timer in any of this.
 
 That second stage is what produces a crisp low-resolution look from vector
 drawing commands: no sprite sheet to author, no image to download, no licence to

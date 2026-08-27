@@ -202,7 +202,12 @@ test.describe("the quest list is a peer of the map", () => {
     await page.getByRole("button", { name: "Play REWIND" }).click();
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("button", { name: /Play REWIND/ }).click();
-    await expect(page).toHaveURL(/\/play\/mission-rewind$/);
+    /*
+     * The origin travels with it, so finishing comes back to the world rather
+     * than to the missions directory. It is a key, never a path: the
+     * destination is resolved from a table in code.
+     */
+    await expect(page).toHaveURL(/\/play\/mission-rewind\?from=streets$/);
   });
 
   test("opens Safe with no reward attached", async ({ page }) => {

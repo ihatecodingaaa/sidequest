@@ -42,12 +42,21 @@ export function TouchPad({
   near,
   door,
   layout,
+  compact = false,
   onMove,
   onInteract,
 }: {
   near: Npc | null;
   door: Door | null;
   layout: "stacked" | "edges";
+  /**
+   * A landscape screen with very little height.
+   *
+   * The pad gets quieter, never smaller in contact area. A thumb that has
+   * found the pad once does not need it shouting, and the space a ring and a
+   * label were using is district.
+   */
+  compact?: boolean;
   onMove: (x: number, y: number) => void;
   onInteract: () => void;
 }) {
@@ -108,7 +117,11 @@ export function TouchPad({
         role="application"
         aria-label="Movement pad. Arrow keys and WASD also work."
         className={cn(
-          "relative size-28 touch-none rounded-full border border-white/12 bg-black/25 backdrop-blur transition-colors",
+          "relative touch-none rounded-full border transition-colors",
+          // The contact area is the same in both. Only the paint changes.
+          compact
+            ? "size-24 border-white/14 bg-black/22 backdrop-blur"
+            : "size-28 border-white/12 bg-black/25 backdrop-blur",
           edges && "pointer-events-auto",
           knob && "border-white/25 bg-black/35",
         )}
@@ -132,12 +145,15 @@ export function TouchPad({
           className="pointer-events-none absolute top-1/2 left-1/2 size-11 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/15"
           style={knob ? { transform: `translate(calc(-50% + ${knob.x}px), calc(-50% + ${knob.y}px))` } : undefined}
         />
-        <span
-          aria-hidden
-          className="absolute inset-x-0 top-2 text-center text-[0.55rem] font-bold tracking-[0.1em] text-white/35"
-        >
-          MOVE
-        </span>
+        {/* The label teaches once. After that it is decoration on a thumb. */}
+        {compact ? null : (
+          <span
+            aria-hidden
+            className="absolute inset-x-0 top-2 text-center text-[0.55rem] font-bold tracking-[0.1em] text-white/35"
+          >
+            MOVE
+          </span>
+        )}
       </div>
 
       <button
@@ -148,8 +164,13 @@ export function TouchPad({
           "sq-pressable grid shrink-0 place-items-center rounded-full text-center font-extrabold transition-all duration-200",
           edges && "pointer-events-auto",
           idle
-            ? "size-14 cursor-default border border-white/10 bg-black/25 text-white/30 backdrop-blur"
-            : "size-20 text-sm",
+            ? cn(
+                "cursor-default border border-white/10 text-white/30",
+                compact ? "size-12 bg-black/28 backdrop-blur" : "size-14 bg-black/25 backdrop-blur",
+              )
+            : compact
+              ? "size-[4.25rem] text-sm"
+              : "size-20 text-sm",
           target === "npc" &&
             "bg-volt-500 text-ink-900 shadow-[0_10px_30px_-8px_rgba(182,242,74,0.8)]",
           target === "door" &&

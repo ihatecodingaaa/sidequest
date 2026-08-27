@@ -258,7 +258,7 @@ interface Vec {
   y: number;
 }
 
-type Facing = "up" | "down" | "left" | "right";
+export type Facing = "up" | "down" | "left" | "right";
 
 export class WorldEngine {
   private readonly canvas: HTMLCanvasElement;
@@ -346,6 +346,29 @@ export class WorldEngine {
   /** Which map the player is on. The HUD names it. */
   get place(): WorldMap {
     return this.map;
+  }
+
+  /** Which way the player is facing. Restored when they come back. */
+  get heading(): Facing {
+    return this.facing;
+  }
+
+  /**
+   * Puts the player back exactly where they left off.
+   *
+   * Used when returning from a mission. Silently ignores a map that no longer
+   * exists or a tile that is no longer standable, because a stale record from
+   * an earlier build must never be able to strand somebody in a wall.
+   */
+  restore(mapId: string, tileX: number, tileY: number, facing: Facing) {
+    const map = MAPS[mapId];
+    if (!map) return;
+    if (map.id !== this.map.id) this.go(map);
+    const px = tileX * TILE + TILE / 2;
+    const py = tileY * TILE + TILE / 2;
+    if (!this.canStand(px, py)) return;
+    this.facing = facing;
+    this.placeAt(tileX, tileY);
   }
 
   /**
