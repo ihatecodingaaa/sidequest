@@ -4,6 +4,7 @@ import {
   NPCS,
   SOLID,
   SPAWN,
+  TERRAIN_CODES,
   TILE,
   type AvatarLook,
   type Door,
@@ -139,9 +140,15 @@ const PALETTE = {
   walkwayShade: "#a2967a",
   post: "#8b91a0",
 
-  tree: "#2f6a3c",
-  treeLight: "#4f9b58",
-  treeDark: "#255630",
+  /*
+   * A canopy has to separate from the grass it stands on, and the grass is
+   * already green. The dark ring does that work: it reads as an outline at
+   * this size, which is what makes a tree look like a tree rather than a
+   * slightly different green circle.
+   */
+  tree: "#357a44",
+  treeLight: "#64ba6f",
+  treeDark: "#1c4429",
   trunk: "#6b4a2c",
 
   bench: "#9a7448",
@@ -490,7 +497,7 @@ export class WorldEngine {
     if (!row) return "#";
     const ch = row[tx];
     // Landmark door letters (M, V, F, S, B) sit inside walls and are solid.
-    if (!ch || /[A-Z]/.test(ch)) return "#";
+    if (!ch || !TERRAIN_CODES.has(ch)) return "#";
     return ch as TerrainCode;
   }
 
@@ -572,7 +579,7 @@ export class WorldEngine {
       const row = map.rows[ty];
       if (!row) return "#";
       const ch = row[tx];
-      if (!ch || /[A-Z]/.test(ch)) return "#";
+      if (!ch || !TERRAIN_CODES.has(ch)) return "#";
       return ch as TerrainCode;
     };
 
@@ -770,7 +777,7 @@ export class WorldEngine {
             g.ellipse(x + 8, y + 13, 6, 2.4, 0, 0, Math.PI * 2);
             g.fill();
             g.fillStyle = PALETTE.trunk;
-            g.fillRect(x + 7, y + 8, 2.6, 5);
+            g.fillRect(x + 6.6, y + 8, 3, 5.4);
             // Canopy in three tones. One flat circle reads as a green dot.
             g.fillStyle = PALETTE.treeDark;
             g.beginPath();

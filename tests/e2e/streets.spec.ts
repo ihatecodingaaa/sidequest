@@ -320,6 +320,27 @@ test.describe("buildings open", () => {
     await expect(page.getByRole("button", { name: /^Talk/ })).toBeEnabled();
   });
 
+  test("finishing something indoors leaves you where you were standing", async ({ page }) => {
+    /*
+     * Completing a check changes the profile, and the engine used to be rebuilt
+     * whenever the profile changed what an NPC's state was. That threw the
+     * player back to the spawn point at the moment they finished a
+     * conversation, which once buildings opened meant being put out on the
+     * street mid-sentence. The engine now takes updates rather than restarts.
+     */
+    await seedPlayer(page, { xp: 0 });
+    await goInside(page, "Bea");
+
+    await page.getByRole("button", { name: /^Talk/ }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
+    await page.getByRole("button", { name: /Scan the last two yourself/ }).click();
+    await expect(page.getByText("+25 XP")).toBeVisible();
+    await page.getByRole("button", { name: "Back to the block" }).click();
+
+    await expect(page.getByText("Sunrise Minimart")).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Talk/ })).toBeEnabled();
+  });
+
   test("a door works in both directions, on foot", async ({ page }) => {
     await seedPlayer(page);
     await goInside(page, "Bea");

@@ -279,7 +279,7 @@ Baseline before this stage, then after.
 | `npm run lint` | clean | clean | clean | clean | clean | clean | clean | clean |
 | `npm run typecheck` | clean | clean | clean | clean | clean | clean | clean | clean |
 | `npm run test` | 65 | 129 | 129 | 143 | 143 | 143 | 143 | **143** |
-| `npx playwright test` | 79 (+1) | 135 (+1) | 149 (+7) | 177 (+7) | 207 (+7) | 239 (+7) | 273 (+7) | **293 (+7)** |
+| `npx playwright test` | 79 (+1) | 135 (+1) | 149 (+7) | 177 (+7) | 207 (+7) | 239 (+7) | 273 (+7) | **295 (+7)** |
 | `npm run build` | passes | passes | passes | passes | passes | passes | passes | passes |
 | client JS | ~1.3 MB | ~1.6 MB | 1559 KB | 1574 KB | 1611 KB | 1660 KB | 1733 KB | **1763 KB** |
 
@@ -290,6 +290,26 @@ network responses rather than by reading the config: on `/`, `/safe` and
 `/pulse` neither chunk is requested, and on `/streets` the renderer is not
 requested either until a canvas actually exists, because a first-time visitor
 sees the avatar screen first.
+
+Swept at five viewports (390, 430, landscape phone, 820 tablet, 1440 desktop)
+across seven routes: **no horizontal overflow anywhere, no console errors, no
+page errors.** The only sub-44px control found by the audit is the skip link,
+which is `sr-only` until focused.
+
+Three real bugs were found by looking rather than by testing, and all three are
+now pinned:
+
+- Finishing a Street Check rebuilt the engine, because `isNpcDone` was a
+  dependency of the boot effect. That threw the player back to the spawn point
+  the moment they finished a conversation. Once buildings opened it put them
+  out on the street mid-sentence.
+- Every tree in the district had been drawn as a cream wall tile since the
+  district was built. `at()` treated any uppercase character as a landmark door
+  letter, and `T` is uppercase. Collision still worked, because a wall and a
+  tree are both solid, so nothing failed loudly.
+- "Go there" landed two tiles below the person it took you to, which is just
+  outside talking range, so the world answered "take me to this person" with
+  "Nobody nearby".
 
 The seven skips are the new bottom-bar geometry tests, which are phone-only by
 design and skip on the desktop project. Six existing assertions were updated

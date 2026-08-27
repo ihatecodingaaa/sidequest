@@ -25,7 +25,7 @@ import {
   type Door,
   type Npc,
 } from "@/features/streets/streets-data";
-import type { WorldEngine } from "@/features/streets/game/world-engine";
+import type { EngineOptions, WorldEngine } from "@/features/streets/game/world-engine";
 
 /**
  * SIDEQUEST Streets.
@@ -56,6 +56,13 @@ export function StreetsClient() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<WorldEngine | null>(null);
   const keysRef = useRef<Set<string>>(new Set());
+  /** Everything about the engine that changes without the engine changing. */
+  const liveRef = useRef<Pick<EngineOptions, "look" | "echo" | "npcs" | "reducedMotion">>({
+    look: DEFAULT_AVATAR,
+    echo: null,
+    npcs: [],
+    reducedMotion: false,
+  });
 
   const [engineReady, setEngineReady] = useState(false);
   const [near, setNear] = useState<Npc | null>(null);
@@ -74,6 +81,30 @@ export function StreetsClient() {
 
   /* --------------------------------------------------------- Engine boot */
 
+  /*
+   * Everything the engine reads every frame is pushed in, never rebuilt around.
+   *
+   * This effect is declared first on purpose: effects run in order on mount, so
+   * the ref is populated before the boot effect below constructs the engine.
+   *
+   * The reason it matters is a real bug this replaced. Finishing a Street Check
+   * changes the profile, which changes `isNpcDone`, which used to be a
+   * dependency of the boot effect. The engine was therefore torn down and
+   * rebuilt at the spawn point at the exact moment somebody finished a
+   * conversation, and once buildings opened that meant being thrown out onto
+   * the street mid-sentence.
+   */
+  useEffect(() => {
+    const live = {
+      look,
+      echo: equippedEcho,
+      npcs: NPCS.map((npc) => ({ npc, done: isNpcDone(npc) })),
+      reducedMotion: reduced,
+    };
+    liveRef.current = live;
+    engineRef.current?.update(live);
+  }, [look, equippedEcho, isNpcDone, reduced]);
+
   useEffect(() => {
     if (!bridgeReady || needsAvatar) return;
     const canvas = canvasRef.current;
@@ -89,10 +120,7 @@ export function StreetsClient() {
       if (disposed) return;
 
       engine = new Engine(canvas, {
-        look,
-        echo: equippedEcho,
-        npcs: NPCS.map((npc) => ({ npc, done: isNpcDone(npc) })),
-        reducedMotion: reduced,
+        ...liveRef.current,
         onNear: setNear,
         onDoor: setDoorway,
         onTile: setTile,
@@ -108,16 +136,7 @@ export function StreetsClient() {
       engine?.stop();
       engineRef.current = null;
     };
-    // Rebuilding on look or Echo change is correct: both change what is drawn.
-  }, [bridgeReady, needsAvatar, look, equippedEcho, reduced, isNpcDone]);
-
-  /* Keep NPC done-state live without rebuilding the engine. */
-  useEffect(() => {
-    engineRef.current?.update({
-      npcs: NPCS.map((npc) => ({ npc, done: isNpcDone(npc) })),
-      echo: equippedEcho,
-    });
-  }, [isNpcDone, equippedEcho]);
+  }, [bridgeReady, needsAvatar]);
 
   /*
    * Resize with the viewport, and reframe when the phone turns.

@@ -63,6 +63,35 @@ export type TerrainCode =
   | "n"
   | "d";
 
+/**
+ * Every character the map may contain.
+ *
+ * Anything else in a map row is a landmark door letter, which is part of a
+ * wall. That test used to be "is it uppercase", which quietly swallowed `T`:
+ * every tree in the district was drawn as a cream wall tile for as long as the
+ * district has existed. Collision still worked, because a wall and a tree are
+ * both solid, so nothing failed loudly. It just looked wrong.
+ */
+export const TERRAIN_CODES: ReadonlySet<string> = new Set<string>([
+  ".",
+  ",",
+  "#",
+  "=",
+  "c",
+  "t",
+  "T",
+  "b",
+  "r",
+  "z",
+  "~",
+  "f",
+  "s",
+  "k",
+  "m",
+  "n",
+  "d",
+]);
+
 export const SOLID: ReadonlySet<TerrainCode> = new Set<TerrainCode>([
   "#",
   "t",
