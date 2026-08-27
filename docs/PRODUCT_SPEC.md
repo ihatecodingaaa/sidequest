@@ -69,6 +69,30 @@ through meLISTEN, and a route into a mission from most items. Outbound
 discovery is grouped by who publishes it, official services separately from
 news reporting, so every row is labelled by the group it sits in.
 
+### SIDEQUEST Streets
+
+An original top-down explorable district at `/streets`, entered from Home.
+
+The player has an avatar they assembled, the Echo they equipped follows them,
+and eight neighbours are standing around District 01 with situations rather
+than quiz questions. Talking to one opens an **existing** SIDEQUEST experience:
+REWIND at the minimart, Norm Mirror at the kopitiam, BREAKSAFE from the uncle
+whose card got charged twice, Crew Shift at the court, ONE BAD MINUTE from Ken
+at the void deck, and Safe from the community post.
+
+Two optional Street Checks sit at the sides, sourced to SPF and ScamShield
+guidance and worth XP once. They are side content: Track B's hero material is
+peer pressure, impulsivity, account misuse and peer intervention, and the four
+hero missions carry it.
+
+The world owns no product state. It reads the store, asks the product to act,
+and reflects the result. Everything reachable by walking is reachable from the
+Quest List without walking a step.
+
+Scope is deliberately one district. Full reasoning in
+`docs/STREETS_RESEARCH.md`, `docs/STREETS_ARCHITECTURE.md` and
+`docs/STREETS_ART_DIRECTION.md`.
+
 ### Echo, and the collection
 
 Echo is SIDEQUEST's mascot: a shield-bodied character with a visor face, six

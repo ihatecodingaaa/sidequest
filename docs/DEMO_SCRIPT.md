@@ -1,7 +1,7 @@
 # Demo script
 
-Target: about six minutes with the Campaign section (365 seconds across nine
-moments), three to four without it. Practise it twice before judging.
+Target: about seven minutes with both the Campaign section and SIDEQUEST
+Streets (425 seconds across ten moments), four to five without them. Practise it twice before judging.
 
 If you only have three minutes, cut Moments 5 and 7 and keep Campaigns. It is
 the part judges have not seen from anybody else, and Moment 6 now carries the
@@ -53,6 +53,38 @@ Point at the bottom bar without tapping it yet.
 
 > "And that shield in the middle is Safe. Same place on every screen, so nobody
 > has to remember where it is. We will come back to it."
+
+## Moment 2b: SIDEQUEST Streets, 60 seconds
+
+The thing nobody else will have. Do not narrate it, just start walking.
+
+Tap **Explore** on the Home hero.
+
+> "This is the same app."
+
+Walk up. Five seconds, no more: Ken is a few steps north of the spawn with a
+gold marker over his head.
+
+> "That is my character, and that is my Echo following me. Both of those came
+> from the collection, so the cosmetic thing is now something you walk around
+> with."
+
+Press **Talk**.
+
+> "Ilyas is not answering the group chat."
+
+Then the important sentence:
+
+> "That opens the Campaign. The world does not rebuild any of the missions, it
+> is a way of arriving at them."
+
+**If the walking is not going well, tap Quests instead.** The list opens the
+identical experiences and is a peer of the map, not a fallback. Say so:
+
+> "Anybody who cannot use the pad gets the same content from the list. The
+> learning is never behind the dexterity."
+
+Do not tour the whole district. Two NPCs is plenty.
 
 ## Moment 3: information to action, 45 seconds
 

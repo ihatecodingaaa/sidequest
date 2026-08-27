@@ -4,7 +4,7 @@ Kept current so another session can pick this up cold. Update after every major
 stage.
 
 **Last updated:** 26 August 2026
-**Status:** Visual delight pass complete and verified. Feature complete overall.
+**Status:** SIDEQUEST Streets vertical slice complete and verified.
 **Repository:** https://github.com/ihatecodingaaa/sidequest
 **Deployment:** not yet deployed to Vercel. CLI installed, not authenticated.
 
@@ -222,18 +222,50 @@ progress card paid for most of the map.
 built. Narration beats are better balanced but still carry no contextual
 visual. That is the largest remaining gap in the story layer.
 
+## SIDEQUEST Streets
+
+An original top-down explorable district, added as a vertical slice rather than
+an open world. Research in `docs/STREETS_RESEARCH.md`, build in
+`docs/STREETS_ARCHITECTURE.md`, visual system in `docs/STREETS_ART_DIRECTION.md`.
+
+| Piece | State |
+| ----- | ----- |
+| District 01 | 40 x 28 tiles, six landmarks, drawn entirely in code. Minimart, void deck, kopitiam, community post, court, bus stop. |
+| Movement | Keyboard (arrows/WASD) and a touch thumb pad. Axis-separated collision so walls are slid along, never stuck on. |
+| Avatar | Four axes, layered at draw time, works in all four walking directions. Randomise and Skip both present. |
+| Echo | The equipped variant follows the player. The collection became a companion instead of a settings tile. |
+| Cast | Eight NPCs, reusing the campaign characters. Situations, not quiz questions. |
+| Missions | NPCs open the existing REWIND, Norm Mirror, BREAKSAFE, Crew Shift and ONE BAD MINUTE. Nothing was rebuilt inside the world. |
+| Street Checks | Two optional encounters, sourced to SPF and ScamShield guidance, XP once through the existing ledger. |
+| Quest List | A peer of the map. Every destination openable without walking a step. |
+| Safe | Reachable from the world as a calm door. No XP, no reward, no quest, no playfulness. |
+
+**Engine.** Phaser 4.2.1 was installed, integrated and proven working on this
+stack, then removed. It costs 1343 KB raw / 347 KB gzipped for a feature set
+this district uses about a fifth of. The original renderer is **8 KB**, and the
+whole feature added **73 KB** to the app. Full measurements in the architecture
+doc.
+
+**Also in this pass.** REWIND's separate debrief screen was folded into the
+comparison: the player had already seen the consequence and both runs side by
+side, and a third full screen teaching the same thing is where a game stops
+being a game. The mechanism sits behind one disclosure.
+
+Deferred deliberately: world audio, mementos, and the wider text compression
+across Crew, You and Campaign.
+
 ## Verification
 
 Baseline before this stage, then after.
 
-| Check | Start | Campaigns | UX pass | Signature | Game feel | Delight |
-| ----- | ----- | --------- | ------- | --------- | --------- | ------- |
-| `npm run lint` | clean | clean | clean | clean | clean | clean |
-| `npm run typecheck` | clean | clean | clean | clean | clean | clean |
-| `npm run test` | 65 | 129 | 129 | 143 | 143 | **143** |
-| `npx playwright test` | 79 (+1) | 135 (+1) | 149 (+7) | 177 (+7) | 207 (+7) | **217 (+7)** |
-| `npm run build` | passes | passes | passes | passes | passes | passes |
-| client JS | ~1.3 MB | ~1.6 MB | 1559 KB | 1574 KB | 1611 KB | **1637 KB** |
+| Check | Start | Campaigns | UX | Signature | Game feel | Delight | Streets |
+| ----- | ----- | --------- | -- | --------- | --------- | ------- | ------- |
+| `npm run lint` | clean | clean | clean | clean | clean | clean | clean |
+| `npm run typecheck` | clean | clean | clean | clean | clean | clean | clean |
+| `npm run test` | 65 | 129 | 129 | 143 | 143 | 143 | **143** |
+| `npx playwright test` | 79 (+1) | 135 (+1) | 149 (+7) | 177 (+7) | 207 (+7) | 239 (+7) | **273 (+7)** |
+| `npm run build` | passes | passes | passes | passes | passes | passes | passes |
+| client JS | ~1.3 MB | ~1.6 MB | 1559 KB | 1574 KB | 1611 KB | 1660 KB | **1733 KB** |
 
 The seven skips are the new bottom-bar geometry tests, which are phone-only by
 design and skip on the desktop project. Six existing assertions were updated

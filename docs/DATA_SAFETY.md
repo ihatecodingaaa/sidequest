@@ -196,3 +196,18 @@ Client-side only, deployed as a static site, but still:
 - Outcomes are realistic. No choice ends in an instant arrest, because that is
   not what usually happens and modelling it that way teaches nothing.
 - Debriefs explain mechanisms rather than moralising.
+
+## SIDEQUEST Streets
+
+The district collects nothing and requires nothing.
+
+- **No account, no GPS, no camera, no contacts, no photographs.** The avatar is
+  a fictional figure assembled from four colour and shape choices.
+- The avatar and the chosen Echo persist in the same `localStorage` profile as
+  everything else, on the device, and are cleared by a demo reset.
+- Street Check answers are **not stored**. Only the fact that a check was
+  completed is recorded, in its own ledger, so XP is granted once.
+- No analytics were added.
+- The world contains no real map, address or property layout. District 01 is
+  fictional and inspired by everyday Singapore.
+- No NPC encodes appearance as risk, and nothing in the world profiles anybody.

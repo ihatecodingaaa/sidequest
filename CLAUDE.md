@@ -145,6 +145,29 @@ work fully with location denied.
 - Echo, collectibles, motifs, playful motion and sound never appear on Safe or
   Settings.
 
+## SIDEQUEST Streets
+
+- **The game does not own product state.** XP, missions, Echo unlocks, campaign
+  progress and the passport stay in the store. The world reads it, asks the
+  product to act, and reflects the result. Delete Streets and every earned
+  point must still be valid.
+- Everything crosses through `quest-bridge.ts`. Nothing under `features/streets`
+  touches `localStorage`.
+- NPCs open the **existing** missions. Never rebuild an experience inside the
+  world.
+- The Quest List is a peer of the map, not a fallback. Every destination is
+  openable without walking. Learning is never gated behind dexterity.
+- All dialogue is DOM. A canvas has no semantics.
+- One currency. No street coins, energy, lives, gems, loot boxes, gacha or
+  random drops.
+- No leaderboard in the world.
+- No NPC signals criminality by appearance. No police roleplay, chasing or
+  combat.
+- Safe is a calm door: no XP, no quest, no reward, no playfulness.
+- All world art is drawn in code. No sprite rips, no tile packs, no stock.
+- Institutional colours are SIDEQUEST-owned and inspired. Never described as
+  official, never a crest or logo, and no copy implies endorsement.
+
 ## Track B alignment
 
 The submission is Delta Challenge Track B, **Crime Prevention**, not scam
