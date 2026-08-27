@@ -297,7 +297,8 @@ test.describe("completion is reward-first", () => {
     await playScene(page);
     await page.getByRole("button", { name: "Leave it there" }).click();
     await page.getByRole("button", { name: "Compare the two runs" }).click();
-    await page.getByRole("button", { name: "What this trains" }).click();
+    // The comparison screen now finishes the mission. The separate debrief
+    // taught the same lesson a third time, after the outcome and the compare.
     await page.getByRole("button", { name: "Finish mission" }).click();
   }
 
