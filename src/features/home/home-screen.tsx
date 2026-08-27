@@ -15,6 +15,7 @@ import { completedPhysicalCount, physicalChapters } from "@/lib/campaign";
 import { Wordmark } from "@/components/layout/wordmark";
 import { SignatureStrip } from "@/components/mission/signature-strip";
 import { CharacterPortrait } from "@/components/story/character-portrait";
+import { StreetsHero } from "@/features/streets/components/streets-hero";
 import { EchoMascot } from "@/components/echo/echo-mascot";
 import { resolveEchoStyle } from "@/data/echo-styles";
 import { cn } from "@/lib/cn";
@@ -106,6 +107,14 @@ export function HomeScreen() {
           />
         </Link>
       </div>
+
+      {/*
+        SIDEQUEST Streets sits above the Campaign hero, because a world is the
+        thing somebody has not seen before and the reason to open the app at
+        all. The Campaign keeps a full hero directly beneath it: Streets is a
+        way in, not a replacement, and ONE BAD MINUTE is still the flagship.
+      */}
+      <StreetsHero />
 
       {campaign ? <CampaignHero progress={progress} /> : null}
 
