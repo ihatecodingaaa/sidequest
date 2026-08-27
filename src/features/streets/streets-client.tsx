@@ -8,15 +8,21 @@ import { cn } from "@/lib/cn";
 import { usePrefersReducedMotion } from "@/hooks/use-profile";
 import { useAppStore } from "@/store/app-store";
 import { useStreetsBridge } from "@/features/streets/game/quest-bridge";
+import { useCompactLandscape } from "@/features/streets/game/use-orientation";
 import { DialogueOverlay } from "@/features/streets/components/dialogue-overlay";
+import { Minimap } from "@/features/streets/components/minimap";
+import { RewardsCounter } from "@/features/streets/components/rewards-counter";
 import { TouchPad } from "@/features/streets/components/touch-pad";
 import { QuestList } from "@/features/streets/components/quest-list";
 import { AvatarSetup } from "@/features/streets/components/avatar-setup";
 import {
   DEFAULT_AVATAR,
-  LANDMARKS,
+  DISTRICT_ID,
+  MAPS,
   NPCS,
+  SPAWN,
   type AvatarLook,
+  type Door,
   type Npc,
 } from "@/features/streets/streets-data";
 import type { WorldEngine } from "@/features/streets/game/world-engine";
@@ -36,6 +42,7 @@ import type { WorldEngine } from "@/features/streets/game/world-engine";
  */
 export function StreetsClient() {
   const reduced = usePrefersReducedMotion();
+  const landscape = useCompactLandscape();
   const bridge = useStreetsBridge();
   /*
    * Destructured because the effects below depend on these two specifically,
@@ -52,12 +59,18 @@ export function StreetsClient() {
 
   const [engineReady, setEngineReady] = useState(false);
   const [near, setNear] = useState<Npc | null>(null);
+  const [doorway, setDoorway] = useState<Door | null>(null);
+  const [placeId, setPlaceId] = useState<string>(DISTRICT_ID);
+  const [tile, setTile] = useState(SPAWN);
   const [talkingTo, setTalkingTo] = useState<Npc | null>(null);
   const [listOpen, setListOpen] = useState(false);
+  const [counterOpen, setCounterOpen] = useState(false);
   const [hint, setHint] = useState(true);
 
   const look: AvatarLook = storedLook ?? DEFAULT_AVATAR;
   const needsAvatar = bridgeReady && !storedLook;
+  const place = MAPS[placeId] ?? MAPS[DISTRICT_ID];
+  const busy = Boolean(talkingTo) || listOpen || counterOpen;
 
   /* --------------------------------------------------------- Engine boot */
 
@@ -81,6 +94,9 @@ export function StreetsClient() {
         npcs: NPCS.map((npc) => ({ npc, done: isNpcDone(npc) })),
         reducedMotion: reduced,
         onNear: setNear,
+        onDoor: setDoorway,
+        onTile: setTile,
+        onMap: (map) => setPlaceId(map.id),
       });
       engineRef.current = engine;
       engine.start();
@@ -103,16 +119,24 @@ export function StreetsClient() {
     });
   }, [isNpcDone, equippedEcho]);
 
-  /* Resize with the viewport. */
+  /*
+   * Resize with the viewport, and reframe when the phone turns.
+   *
+   * The camera takes its shape from the container, so a rotation is a resize
+   * as far as the engine is concerned. `landscape` is in the dependency list
+   * because the layout around the canvas changes first and the canvas has to
+   * measure itself again afterwards.
+   */
   useEffect(() => {
     const onResize = () => engineRef.current?.resize();
+    onResize();
     window.addEventListener("resize", onResize);
     window.addEventListener("orientationchange", onResize);
     return () => {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("orientationchange", onResize);
     };
-  }, []);
+  }, [landscape, engineReady]);
 
   /* ------------------------------------------------------------- Input */
 
@@ -124,14 +148,35 @@ export function StreetsClient() {
     if (x !== 0 || y !== 0) setHint(false);
   }, []);
 
-  const interact = useCallback(() => {
-    const npc = engineRef.current?.target ?? null;
-    if (!npc) return;
-    engineRef.current?.setInput(0, 0);
-    keysRef.current.clear();
+  const openNpc = useCallback((npc: Npc) => {
+    // The rewards counter is a screen of its own. Everybody else talks first.
     setTalkingTo(npc);
     setHint(false);
   }, []);
+
+  /**
+   * One button, whichever is nearer.
+   *
+   * The engine suppresses a person who is further away than a doorway, so this
+   * only has to prefer the person it was given.
+   */
+  const interact = useCallback(() => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    engine.setInput(0, 0);
+    keysRef.current.clear();
+
+    const npc = engine.target;
+    if (npc) {
+      openNpc(npc);
+      return;
+    }
+    const door = engine.doorway;
+    if (door) {
+      engine.enter(door);
+      setHint(false);
+    }
+  }, [openNpc]);
 
   useEffect(() => {
     const map: Record<string, string> = {
@@ -153,7 +198,7 @@ export function StreetsClient() {
       // Never steal a key from a control somebody is actually using.
       const target = event.target as HTMLElement | null;
       if (target && /^(BUTTON|A|INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
-      if (talkingTo || listOpen) return;
+      if (busy) return;
 
       const dir = map[event.key];
       if (dir) {
@@ -181,15 +226,33 @@ export function StreetsClient() {
       window.removeEventListener("keydown", onDown);
       window.removeEventListener("keyup", onUp);
     };
-  }, [applyKeys, interact, talkingTo, listOpen]);
+  }, [applyKeys, interact, busy]);
 
   /* Movement stops whenever something is on top of the world. */
   useEffect(() => {
-    if (talkingTo || listOpen) {
+    if (busy) {
       keysRef.current.clear();
       engineRef.current?.setInput(0, 0);
     }
-  }, [talkingTo, listOpen]);
+  }, [busy]);
+
+  /** The Quest List's shortcut. Interiors open their door on the way. */
+  const walkTo = useCallback((npc: Npc) => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    const mapId = npc.mapId ?? DISTRICT_ID;
+    if (mapId === DISTRICT_ID) {
+      engine.moveTo(npc.x, npc.y);
+    } else {
+      const door = MAPS[DISTRICT_ID]?.doors.find((entry) => entry.to === mapId);
+      if (door) engine.enter(door);
+    }
+    // Close enough to talk. Arriving out of range and being told nobody is
+    // nearby is the worst possible answer to "take me to this person".
+    engine.approach(npc);
+    setListOpen(false);
+    setHint(false);
+  }, []);
 
   /* ------------------------------------------------------------ Render */
 
@@ -202,68 +265,135 @@ export function StreetsClient() {
     );
   }
 
-  return (
-    <div className="fixed inset-0 flex flex-col bg-[#1a2a1e]" data-testid="streets-root">
-      {/* Top bar: exit, XP, and the list alternative, all real controls. */}
-      <div className="relative z-20 flex items-center gap-2 px-3 pt-[max(0.6rem,env(safe-area-inset-top))] pb-2">
-        <Link
-          href="/"
-          aria-label="Leave Streets"
-          className="sq-pressable grid size-11 place-items-center rounded-full bg-black/45 text-chalk backdrop-blur"
-        >
-          <X aria-hidden className="size-5" />
-        </Link>
+  const topBar = (
+    <div
+      className={cn(
+        "z-20 flex items-center gap-2",
+        landscape
+          ? "pointer-events-none absolute inset-x-0 top-0 px-3 pt-[max(0.5rem,env(safe-area-inset-top))]"
+          : "relative px-3 pt-[max(0.6rem,env(safe-area-inset-top))] pb-2",
+      )}
+    >
+      <Link
+        href="/"
+        aria-label="Leave Streets"
+        className={cn(
+          "sq-pressable grid size-11 place-items-center rounded-full bg-black/45 text-chalk backdrop-blur",
+          landscape && "pointer-events-auto",
+        )}
+      >
+        <X aria-hidden className="size-5" />
+      </Link>
 
-        <p className="rounded-full bg-black/45 px-3 py-1.5 text-sm font-bold text-volt-300 tabular-nums backdrop-blur">
-          {bridge.xp} XP
+      <p className="shrink-0 rounded-full bg-black/45 px-3 py-1.5 text-sm font-bold whitespace-nowrap text-volt-300 backdrop-blur tabular-nums">
+        {bridge.xp} XP
+      </p>
+
+      <div className="flex-1" />
+
+      <button
+        type="button"
+        onClick={() => setListOpen(true)}
+        className={cn(
+          "sq-pressable flex min-h-11 items-center gap-2 rounded-full bg-black/45 px-3.5 text-sm font-bold text-chalk backdrop-blur",
+          landscape && "pointer-events-auto",
+        )}
+      >
+        <List aria-hidden className="size-4" />
+        Quests
+      </button>
+    </div>
+  );
+
+  const world = (
+    <>
+      <canvas
+        ref={canvasRef}
+        data-testid="streets-canvas"
+        aria-label="District 01. Use the quest list for a version without walking."
+        role="img"
+        className="absolute inset-0 size-full"
+      />
+
+      {!engineReady ? (
+        <p className="absolute inset-0 grid place-items-center text-sm text-chalk/70">
+          Loading the block...
         </p>
+      ) : null}
 
-        <div className="flex-1" />
-
-        <button
-          type="button"
-          onClick={() => setListOpen(true)}
-          className="sq-pressable flex min-h-11 items-center gap-2 rounded-full bg-black/45 px-3.5 text-sm font-bold text-chalk backdrop-blur"
+      {/*
+        Where you are, in words, opposite the minimap.
+        It sits over the world rather than in the top bar because on a 390px
+        phone the bar already carries four controls, and "Corner kopiti..." is
+        not a place name.
+      */}
+      {engineReady ? (
+        <p
+          className={cn(
+            "pointer-events-none absolute left-2 max-w-[52%] truncate rounded-full bg-black/45 px-3 py-1.5 text-sm font-semibold text-chalk backdrop-blur",
+            landscape ? "top-14" : "top-2",
+          )}
         >
-          <List aria-hidden className="size-4" />
-          Quests
-        </button>
-      </div>
+          {place?.name ?? "District 01"}
+        </p>
+      ) : null}
 
-      {/* The district. */}
-      <div className="relative min-h-0 flex-1">
-        <canvas
-          ref={canvasRef}
-          data-testid="streets-canvas"
-          aria-label="District 01. Use the quest list for a version without walking."
-          role="img"
-          className="absolute inset-0 size-full"
-        />
-
-        {!engineReady ? (
-          <p className="absolute inset-0 grid place-items-center text-sm text-chalk/70">
-            Loading the block...
-          </p>
-        ) : null}
-
-        {hint && engineReady ? (
-          <p className="pointer-events-none absolute inset-x-0 bottom-4 mx-auto w-fit rounded-full bg-black/55 px-4 py-2 text-sm font-semibold text-chalk backdrop-blur">
-            Move with the pad. Someone is waiting nearby.
-          </p>
-        ) : null}
-      </div>
-
-      {/* Controls sit below the world, never over the dialogue. */}
-      {!talkingTo && !listOpen ? (
-        <TouchPad
-          near={near}
-          onMove={(x, y) => {
-            engineRef.current?.setInput(x, y);
-            if (x !== 0 || y !== 0) setHint(false);
-          }}
-          onInteract={interact}
+      {/*
+        The minimap is for the district. An eighteen by twelve room does not
+        need one, and drawing it anyway would be the debug-panel look this
+        deliberately avoids.
+      */}
+      {engineReady && placeId === DISTRICT_ID ? (
+        <Minimap
+          tile={tile}
+          npcs={NPCS.filter((npc) => !npc.mapId).map((npc) => ({ npc, done: isNpcDone(npc) }))}
+          className={cn(
+            "absolute right-2",
+            landscape ? "top-14 w-24" : "top-2 w-28",
+          )}
         />
       ) : null}
+
+      {hint && engineReady ? (
+        <p className="pointer-events-none absolute inset-x-0 bottom-4 mx-auto w-fit rounded-full bg-black/55 px-4 py-2 text-sm font-semibold text-chalk backdrop-blur">
+          Move with the pad. Doors open.
+        </p>
+      ) : null}
+    </>
+  );
+
+  const controls = !busy ? (
+    <TouchPad
+      near={near}
+      door={doorway}
+      layout={landscape ? "edges" : "stacked"}
+      onMove={(x, y) => {
+        engineRef.current?.setInput(x, y);
+        if (x !== 0 || y !== 0) setHint(false);
+      }}
+      onInteract={interact}
+    />
+  ) : null;
+
+  return (
+    <div
+      className={cn("fixed inset-0 bg-[#1a2a1e]", landscape ? "block" : "flex flex-col")}
+      data-testid="streets-root"
+      data-orientation={landscape ? "landscape" : "portrait"}
+    >
+      {landscape ? (
+        <>
+          {world}
+          {topBar}
+          {controls}
+        </>
+      ) : (
+        <>
+          {topBar}
+          <div className="relative min-h-0 flex-1">{world}</div>
+          {controls}
+        </>
+      )}
 
       {talkingTo ? (
         <DialogueOverlay
@@ -271,23 +401,24 @@ export function StreetsClient() {
           done={bridge.isNpcDone(talkingTo)}
           bridge={bridge}
           onClose={() => setTalkingTo(null)}
+          onOpenRewards={() => {
+            setTalkingTo(null);
+            setCounterOpen(true);
+          }}
         />
       ) : null}
+
+      {counterOpen ? <RewardsCounter onClose={() => setCounterOpen(false)} /> : null}
 
       {listOpen ? (
         <QuestList
           bridge={bridge}
           onClose={() => setListOpen(false)}
-          onWalkTo={(npc) => {
-            const landmark = LANDMARKS.find((entry) => entry.id === npc.landmarkId);
-            engineRef.current?.moveTo(npc.x, npc.y + 2);
-            setListOpen(false);
-            setHint(false);
-            void landmark;
-          }}
+          onWalkTo={walkTo}
           onTalkTo={(npc) => {
             setListOpen(false);
-            setTalkingTo(npc);
+            if (npc.action.kind === "rewards") setCounterOpen(true);
+            else openNpc(npc);
           }}
         />
       ) : null}

@@ -5,7 +5,7 @@ import { useAppStore } from "@/store/app-store";
 import { useProfile } from "@/hooks/use-profile";
 import { resolveEchoStyle } from "@/data/echo-styles";
 import { getMission } from "@/data/missions";
-import { NPCS, STREET_CHECKS, type Npc, type NpcAction } from "@/features/streets/streets-data";
+import { STREET_CHECKS, type Npc, type NpcAction } from "@/features/streets/streets-data";
 import type { AwardResult } from "@/lib/xp";
 import type { EchoStyleId } from "@/data/echo-styles";
 
@@ -75,7 +75,11 @@ export function useStreetsBridge(): StreetsBridge {
           (entry) => (entry?.completedChapterIds?.length ?? 0) > 0,
         );
       }
-      // Safe is a service, never a completion. It has no done state, ever.
+      /*
+       * Safe is a service, never a completion, and it has no done state ever.
+       * Neither does a noticeboard or the rewards counter: reading something
+       * twice is not a thing to tick off.
+       */
       return false;
     },
     [completedMissionIds, checksDone, profile.campaigns],
@@ -97,7 +101,14 @@ export function useStreetsBridge(): StreetsBridge {
           router.push("/safe");
           break;
         case "check":
-          // Handled in the world by the dialogue overlay, not a route change.
+        case "rewards":
+        case "info":
+          /*
+           * Handled inside the world by the dialogue overlay rather than by a
+           * route change. Claiming a reward at the counter runs the store's
+           * existing `claimReward`, unchanged: the counter is a place to stand,
+           * not a second economy.
+           */
           break;
       }
     },
@@ -123,12 +134,4 @@ export function useStreetsBridge(): StreetsBridge {
     open,
     completeCheck,
   };
-}
-
-/** Every destination in the district, for the Quest List. */
-export function districtDestinations() {
-  return NPCS.map((npc) => ({
-    npc,
-    check: npc.action.kind === "check" ? STREET_CHECKS[npc.action.checkId] : undefined,
-  }));
 }

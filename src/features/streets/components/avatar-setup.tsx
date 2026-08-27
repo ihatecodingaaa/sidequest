@@ -5,6 +5,7 @@ import { Shuffle } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import {
+  ACCESSORIES,
   DEFAULT_AVATAR,
   HAIR_COLOURS,
   HAIR_STYLES,
@@ -17,11 +18,16 @@ import {
  * Avatar setup, deliberately small.
  *
  * Birk et al. (CHI 2016) tie the motivational effect to *identification*, not
- * to the number of options, so this is four axes with small sets rather than a
- * character creator. It also has to stay small for a concrete reason: every
- * option has to work in four walking directions, and four directions times five
- * skins times five hair colours times four styles times six tops is 2400 frames
- * if anything is pre-rendered. Nothing is: the sprite is layered at draw time.
+ * to the number of options, so this is five axes with small sets rather than a
+ * character creator. It stays small for a concrete reason too: every option has
+ * to work in four walking directions, and the combinations are already in the
+ * tens of thousands. Nothing is pre-rendered: the sprite is layered at draw
+ * time, which is what keeps the option list free.
+ *
+ * Where it did grow, it grew towards the people it is for. Darker skin tones,
+ * more hair, and a covered head are all here because a customiser that cannot
+ * make a recognisable share of Singapore youth is not finished. Everything is
+ * available from the start: nothing is earned, priced, dropped or bundled.
  *
  * Nothing is labelled by gender. Randomise and Skip are both first-class, so
  * nobody who does not care has to care. Target is under thirty seconds.
@@ -43,6 +49,7 @@ export function AvatarSetup({
       hair: pick(HAIR_COLOURS),
       hairStyle: pick(HAIR_STYLES),
       top: pick(TOP_COLOURS),
+      accessory: pick(ACCESSORIES),
     });
 
   return (
@@ -110,6 +117,25 @@ export function AvatarSetup({
               label="Top colour"
               onSelect={() => setLook({ ...look, top: colour })}
             />
+          ))}
+        </Row>
+
+        <Row label="One extra">
+          {ACCESSORIES.map((item) => (
+            <button
+              key={item}
+              type="button"
+              aria-pressed={(look.accessory ?? "none") === item}
+              onClick={() => setLook({ ...look, accessory: item })}
+              className={cn(
+                "sq-pressable min-h-11 rounded-xl border px-3.5 text-sm font-semibold capitalize",
+                (look.accessory ?? "none") === item
+                  ? "border-quest-400 bg-quest-500/15 text-chalk"
+                  : "border-white/12 text-mist",
+              )}
+            >
+              {item}
+            </button>
           ))}
         </Row>
       </div>
@@ -195,27 +221,95 @@ function AvatarPreview({ look }: { look: AvatarLook }) {
       <rect x="6.6" y="12" width="1.7" height="5" fill={look.skin} />
       <rect x="15.7" y="12" width="1.7" height="5" fill={look.skin} />
       <rect x="8.4" y="4" width="7.2" height="7.4" fill={look.skin} />
-      {look.hairStyle === "swept" ? (
-        <>
-          <rect x="8" y="2.8" width="8" height="3" fill={look.hair} />
-          <rect x="14.4" y="3.8" width="1.8" height="4" fill={look.hair} />
-        </>
-      ) : look.hairStyle === "tied" ? (
-        <>
-          <rect x="8" y="2.8" width="8" height="3" fill={look.hair} />
-          <rect x="6.6" y="4.8" width="1.6" height="4" fill={look.hair} />
-        </>
-      ) : look.hairStyle === "curls" ? (
-        <rect x="7.6" y="2.2" width="8.8" height="4" fill={look.hair} />
-      ) : (
-        <rect x="8" y="2.8" width="8" height="3.4" fill={look.hair} />
-      )}
+      <Hair style={look.hairStyle} colour={look.hair} />
       <rect x="9.8" y="7.4" width="1.2" height="1.4" fill="#1a1208" />
       <rect x="13" y="7.4" width="1.2" height="1.4" fill="#1a1208" />
+      <Extra accessory={look.accessory} />
     </svg>
   );
 }
 
+/** The same silhouettes the renderer draws, at the same proportions. */
+function Hair({ style, colour }: { style: AvatarLook["hairStyle"]; colour: string }) {
+  switch (style) {
+    case "swept":
+      return (
+        <>
+          <rect x="8" y="2.8" width="8" height="3" fill={colour} />
+          <rect x="14.4" y="3.8" width="1.8" height="4" fill={colour} />
+        </>
+      );
+    case "tied":
+      return (
+        <>
+          <rect x="8" y="2.8" width="8" height="3" fill={colour} />
+          <rect x="6.6" y="4.8" width="1.6" height="4" fill={colour} />
+        </>
+      );
+    case "curls":
+      return <rect x="7.6" y="2.2" width="8.8" height="4" fill={colour} />;
+    case "buzz":
+      return <rect x="8.4" y="3.4" width="7.2" height="2.2" fill={colour} />;
+    case "long":
+      return (
+        <>
+          <rect x="8" y="3" width="8" height="3" fill={colour} />
+          <rect x="7.4" y="4" width="1.6" height="8" fill={colour} />
+          <rect x="15" y="4" width="1.6" height="8" fill={colour} />
+        </>
+      );
+    case "tudung":
+      return (
+        <>
+          <rect x="7.6" y="2.6" width="8.8" height="5" fill={colour} />
+          <rect x="7.6" y="7" width="1.6" height="6" fill={colour} />
+          <rect x="14.8" y="7" width="1.6" height="6" fill={colour} />
+          <rect x="8.6" y="12" width="6.8" height="2.4" fill={colour} />
+        </>
+      );
+    default:
+      return <rect x="8" y="2.8" width="8" height="3.4" fill={colour} />;
+  }
+}
+
+/** The one extra, drawn over the head or the torso as the case may be. */
+function Extra({ accessory }: { accessory: AvatarLook["accessory"] }) {
+  switch (accessory) {
+    case "glasses":
+      return (
+        <>
+          <rect x="9" y="6.4" width="2.4" height="2" fill="rgba(24,28,40,0.85)" />
+          <rect x="12.6" y="6.4" width="2.4" height="2" fill="rgba(24,28,40,0.85)" />
+          <rect x="11.4" y="7" width="1.2" height="0.8" fill="rgba(24,28,40,0.85)" />
+        </>
+      );
+    case "cap":
+      return (
+        <>
+          <rect x="7.8" y="2.2" width="8.4" height="3" fill="#22303f" />
+          <rect x="7.4" y="4.8" width="9.2" height="1.6" fill="#2f4258" />
+        </>
+      );
+    case "headphones":
+      return (
+        <>
+          <rect x="7.2" y="2" width="9.6" height="1.6" fill="#1c2230" />
+          <rect x="6.6" y="3.6" width="1.8" height="3.4" fill="#1c2230" />
+          <rect x="15.6" y="3.6" width="1.8" height="3.4" fill="#1c2230" />
+        </>
+      );
+    case "bag":
+      return (
+        <>
+          <rect x="7" y="11.6" width="1.8" height="5.2" fill="#3a4560" />
+          <rect x="15.2" y="11.6" width="1.8" height="5.2" fill="#3a4560" />
+        </>
+      );
+    default:
+      return null;
+  }
+}
+
 function pick<T>(items: readonly T[]): T {
-  return items[Math.floor(Math.random() * items.length)];
+  return items[Math.floor(Math.random() * items.length)] as T;
 }

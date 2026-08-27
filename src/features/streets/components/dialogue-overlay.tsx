@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Check, X } from "lucide-react";
+import { ArrowRight, Check, Monitor, StickyNote, X } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import { CharacterPortrait } from "@/components/story/character-portrait";
 import { EchoMascot } from "@/components/echo/echo-mascot";
+import { ProvenanceTag } from "@/components/ui/primitives";
 import { STREET_CHECKS, type Npc } from "@/features/streets/streets-data";
 import type { StreetsBridge } from "@/features/streets/game/quest-bridge";
 import type { AwardResult } from "@/lib/xp";
@@ -27,16 +28,21 @@ export function DialogueOverlay({
   done,
   bridge,
   onClose,
+  onOpenRewards,
 }: {
   npc: Npc;
   done: boolean;
   bridge: StreetsBridge;
   onClose: () => void;
+  /** The rewards counter is a screen of its own, opened from Mei's line. */
+  onOpenRewards: () => void;
 }) {
   const panelRef = useRef<HTMLDivElement | null>(null);
   const [beat, setBeat] = useState(0);
 
   const check = npc.action.kind === "check" ? STREET_CHECKS[npc.action.checkId] : undefined;
+  const figure = npc.figure ?? "person";
+  const isFixture = figure !== "person";
   const lines = done ? npc.doneLines : npc.lines;
   const linesDone = beat >= lines.length - 1;
 
@@ -82,11 +88,25 @@ export function DialogueOverlay({
         className="relative max-h-[85dvh] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-ink-900 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
       >
         <div className="flex items-start gap-3">
-          <CharacterPortrait
-            characterId={npc.characterId}
-            expression={done ? "relieved" : "neutral"}
-            className="size-12"
-          />
+          {/* A screen or a board gets a glyph. Only people get faces. */}
+          {isFixture ? (
+            <span
+              aria-hidden
+              className="grid size-12 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5 text-mist"
+            >
+              {figure === "machine" ? (
+                <Monitor className="size-5" />
+              ) : (
+                <StickyNote className="size-5" />
+              )}
+            </span>
+          ) : (
+            <CharacterPortrait
+              characterId={npc.characterId}
+              expression={done ? "relieved" : "neutral"}
+              className="size-12"
+            />
+          )}
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold uppercase tracking-[0.1em] text-quest-300">{npc.name}</p>
 
@@ -189,8 +209,32 @@ export function DialogueOverlay({
           </div>
         ) : null}
 
+        {/* ------------------------------------------------ Just to read */}
+        {npc.action.kind === "info" && linesDone ? (
+          <div className="mt-5">
+            {/*
+              Provenance on the screen that makes the claim. A noticeboard
+              listing what the block is doing this week is invented content,
+              and the reader finds that out here rather than in a document.
+            */}
+            {npc.provenance ? (
+              <div className="rounded-2xl border border-white/10 bg-white/3 p-3.5">
+                <ProvenanceTag provenance="seeded" compact />
+                <p className="mt-1.5 text-xs leading-relaxed text-mist">{npc.provenance}</p>
+              </div>
+            ) : null}
+            <button
+              type="button"
+              onClick={onClose}
+              className="sq-pressable mt-3 flex min-h-12 w-full items-center justify-center rounded-2xl border border-white/10 bg-white/4 text-sm font-semibold text-mist"
+            >
+              Done
+            </button>
+          </div>
+        ) : null}
+
         {/* ------------------------------------------------- Hand over */}
-        {!check && linesDone ? (
+        {!check && npc.action.kind !== "info" && linesDone ? (
           <div className="mt-5">
             {
               <div className="space-y-2.5">
@@ -199,14 +243,23 @@ export function DialogueOverlay({
                     No XP here, and nothing to play. It opens the real thing.
                   </p>
                 ) : null}
+                {npc.action.kind === "rewards" ? (
+                  <p className="text-sm leading-relaxed text-muted">
+                    Nothing is spent here. XP is a threshold, and claiming takes none of it away.
+                  </p>
+                ) : null}
                 <button
                   type="button"
-                  onClick={() => bridge.open(npc.action)}
+                  onClick={() =>
+                    npc.action.kind === "rewards" ? onOpenRewards() : bridge.open(npc.action)
+                  }
                   className={cn(
                     "sq-pressable flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold",
                     npc.action.kind === "safe"
                       ? "bg-[#3d7de0] text-white"
-                      : "bg-volt-500 text-ink-900",
+                      : npc.action.kind === "rewards"
+                        ? "bg-gold-500 text-ink-900"
+                        : "bg-volt-500 text-ink-900",
                   )}
                 >
                   {npc.cta}
@@ -225,7 +278,7 @@ export function DialogueOverlay({
         ) : null}
 
         {/* Echo reacts once, quietly, and only where it has something to add. */}
-        {done && bridge.equippedEcho ? (
+        {done && !isFixture && bridge.equippedEcho ? (
           <p className="mt-5 flex items-center gap-2.5 text-sm text-muted">
             <EchoMascot expression="pleased" style={bridge.equippedEcho} size={28} />
             That one is behind you.
