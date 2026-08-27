@@ -194,7 +194,11 @@ describe("official destinations come from one place", () => {
       }
     }
     for (const resource of OFFICIAL_RESOURCES) {
-      expect(resource.href, `${resource.id} has no destination`).toMatch(/^(tel:|https:\/\/)/);
+      // Three schemes, and nothing else. `sms:` is the route for when it is
+      // not safe to speak, which is the one case a call is the wrong answer.
+      expect(resource.href, `${resource.id} has no destination`).toMatch(
+        /^(tel:|sms:|https:\/\/)/,
+      );
     }
   });
 });
@@ -217,6 +221,36 @@ describe("pilot provenance stays unusable until a pilot exists", () => {
         `${file.path} claims pilot data`,
       ).toBe(false);
     }
+  });
+});
+
+/* --------------------------------------------- Outbound schemes stay narrow */
+
+describe("ExternalLink's allowlist", () => {
+  /*
+   * A tripwire on a security boundary. `ExternalLink` refuses anything that is
+   * not http(s), `tel:` or `sms:`, which is what stops a `javascript:` or
+   * `data:` URL arriving through content and reaching a user.
+   *
+   * The list is short on purpose and every addition widens what content can
+   * reach the operating system through, so this test exists to make an
+   * addition a deliberate act rather than a quiet one.
+   */
+  it("permits exactly http, https, tel and sms", () => {
+    const source = SOURCE_FILES.find((file) => file.path === "src/components/ui/primitives.tsx");
+    expect(source).toBeDefined();
+    const schemes = [...source!.text.matchAll(/href\.startsWith\("(\w+):"\)/g)].map(
+      (match) => match[1],
+    );
+    expect(schemes.sort()).toEqual(["sms", "tel"]);
+  });
+
+  it("gives the emergency SMS route a scheme the link component will render", () => {
+    const sms = OFFICIAL_RESOURCES.find((resource) => resource.action === "sms");
+    expect(sms, "no emergency SMS route").toBeDefined();
+    expect(sms!.href).toBe("sms:70999");
+    // Verified verbatim on police.gov.sg, 27 August 2026.
+    expect(sms!.owner).toBe("Singapore Police Force");
   });
 });
 

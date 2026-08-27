@@ -748,14 +748,14 @@ export const STREET_CHECKS: Record<string, StreetCheck> = {
         id: "quiet",
         label: "Say nothing. It is not your basket",
         outcome:
-          "You walk out together. Whether anything comes of it is decided later by someone reviewing footage, not by either of you at the machine.",
+          "You walk out together, and that is the part people get wrong. Police advice to this age group is blunt about it: being part of a group that is shoplifting makes you equally liable, whether or not you were the one holding anything.",
       },
     ],
     takeaway: "The move that costs least is usually a hand, not a speech.",
     xp: 25,
     source: {
-      label: "Singapore Police Force crime prevention advisories",
-      body: "Shop theft is theft regardless of how small the item is. Self checkout areas are recorded, and what happens next is decided from that footage rather than at the machine.",
+      label: "Singapore Police Force youth advisory, ages 13 to 19",
+      body: "SPF tells this age group directly: \u201cEven if you're not the one pocketing goods, being part of a group that's shoplifting makes you equally liable.\u201d Self checkout areas are recorded, and what happens next is decided from that footage rather than at the machine.",
     },
   },
   "check-job": {

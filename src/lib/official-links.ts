@@ -6,10 +6,18 @@
  * the agency that actually owns the job.
  *
  * All URLs and numbers below were checked against the live official sites.
- * Last verified: 2026-08-25.
+ * Last verified: 2026-08-27.
  */
 
-export type OfficialAction = "call" | "open";
+/**
+ * What tapping does.
+ *
+ * `sms` is its own kind rather than a variety of `open`, because the handoff a
+ * person needs to be told is different: a call dials, a link leaves the app,
+ * and a text opens a message they have to write themselves. Collapsing it into
+ * `open` would have made the copy lie about what happens next.
+ */
+export type OfficialAction = "call" | "open" | "sms";
 
 export interface OfficialResource {
   id: string;
@@ -34,6 +42,31 @@ export const OFFICIAL_RESOURCES: readonly OfficialResource[] = [
     action: "call",
     href: "tel:999",
     displayTarget: "999",
+    owner: "Singapore Police Force",
+    accent: "coral",
+    priority: "emergency",
+  },
+  {
+    /*
+     * The route for when calling is not safe.
+     *
+     * Added after re-verifying the Police contact page on 27 August 2026,
+     * which lists it verbatim as "Emergency SMS (For immediate police
+     * assistance if it is not safe to talk) 70999". The repository did not
+     * carry it at all before, which was a real gap: it is precisely the
+     * situation the district's Protect thread ends in, and the one where a
+     * young person is least able to look it up.
+     *
+     * SMS rather than a call, so the action is `open` with an `sms:` target
+     * and the message is left empty for the person to write.
+     */
+    id: "police-sms",
+    label: "Police emergency SMS",
+    description: "For immediate police assistance when it is not safe to speak.",
+    handoff: "Opens a text message to 70999. You write it.",
+    action: "sms",
+    href: "sms:70999",
+    displayTarget: "70999",
     owner: "Singapore Police Force",
     accent: "coral",
     priority: "emergency",
@@ -134,6 +167,8 @@ export const QUICK_LINKS = {
   scamShield: "https://www.scamshield.gov.sg",
   scamHelpline: "tel:1799",
   policeEmergency: "tel:999",
+  /** For when speaking is not safe. Verified on police.gov.sg, 27 August 2026. */
+  policeSms: "sms:70999",
   iWitness: "https://www.police.gov.sg/iwitness",
   spfAdvisories: "https://www.police.gov.sg/Advisories",
   ncpc: "https://www.ncpc.org.sg",

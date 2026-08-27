@@ -103,6 +103,13 @@ export interface ThreadStep {
   xp: number;
   /** Optional extra conversation that adds context and grants nothing. */
   optional?: boolean;
+  /**
+   * An entry in `official-links.ts` to offer after the step.
+   *
+   * SIDEQUEST teaches the decision and links out. It never takes a report and
+   * never restates an agency's page: the handoff is the point.
+   */
+  official?: string;
 }
 
 export interface PreventionThread {
@@ -386,6 +393,7 @@ const THE_SHOUT: PreventionThread = {
       ],
       skillId: "communication",
       xp: THREAD_XP.step,
+      official: "police-sms",
     },
   ],
   completion: {

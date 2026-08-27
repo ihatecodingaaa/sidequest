@@ -7,6 +7,8 @@ import { cn } from "@/lib/cn";
 import { ACCENT_BG_SOFT, ACCENT_BORDER, ACCENT_TEXT } from "@/lib/accent";
 import { SIGNAL_MODES } from "@/data/signals";
 import { getMission } from "@/data/missions";
+import { getOfficialResource } from "@/lib/official-links";
+import { ExternalLink } from "@/components/ui/primitives";
 import type { PreventionThread, ThreadStep } from "@/data/prevention-threads";
 import type { StreetsBridge } from "@/features/streets/game/quest-bridge";
 import type { AwardResult } from "@/lib/xp";
@@ -61,6 +63,7 @@ export function ThreadPanel({
   };
 
   const mission = step.kind === "hero-mission" && step.missionId ? getMission(step.missionId) : null;
+  const official = step.official ? getOfficialResource(step.official) : undefined;
 
   return (
     <div className="mt-4">
@@ -172,6 +175,24 @@ export function ThreadPanel({
               <span className="font-bold text-mist">{thread.source.label}.</span>{" "}
               {thread.source.body}
             </p>
+          ) : null}
+
+          {/*
+            The real route, offered where the story just taught it.
+            SIDEQUEST never takes a report: this hands off to the people whose
+            job it is, and says what tapping will do before it does it.
+          */}
+          {official ? (
+            <div className="mt-4 rounded-2xl border border-coral-500/25 bg-coral-500/8 p-3.5">
+              <p className="text-sm font-bold text-chalk">{official.label}</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-mist">{official.handoff}</p>
+              <ExternalLink
+                href={official.href}
+                className="sq-pressable mt-2.5 flex min-h-11 w-full items-center justify-center rounded-xl bg-coral-500 text-sm font-bold text-white"
+              >
+                {official.displayTarget}
+              </ExternalLink>
+            </div>
           ) : null}
 
           <button

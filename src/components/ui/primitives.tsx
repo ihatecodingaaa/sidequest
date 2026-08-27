@@ -205,9 +205,21 @@ export function ProgressBar({
 /* -------------------------------------------------------- External link */
 
 /**
- * The only way an outbound link should ever be rendered. Enforces
- * `rel="noreferrer"` and refuses anything that is not http(s), which closes off
- * javascript: and data: URLs arriving from data.
+ * The only way an outbound link should ever be rendered.
+ *
+ * Enforces `rel="noopener noreferrer"` and refuses anything that is not
+ * http(s) or one of two device handlers, which closes off `javascript:` and
+ * `data:` URLs arriving from data.
+ *
+ * `tel:` and `sms:` are the two exceptions, and they are exceptions because
+ * they hand off to the phone rather than to a page: neither opens a tab and
+ * neither should carry a referrer policy. `sms:` was added when the Police
+ * emergency SMS route went into `official-links.ts`, and without it that link
+ * rendered as inert text, which is the worst possible failure mode for the
+ * one route somebody uses when it is not safe to speak.
+ *
+ * The allowlist stays exactly this long. Every scheme added here is a scheme
+ * that content can then reach the operating system through.
  */
 export function ExternalLink({
   href,
@@ -221,19 +233,19 @@ export function ExternalLink({
   className?: string;
   showIcon?: boolean;
 } & Omit<ComponentPropsWithoutRef<"a">, "href" | "className" | "children">) {
-  const isTel = href.startsWith("tel:");
-  if (!isTel && !isSafeExternalUrl(href)) return <span className={className}>{children}</span>;
+  const isDevice = href.startsWith("tel:") || href.startsWith("sms:");
+  if (!isDevice && !isSafeExternalUrl(href)) return <span className={className}>{children}</span>;
 
   return (
     <a
       href={href}
-      target={isTel ? undefined : "_blank"}
-      rel={isTel ? undefined : "noopener noreferrer"}
+      target={isDevice ? undefined : "_blank"}
+      rel={isDevice ? undefined : "noopener noreferrer"}
       className={className}
       {...rest}
     >
       {children}
-      {showIcon && !isTel ? (
+      {showIcon && !isDevice ? (
         <ArrowUpRight aria-hidden className="size-4 shrink-0 opacity-70" />
       ) : null}
     </a>

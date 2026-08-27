@@ -151,6 +151,9 @@ describe("outbound links", () => {
     for (const resource of OFFICIAL_RESOURCES) {
       if (resource.action === "call") {
         expect(resource.href.startsWith("tel:"), resource.id).toBe(true);
+      } else if (resource.action === "sms") {
+        // Digits only, and no prefilled body: the person writes the message.
+        expect(resource.href, resource.id).toMatch(/^sms:\d+$/);
       } else {
         expect(isSafeExternalUrl(resource.href), resource.id).toBe(true);
       }
