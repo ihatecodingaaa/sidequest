@@ -20,6 +20,27 @@ export interface PartnerSubmission {
   submittedAt: string;
 }
 
+/**
+ * A scenario a young person wrote.
+ *
+ * Saved locally and marked as a draft. Nothing a user writes becomes live
+ * content: the intended pipeline is facilitator or school review first, and
+ * that is stated on the screen rather than only in a document. An unmoderated
+ * crime-scenario publishing system aimed at teenagers is an obvious harm, and
+ * the fact that it would demo well is not a reason to build it.
+ */
+export interface QuestDraft {
+  id: string;
+  title: string;
+  /** The situation, in the author's own words. */
+  hook: string;
+  /** The moment somebody has to choose. */
+  moment: string;
+  /** What they think the workable response is. */
+  response: string;
+  createdAt: string;
+}
+
 export interface RewardClaim {
   rewardId: string;
   claimedAt: string;
@@ -62,4 +83,23 @@ export interface UserProfile {
   streetChecksDone?: string[];
   /** Chosen Streets avatar. Cosmetic, local, and never a real photograph. */
   streetsAvatar?: AvatarLook;
+  /**
+   * Prevention Thread steps banked, as `threadId:stepId`.
+   *
+   * Its own ledger for the same reason Street Checks have one: a thread step
+   * is not a catalogue mission and counting it as one would inflate "played N
+   * missions" on You. Same `awardMission` engine either way, so the once-only
+   * rule comes for free rather than being reimplemented.
+   */
+  threadSteps?: string[];
+  /**
+   * Which option was taken at each decision step, keyed the same way.
+   *
+   * Stored so the world can react to what somebody actually chose, and so a
+   * completion screen can name it back to them. Never scored, never compared
+   * to anybody else's, and never used to rank a person.
+   */
+  threadChoices?: Record<string, string>;
+  /** Youth-authored scenario drafts. Local, and never published from here. */
+  questDrafts?: QuestDraft[];
 }

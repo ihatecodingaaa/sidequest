@@ -3,6 +3,8 @@
 import { Check, MapPin, Monitor, StickyNote, X } from "lucide-react";
 
 import { cn } from "@/lib/cn";
+import { ACCENT_BG_SOFT, ACCENT_BORDER, ACCENT_TEXT } from "@/lib/accent";
+import { SIGNAL_MODES, type SignalMode } from "@/data/signals";
 import { CharacterPortrait } from "@/components/story/character-portrait";
 import {
   DISTRICT_ID,
@@ -32,7 +34,32 @@ import type { StreetsBridge } from "@/features/streets/game/quest-bridge";
  */
 
 /** Anything that can be finished, so the header count means something. */
-const COUNTABLE = new Set(["mission", "campaign", "check"]);
+const COUNTABLE = new Set(["mission", "campaign", "check", "thread"]);
+
+/**
+ * The Signal mode, in words.
+ *
+ * This is the channel that matters most here. In the world the mode is a
+ * colour and a silhouette; in this list it is a label and an accessible name,
+ * which is what makes the whole system usable without colour vision and
+ * readable by a screen reader.
+ */
+function SignalChip({ mode }: { mode: SignalMode }) {
+  const spec = SIGNAL_MODES[mode];
+  return (
+    <span
+      className={cn(
+        "inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[0.6rem] font-bold tracking-[0.1em] uppercase",
+        ACCENT_BG_SOFT[spec.accent],
+        ACCENT_BORDER[spec.accent],
+        ACCENT_TEXT[spec.accent],
+      )}
+    >
+      {spec.label}
+      <span className="sr-only">. {spec.means}</span>
+    </span>
+  );
+}
 
 function groupsOf(npcs: Npc[]) {
   const order = [DISTRICT_ID, ...Object.keys(MAPS).filter((id) => id !== DISTRICT_ID)];
@@ -96,6 +123,7 @@ export function QuestList({
                   key={npc.id}
                   npc={npc}
                   done={bridge.isNpcDone(npc)}
+                  signal={bridge.signals[npc.id]?.mode}
                   onWalkTo={onWalkTo}
                   onTalkTo={onTalkTo}
                 />
@@ -111,11 +139,14 @@ export function QuestList({
 function QuestRow({
   npc,
   done,
+  signal,
   onWalkTo,
   onTalkTo,
 }: {
   npc: Npc;
   done: boolean;
+  /** Which mode this row's situation is in, if it has one live. */
+  signal?: SignalMode;
   onWalkTo: (npc: Npc) => void;
   onTalkTo: (npc: Npc) => void;
 }) {
@@ -158,8 +189,9 @@ function QuestRow({
           />
         )}
         <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-2 text-sm font-bold text-chalk">
+          <p className="flex flex-wrap items-center gap-2 text-sm font-bold text-chalk">
             {npc.name}
+            {signal ? <SignalChip mode={signal} /> : null}
             {done && !isSafe && !isFixture ? (
               <span className="inline-flex items-center gap-1 text-[0.7rem] font-bold text-volt-300">
                 <Check aria-hidden className="size-3" strokeWidth={3} />
@@ -172,7 +204,7 @@ function QuestRow({
             {landmark?.name ?? "District 01"}
           </p>
           <p className="mt-1.5 text-sm leading-snug text-muted">
-            {done ? npc.doneLines[0] : npc.lines[0]}
+            {npc.situation && !done ? npc.situation : done ? npc.doneLines[0] : npc.lines[0]}
           </p>
         </div>
       </div>

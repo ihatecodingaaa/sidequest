@@ -1,4 +1,5 @@
 import type { EchoStyleId } from "@/data/echo-styles";
+import type { SignalMode } from "@/data/signals";
 
 /**
  * DISTRICT 01, the SIDEQUEST Streets vertical slice.
@@ -192,6 +193,7 @@ export const LANDMARKS: Landmark[] = [
     accent: "quest",
     building: { x: 16, y: 1, w: 4, h: 5 },
     sign: "#6e56f8",
+    interiorId: "hub-in",
   },
   {
     id: "foodcourt",
@@ -247,7 +249,11 @@ export type NpcAction =
   /** The rewards counter, which is the existing claim flow behind a counter. */
   | { kind: "rewards" }
   /** Something to read and nothing to open. Noticeboards, mostly. */
-  | { kind: "info" };
+  | { kind: "info" }
+  /** One step of a Prevention Thread, run in the world's own dialogue sheet. */
+  | { kind: "thread"; threadId: string }
+  /** The Community Safety Crew hub: roles, signals and the draft board. */
+  | { kind: "hub" };
 
 export interface Npc {
   id: string;
@@ -285,6 +291,19 @@ export interface Npc {
   /** The label on the button that leaves the world. */
   cta: string;
   /**
+   * The Signal this person raises, if any.
+   *
+   * Read this carefully, because the placement is load-bearing. The mode
+   * describes **what the situation needs**, and it is drawn near this person
+   * only because that is where the situation is. It is not a property of them.
+   *
+   * There is deliberately no risk field, no score and no severity anywhere on
+   * this interface, and a unit test fails the build if one appears.
+   */
+  signal?: SignalMode;
+  /** One short line naming the situation for the Quest List. Never a person. */
+  situation?: string;
+  /**
    * Shown as a provenance tag inside the conversation.
    *
    * Required on anything that looks like a community feed. A noticeboard that
@@ -293,6 +312,13 @@ export interface Npc {
    * makes the claim, not in a document.
    */
   provenance?: string;
+  /**
+   * An entry in `official-links.ts` to offer after reading.
+   *
+   * The world never restates an agency's page. It summarises in its own words,
+   * attributes, and hands off to the people who own the information.
+   */
+  official?: string;
   action: NpcAction;
   landmarkId: string;
 }
@@ -307,6 +333,8 @@ export const NPCS: Npc[] = [
     tint: "#5ac8e0",
     lines: ["Eh. Come here a second.", "I keep thinking about that thing at the shop."],
     doneLines: ["You actually said something. Most people just watch."],
+    signal: "redirect",
+    situation: "A shop floor moment somebody is still thinking about",
     cta: "Play REWIND",
     action: { kind: "mission", missionId: "mission-rewind" },
     landmarkId: "minimart",
@@ -320,6 +348,8 @@ export const NPCS: Npc[] = [
     tint: "#e8663c",
     lines: ["Ilyas is not answering the group chat.", "Something happened on Thursday."],
     doneLines: ["You saw the whole thing play out. Twice."],
+    signal: "redirect",
+    situation: "A group chat has gone quiet since Thursday",
     cta: "Open ONE BAD MINUTE",
     action: { kind: "campaign", slug: "one-bad-minute" },
     landmarkId: "voiddeck",
@@ -333,6 +363,8 @@ export const NPCS: Npc[] = [
     tint: "#c9a2ff",
     lines: ["Settle an argument for us.", "How many people here would actually do it?"],
     doneLines: ["Turns out we were all guessing high."],
+    signal: "connect",
+    situation: "An argument about what everybody else would really do",
     cta: "Play Norm Mirror",
     action: { kind: "mission", missionId: "mission-norm-mirror" },
     landmarkId: "foodcourt",
@@ -346,6 +378,8 @@ export const NPCS: Npc[] = [
     tint: "#8fbf2e",
     lines: ["We are four and we cannot agree.", "You in?"],
     doneLines: ["Two of us changed our minds. Nobody argued about it."],
+    signal: "redirect",
+    situation: "Four people, one decision, nobody agreeing",
     cta: "Play Crew Shift",
     action: { kind: "campaign", slug: "one-bad-minute" },
     landmarkId: "court",
@@ -359,6 +393,8 @@ export const NPCS: Npc[] = [
     tint: "#f0b545",
     lines: ["That machine charged me twice last week.", "Nobody could tell me why."],
     doneLines: ["You changed the machine, not the person. Smart."],
+    signal: "prevent",
+    situation: "A machine that charges people twice and nobody fixes",
     cta: "Play BREAKSAFE",
     action: { kind: "mission", missionId: "mission-breaksafe" },
     landmarkId: "foodcourt",
@@ -372,6 +408,8 @@ export const NPCS: Npc[] = [
     tint: "#5ac8e0",
     lines: ["Someone messaged me about a job.", "It pays a lot for basically nothing."],
     doneLines: ["You worked out what they actually wanted."],
+    signal: "connect",
+    situation: "A job offer that wants an account, not a worker",
     cta: "Take a look",
     action: { kind: "check", checkId: "check-job" },
     landmarkId: "voiddeck",
@@ -385,6 +423,8 @@ export const NPCS: Npc[] = [
     tint: "#c9a2ff",
     lines: ["My cousin just video called asking for money.", "It looked like him."],
     doneLines: ["You checked another way instead of trusting the screen."],
+    signal: "connect",
+    situation: "A video call asking for money tonight",
     cta: "Take a look",
     action: { kind: "check", checkId: "check-verify" },
     landmarkId: "busstop",
@@ -411,6 +451,69 @@ export const NPCS: Npc[] = [
     landmarkId: "safehub",
   },
 
+
+  /* ------------------------------------------ The favour, across the block */
+
+  {
+    id: "npc-devi",
+    name: "Devi",
+    characterId: "rina",
+    x: 14,
+    y: 12,
+    tint: "#f06fd0",
+    lines: ["Can I ask you something weird.", "Haziq wants to borrow my bank login."],
+    doneLines: ["He asked me again. I had the words ready that time."],
+    signal: "connect",
+    situation: "Somebody has been asked for their bank login by a friend",
+    cta: "Hear her out",
+    action: { kind: "thread", threadId: "thread-favour" },
+    landmarkId: "voiddeck",
+  },
+  {
+    id: "npc-joy",
+    name: "Joy",
+    characterId: "rina",
+    x: 34,
+    y: 12,
+    tint: "#5ac8e0",
+    lines: ["He asked me first, you know.", "I said no and he went quiet about it."],
+    doneLines: ["Glad somebody said something to him."],
+    cta: "Ask what she knows",
+    action: { kind: "thread", threadId: "thread-favour" },
+    landmarkId: "busstop",
+  },
+  {
+    id: "npc-rafi",
+    name: "Haziq",
+    characterId: "ken",
+    x: 24,
+    y: 21,
+    tint: "#e8663c",
+    lines: ["You heard already.", "It is one week. Then I close it."],
+    doneLines: ["I stopped asking. Took the number you gave me."],
+    cta: "Say something",
+    action: { kind: "thread", threadId: "thread-favour" },
+    landmarkId: "court",
+  },
+
+  /* --------------------------------------------- The shout, at the court */
+
+  {
+    id: "npc-elle",
+    name: "Elle",
+    characterId: "rina",
+    x: 17,
+    y: 20,
+    tint: "#c9a2ff",
+    lines: ["It started as nothing.", "I do not want to be the one who makes it worse."],
+    doneLines: ["I am alright. Thanks for not leaving me standing there."],
+    signal: "protect",
+    situation: "Raised voices at the court and one person has stopped talking",
+    cta: "Help",
+    action: { kind: "thread", threadId: "thread-shout" },
+    landmarkId: "court",
+  },
+
   /* ------------------------------------------------- Inside the minimart */
 
   {
@@ -423,6 +526,8 @@ export const NPCS: Npc[] = [
     tint: "#f06fd0",
     lines: ["Five things in the basket.", "She scanned three and she is watching me."],
     doneLines: ["You just scanned it. Nobody had to make it a whole thing."],
+    signal: "redirect",
+    situation: "Five things in the basket and three of them scanned",
     cta: "Take a look",
     action: { kind: "check", checkId: "check-checkout" },
     landmarkId: "minimart",
@@ -502,6 +607,75 @@ export const NPCS: Npc[] = [
     action: { kind: "info" },
     provenance: "Concept only. No retailer, brand or organisation is a SIDEQUEST partner, and nothing claimed here has monetary value.",
     landmarkId: "foodcourt",
+  },
+
+  {
+    id: "npc-sumi",
+    name: "Ms Sumi",
+    characterId: "narrator",
+    mapId: "post-in",
+    x: 10,
+    y: 3,
+    tint: "#3d7de0",
+    lines: ["I run the youth sessions upstairs.", "Ask me the awkward one. That is the job."],
+    doneLines: ["Come back if the next one is harder."],
+    cta: "Ask her",
+    action: { kind: "thread", threadId: "thread-favour" },
+    landmarkId: "safehub",
+  },
+  {
+    id: "npc-hana",
+    name: "Hana",
+    characterId: "narrator",
+    mapId: "kopitiam-in",
+    x: 2,
+    y: 5,
+    tint: "#f5b93f",
+    lines: ["We are open latest on this block.", "People come in here when they need somewhere lit."],
+    doneLines: ["She is sitting inside. She is alright."],
+    cta: "Talk to her",
+    action: { kind: "thread", threadId: "thread-shout" },
+    landmarkId: "foodcourt",
+  },
+
+  /* ------------------------------------------------ Community Safety Crew */
+
+  {
+    id: "npc-crew",
+    name: "Farah",
+    characterId: "narrator",
+    mapId: "hub-in",
+    x: 6,
+    y: 3,
+    tint: "#b6f24a",
+    lines: [
+      "This is the Crew room. Nobody here is police and nobody pretends to be.",
+      "We practise the boring version of helping, which is the one that works.",
+    ],
+    doneLines: ["Board is up. Take whatever you want."],
+    cta: "Open the Crew board",
+    action: { kind: "hub" },
+    landmarkId: "voiddeck",
+  },
+  {
+    id: "npc-briefs",
+    name: "Street briefs",
+    characterId: "narrator",
+    figure: "board",
+    mapId: "hub-in",
+    x: 10,
+    y: 3,
+    tint: "#3d7de0",
+    lines: [
+      "STREET BRIEFS",
+      "Police advisories for 13 to 19 year olds cover shop theft in groups, lending accounts, and who the bank calls afterwards.",
+    ],
+    doneLines: ["STREET BRIEFS"],
+    cta: "Read the briefs",
+    action: { kind: "info" },
+    official: "spf-advisories",
+    provenance: "Summarised in our own words from published Police advisories. SIDEQUEST is not a Police service and this is not an official notice.",
+    landmarkId: "voiddeck",
   },
 ];
 
@@ -764,6 +938,34 @@ const POST_IN: string[] = [
     "##############",
 ];
 
+/**
+ * The Crew room, in the void deck.
+ *
+ * A youth community room, not an operations centre. Two boards on the back
+ * wall, tables people actually sit at, and a plant. Nothing in here suggests
+ * anybody holds a power a member of the public does not.
+ */
+const HUB_IN: string[] = [
+    "##############",
+    "#ffffffffffff#",
+    "#fnnnffffnnnf#",
+    "#ffffffffffff#",
+    "#ffffffffffff#",
+    "#ffkkkffkkkff#",
+    "#ffffffffffff#",
+    "#ffttffffttff#",
+    "#ffffffffffff#",
+    "#ffttffffttff#",
+    "#ffffffffffff#",
+    "#ffffffffffff#",
+    "#f~ffffffff~f#",
+    "#ffffffffffff#",
+    "#ffffffffffff#",
+    "#ffffffffffff#",
+    "######dd######",
+    "##############",
+];
+
 const KOPITIAM_IN: string[] = [
     "##############",
     "#ffffffffffff#",
@@ -837,6 +1039,18 @@ export const MAPS: Record<string, WorldMap> = {
     tint: "#3d7de0",
     landmarks: [],
     doors: [exitDoor({ x: 7, y: 19 }, "the street")],
+  },
+  "hub-in": {
+    id: "hub-in",
+    name: "Crew room",
+    rows: HUB_IN,
+    w: IN_W,
+    h: IN_H,
+    indoor: true,
+    surround: "#151d18",
+    tint: "#b6f24a",
+    landmarks: [],
+    doors: [exitDoor({ x: 17, y: 6 }, "the void deck")],
   },
   "kopitiam-in": {
     id: "kopitiam-in",
@@ -948,3 +1162,141 @@ export interface StreetsSave {
   checksDone: string[];
   echo: EchoStyleId | null;
 }
+
+/* ------------------------------------------------------------- Residents */
+
+/**
+ * The people who make the district a neighbourhood rather than a set.
+ *
+ * Residents walk authored loops. They carry no quest, no signal and no
+ * dialogue, and they are the only figures in the world that move between
+ * places.
+ *
+ * That split is deliberate and it is the answer to two requirements that pull
+ * against each other. A frozen district reads as a menu with a camera on it.
+ * But a quest giver who wanders behind a building while somebody is looking
+ * for them is how a demo dies in front of a judge. So: **the people you need
+ * are where you left them, and the people who make it feel alive are the ones
+ * moving.**
+ *
+ * Routes are authored, looped and deterministic. Nothing here is random,
+ * nothing is a function of wall-clock time, and there is no pathfinding: a
+ * resident walks to the next waypoint in a straight line, and every waypoint
+ * was placed on a walkable tile by hand.
+ */
+export interface RouteStop {
+  x: number;
+  y: number;
+  /** How long to stand here. A route with no pauses reads as a conveyor belt. */
+  pauseMs?: number;
+}
+
+export interface Resident {
+  id: string;
+  mapId?: string;
+  look: AvatarLook;
+  /** Looped. The last stop connects back to the first. */
+  route: RouteStop[];
+  /** World units per second. Slower than the player, so nobody outpaces you. */
+  speed: number;
+}
+
+const R = (skin: number, hair: number, style: HairStyle, top: number): AvatarLook => ({
+  skin: SKIN_TONES[skin] as string,
+  hair: HAIR_COLOURS[hair] as string,
+  hairStyle: style,
+  top: TOP_COLOURS[top] as string,
+});
+
+/*
+ * Routes are kept clear of the people a thread needs.
+ *
+ * A resident standing on top of a quest giver is not a crash, it is worse: the
+ * person you were sent to find becomes hard to pick out, and the world starts
+ * working against the list that sent you there.
+ */
+export const RESIDENTS: Resident[] = [
+  {
+    id: "res-street-w",
+    look: R(1, 0, "short", 1),
+    speed: 26,
+    route: [
+      { x: 4, y: 10, pauseMs: 1400 },
+      { x: 14, y: 10, pauseMs: 900 },
+    ],
+  },
+  {
+    id: "res-street-e",
+    look: R(3, 2, "curls", 4),
+    speed: 30,
+    route: [
+      { x: 36, y: 9 },
+      { x: 25, y: 9, pauseMs: 1800 },
+    ],
+  },
+  {
+    id: "res-walk-west",
+    look: R(2, 1, "tied", 5),
+    speed: 24,
+    route: [
+      { x: 7, y: 7, pauseMs: 1200 },
+      { x: 7, y: 13, pauseMs: 1200 },
+    ],
+  },
+  {
+    id: "res-walk-mid",
+    look: R(0, 4, "swept", 6),
+    speed: 28,
+    route: [
+      { x: 17, y: 6, pauseMs: 900 },
+      { x: 17, y: 14, pauseMs: 2200 },
+    ],
+  },
+  {
+    id: "res-walk-east",
+    look: R(4, 0, "buzz", 3),
+    speed: 27,
+    route: [
+      { x: 30, y: 13 },
+      { x: 30, y: 7, pauseMs: 1500 },
+    ],
+  },
+  {
+    id: "res-park-south",
+    look: R(2, 3, "long", 2),
+    speed: 22,
+    route: [
+      { x: 30, y: 21, pauseMs: 2000 },
+      { x: 36, y: 21, pauseMs: 1000 },
+    ],
+  },
+  {
+    id: "res-park-far",
+    look: R(5, 0, "tudung", 7),
+    speed: 25,
+    route: [
+      { x: 10, y: 25, pauseMs: 1600 },
+      { x: 17, y: 25, pauseMs: 1600 },
+    ],
+  },
+  {
+    id: "res-shop",
+    mapId: "minimart-in",
+    look: R(1, 1, "short", 0),
+    speed: 20,
+    route: [
+      { x: 7, y: 15, pauseMs: 1500 },
+      { x: 7, y: 4, pauseMs: 2400 },
+    ],
+  },
+  {
+    id: "res-kopi",
+    mapId: "kopitiam-in",
+    look: R(3, 0, "swept", 4),
+    speed: 20,
+    route: [
+      { x: 6, y: 14, pauseMs: 2000 },
+      { x: 6, y: 5, pauseMs: 2600 },
+    ],
+  },
+];

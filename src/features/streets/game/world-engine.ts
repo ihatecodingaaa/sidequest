@@ -2,6 +2,7 @@ import {
   DISTRICT_ID,
   MAPS,
   NPCS,
+  RESIDENTS,
   SOLID,
   SPAWN,
   TERRAIN_CODES,
@@ -9,9 +10,11 @@ import {
   type AvatarLook,
   type Door,
   type Npc,
+  type Resident,
   type TerrainCode,
   type WorldMap,
 } from "@/features/streets/streets-data";
+import { SIGNAL_MODES } from "@/data/signals";
 import type { EchoStyleId } from "@/data/echo-styles";
 
 /**
@@ -89,6 +92,12 @@ const INTERACT_RANGE = 30;
  * past a shop should not keep offering to take you inside it.
  */
 const DOOR_RANGE = 26;
+
+/**
+ * How close the player has to be before a resident stops walking, in world
+ * units. A little wider than a conversation, so nobody ever clips through you.
+ */
+const RESIDENT_YIELD = 26;
 
 /**
  * The district palette.
@@ -182,6 +191,31 @@ export interface NpcRuntime {
   done: boolean;
 }
 
+/**
+ * A live Signal, as the renderer needs it.
+ *
+ * The mode describes what the situation needs. It is keyed by the id of
+ * whoever raises it purely so the marker knows where to sit, and there is
+ * deliberately nothing else on this type: no severity, no score, no owner.
+ */
+export interface SignalMarker {
+  mode: keyof typeof SIGNAL_MODES;
+}
+
+/** A resident mid-route. Ambient only: no quest, no signal, no dialogue. */
+interface ResidentRuntime {
+  resident: Resident;
+  x: number;
+  y: number;
+  /** Index of the waypoint being walked towards. */
+  leg: number;
+  /** Milliseconds left standing at the waypoint just reached. */
+  waiting: number;
+  facing: Facing;
+  phase: number;
+  moving: boolean;
+}
+
 export interface EngineOptions {
   look: AvatarLook;
   echo: EchoStyleId | null;
@@ -200,6 +234,14 @@ export interface EngineOptions {
   onDoor?: (door: Door | null) => void;
   /** Fires when the player enters or leaves a building. */
   onMap?: (map: WorldMap) => void;
+  /**
+   * Which NPCs are currently raising a Signal, and in which mode.
+   *
+   * Passed in rather than read from the data, because whether a situation is
+   * live depends on progress, and progress lives in the store. The engine
+   * draws what it is told and owns none of it.
+   */
+  signals: Record<string, SignalMarker>;
   /**
    * Fires when the player crosses into a new tile.
    *
@@ -250,6 +292,10 @@ export class WorldEngine {
   private near: Npc | null = null;
   private door: Door | null = null;
   private lastTile = "";
+  private lastResidentTiles = "";
+
+  /** Ambient residents, rebuilt whenever the map changes. */
+  private residents: ResidentRuntime[] = [];
 
   constructor(canvas: HTMLCanvasElement, options: EngineOptions) {
     this.canvas = canvas;
@@ -267,6 +313,7 @@ export class WorldEngine {
     this.bctx = bctx;
 
     this.terrain = this.paintTerrain(this.map);
+    this.spawnResidents();
     this.resize();
   }
 
@@ -364,6 +411,7 @@ export class WorldEngine {
   private go(next: WorldMap) {
     this.map = next;
     this.terrain = this.paintTerrain(next);
+    this.spawnResidents();
     // A room is framed closer than a street, so the camera reframes on entry.
     this.resize();
     this.options.onMap?.(next);
@@ -432,6 +480,86 @@ export class WorldEngine {
     this.draw();
   }
 
+  /* ----------------------------------------------------------- Residents */
+
+  /** Puts every resident of this map at the start of their loop. */
+  private spawnResidents() {
+    this.residents = RESIDENTS.filter(
+      (resident) => (resident.mapId ?? DISTRICT_ID) === this.map.id,
+    ).map((resident) => {
+      const start = resident.route[0] as { x: number; y: number };
+      return {
+        resident,
+        x: start.x * TILE + TILE / 2,
+        y: start.y * TILE + TILE / 2,
+        leg: 1 % resident.route.length,
+        waiting: 0,
+        facing: "down" as Facing,
+        phase: 0,
+        moving: false,
+      };
+    });
+    this.lastResidentTiles = "";
+  }
+
+  /**
+   * Walks residents along their loops.
+   *
+   * Straight lines between authored waypoints, no pathfinding, and every
+   * waypoint was placed on a walkable tile by hand and is checked by a test.
+   *
+   * A resident stops when the player comes close. That is not politeness, it
+   * is the cheapest way to stop somebody walking through you, and it reads as
+   * ordinary social awareness rather than as a bug.
+   */
+  private stepResidents(dt: number) {
+    for (const entry of this.residents) {
+      const route = entry.resident.route;
+      const target = route[entry.leg] as { x: number; y: number; pauseMs?: number };
+
+      const near =
+        Math.hypot(this.player.x - entry.x, this.player.y - entry.y) < RESIDENT_YIELD;
+      if (near) {
+        entry.moving = false;
+        // Face whoever just walked up. Being looked at is most of feeling seen.
+        const dx = this.player.x - entry.x;
+        const dy = this.player.y - entry.y;
+        entry.facing =
+          Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : dy > 0 ? "down" : "up";
+        continue;
+      }
+
+      if (entry.waiting > 0) {
+        entry.waiting -= dt * 1000;
+        entry.moving = false;
+        continue;
+      }
+
+      const tx = target.x * TILE + TILE / 2;
+      const ty = target.y * TILE + TILE / 2;
+      const dx = tx - entry.x;
+      const dy = ty - entry.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist < 1.5) {
+        entry.x = tx;
+        entry.y = ty;
+        entry.waiting = target.pauseMs ?? 0;
+        entry.leg = (entry.leg + 1) % route.length;
+        entry.moving = false;
+        continue;
+      }
+
+      const move = Math.min(dist, entry.resident.speed * dt);
+      entry.x += (dx / dist) * move;
+      entry.y += (dy / dist) * move;
+      entry.moving = true;
+      entry.phase += dt * 7;
+      entry.facing =
+        Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : dy > 0 ? "down" : "up";
+    }
+  }
+
   /* ---------------------------------------------------------- Simulation */
 
   private step(dt: number) {
@@ -460,6 +588,7 @@ export class WorldEngine {
       if (this.trail.length > 26) this.trail.shift();
     }
 
+    this.stepResidents(dt);
     this.checkProximity();
   }
 
@@ -1038,6 +1167,20 @@ export class WorldEngine {
       this.options.onTile?.(this.tile);
     }
 
+    /*
+     * Resident tiles, published the same way and for the same reason.
+     *
+     * "The world feels alive" is otherwise an unfalsifiable claim about a
+     * canvas. This makes it a string a test can watch change.
+     */
+    const residentTiles = this.residents
+      .map((entry) => `${entry.resident.id}:${Math.floor(entry.x / TILE)},${Math.floor(entry.y / TILE)}`)
+      .join(" ");
+    if (residentTiles !== this.lastResidentTiles) {
+      this.lastResidentTiles = residentTiles;
+      this.canvas.dataset.residents = residentTiles;
+    }
+
     const g = this.bctx;
     g.imageSmoothingEnabled = false;
     /*
@@ -1070,6 +1213,10 @@ export class WorldEngine {
 
     // Entities are drawn back to front so nearer things overlap further ones.
     const drawables = [
+      ...this.residents.map((entry) => ({
+        y: entry.y,
+        paint: () => this.drawResident(g, entry, camX, camY),
+      })),
       ...this.here.map((entry) => ({
         y: entry.npc.y * TILE + TILE,
         paint: () => this.drawNpc(g, entry, camX, camY),
@@ -1122,26 +1269,104 @@ export class WorldEngine {
     }
 
     /*
-     * The quest marker. A SIDEQUEST spark, not an exclamation mark: it means
-     * "there is something here", never "this person is suspicious". Nothing in
-     * this district may encode appearance as risk.
+     * The Signal marker.
      *
-     * Only things that can be finished get one. Safe, the rewards counter and
-     * the noticeboards have no done state, so a marker over them would never
-     * go out, and a permanent alert is the definition of alarm fatigue.
+     * It means **this situation needs something**, and the shape says what.
+     * It never means "this person is a problem": there is no risk field on an
+     * NPC anywhere in this codebase and a unit test fails the build if one
+     * appears.
+     *
+     * Colour is one of four channels. The silhouette is the second, and it is
+     * the one that survives a red-green colour vision deficiency. The label
+     * and the accessible name are carried in the DOM, where they can actually
+     * be read.
+     *
+     * Only situations that can be resolved get a marker. Safe, the rewards
+     * counter and the noticeboards have no done state, so a marker over them
+     * would never go out, and a permanent alert is the definition of alarm
+     * fatigue.
      */
-    if (!entry.done && MARKED.has(entry.npc.action.kind)) {
+    const marker = this.options.signals[entry.npc.id];
+    if (!entry.done && marker && MARKED.has(entry.npc.action.kind)) {
       const bob = this.options.reducedMotion ? 0 : Math.sin(this.walkPhase * 0.6) * 1.2;
-      const my = y - 16 + bob;
-      g.fillStyle = "#f5b93f";
-      g.beginPath();
-      g.moveTo(x, my - 4);
-      g.lineTo(x + 2.6, my);
-      g.lineTo(x, my + 4);
-      g.lineTo(x - 2.6, my);
-      g.closePath();
-      g.fill();
+      this.drawSignal(g, x, y - 17 + bob, marker.mode);
     }
+  }
+
+  /** Four silhouettes, so the mode reads without colour. */
+  private drawSignal(g: CanvasRenderingContext2D, x: number, y: number, mode: SignalMarker["mode"]) {
+    const spec = SIGNAL_MODES[mode];
+
+    // A soft ground-facing glow, so a marker is findable against any surface.
+    g.fillStyle = "rgba(10,14,22,0.28)";
+    g.beginPath();
+    g.arc(x, y + 0.5, 6.4, 0, Math.PI * 2);
+    g.fill();
+
+    g.fillStyle = spec.colour;
+    g.beginPath();
+    switch (mode) {
+      case "connect":
+        // A ring. Open, and the only round one.
+        g.arc(x, y, 4.6, 0, Math.PI * 2);
+        g.fill();
+        g.fillStyle = "rgba(12,18,26,0.55)";
+        g.beginPath();
+        g.arc(x, y, 1.9, 0, Math.PI * 2);
+        g.fill();
+        break;
+      case "prevent":
+        // A shield, point down. Flat top, so it never reads as an alert.
+        g.moveTo(x - 4.4, y - 4.4);
+        g.lineTo(x + 4.4, y - 4.4);
+        g.lineTo(x + 4.4, y + 0.6);
+        g.quadraticCurveTo(x + 4.4, y + 4.2, x, y + 5.4);
+        g.quadraticCurveTo(x - 4.4, y + 4.2, x - 4.4, y + 0.6);
+        g.closePath();
+        g.fill();
+        break;
+      case "redirect":
+        // A chevron turning aside. The only asymmetric one.
+        g.moveTo(x - 5, y - 4.6);
+        g.lineTo(x + 0.4, y - 4.6);
+        g.lineTo(x + 5.2, y);
+        g.lineTo(x + 0.4, y + 4.6);
+        g.lineTo(x - 5, y + 4.6);
+        g.lineTo(x - 0.6, y);
+        g.closePath();
+        g.fill();
+        break;
+      case "protect":
+        // An octagon. Borrowed from stop signage, which everybody already reads.
+        for (let i = 0; i < 8; i += 1) {
+          const a = (Math.PI / 4) * i + Math.PI / 8;
+          const px = x + Math.cos(a) * 5.2;
+          const py = y + Math.sin(a) * 5.2;
+          if (i === 0) g.moveTo(px, py);
+          else g.lineTo(px, py);
+        }
+        g.closePath();
+        g.fill();
+        break;
+    }
+
+    // Top-left highlight, same light rule as everything else in the district.
+    g.fillStyle = spec.colourLight;
+    g.fillRect(x - 2.4, y - 4.8, 3, 1.4);
+  }
+
+  /** A resident, drawn from the same parts as anybody else. No marker, ever. */
+  private drawResident(
+    g: CanvasRenderingContext2D,
+    entry: ResidentRuntime,
+    camX: number,
+    camY: number,
+  ) {
+    const x = Math.round(entry.x - camX);
+    const y = Math.round(entry.y - camY);
+    if (x < -20 || y < -24 || x > this.viewW + 20 || y > this.viewH + 24) return;
+    const frame = entry.moving && !this.options.reducedMotion ? Math.floor(entry.phase) % 4 : 0;
+    this.drawPerson(g, x, y, entry.resident.look, entry.facing, frame);
   }
 
   /**

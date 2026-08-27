@@ -6,7 +6,7 @@ import type { AvatarLook } from "@/features/streets/streets-data";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { AgeBand, Interest, SkillId } from "@/types/core";
-import type { PartnerSubmission, RewardClaim, UserProfile } from "@/types/profile";
+import type { PartnerSubmission, QuestDraft, RewardClaim, UserProfile } from "@/types/profile";
 import { awardMission, type AwardResult } from "@/lib/xp";
 import { getMission } from "@/data/missions";
 import { getReward } from "@/data/rewards";
@@ -80,6 +80,22 @@ interface AppState {
   completeMission: (missionId: string) => AwardResult;
   /** Banks a Street Check once. Replays grant nothing. */
   completeStreetCheck: (check: { id: string; xp: number }) => AwardResult;
+  /**
+   * Banks one Prevention Thread step. Idempotent.
+   *
+   * `mode` is deliberately not a parameter. XP here is a function of length and
+   * structure only, never of how serious the situation is, because whatever
+   * pays most is what people go and do.
+   */
+  completeThreadStep: (step: {
+    threadId: string;
+    stepId: string;
+    xp: number;
+    skillId: SkillId;
+    choiceId?: string;
+  }) => AwardResult;
+  /** Saves a youth-authored scenario as a draft. Never publishes it. */
+  addQuestDraft: (draft: Omit<QuestDraft, "id" | "createdAt">) => QuestDraft;
   /** Cosmetic only. Stored locally, never a photograph. */
   setStreetsAvatar: (look: AvatarLook) => void;
   isMissionComplete: (missionId: string) => boolean;
@@ -217,6 +233,58 @@ export const useAppStore = create<AppState>()(
         }
 
         return result;
+      },
+
+      /*
+       * Thread steps, on the Street Check pattern exactly.
+       *
+       * One ledger key per step, one payment ever, and the skill awarded is
+       * whichever capability the step actually exercises rather than a fixed
+       * one. Replaying a thread is free and grants nothing, which is what
+       * keeps a serious scenario from becoming something to farm.
+       */
+      completeThreadStep: ({ threadId, stepId, xp, skillId, choiceId }) => {
+        const profile = get().profile;
+        const done = profile.threadSteps ?? [];
+        const key = `${threadId}:${stepId}`;
+
+        const result = awardMission(
+          { xp: profile.xp, completedMissionIds: done, skillPoints: profile.skillPoints },
+          { id: key, xp, skillRewards: [{ skillId, points: 10 }] },
+        );
+
+        const choices = choiceId
+          ? { ...(profile.threadChoices ?? {}), [key]: choiceId }
+          : profile.threadChoices;
+
+        if (result.awarded || choices !== profile.threadChoices) {
+          set({
+            profile: {
+              ...profile,
+              xp: result.xp,
+              skillPoints: result.skillPoints,
+              threadSteps: result.completedMissionIds,
+              threadChoices: choices,
+            },
+          });
+        }
+
+        return result;
+      },
+
+      addQuestDraft: (draft) => {
+        const entry: QuestDraft = {
+          ...draft,
+          id: makeId("draft"),
+          createdAt: new Date().toISOString(),
+        };
+        set((state) => ({
+          profile: {
+            ...state.profile,
+            questDrafts: [entry, ...(state.profile.questDrafts ?? [])],
+          },
+        }));
+        return entry;
       },
 
       setStreetsAvatar: (look) =>

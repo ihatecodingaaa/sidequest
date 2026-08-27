@@ -176,8 +176,14 @@ test.describe("the quest list is a peer of the map", () => {
     await page.getByRole("button", { name: /Quests/ }).click();
 
     await expect(page.getByRole("heading", { name: "Around the block" })).toBeVisible();
+    /*
+     * By row rather than by exact text. A name now shares its line with the
+     * Signal mode chip, so the paragraph's text is "WeiREDIRECT..." and an
+     * exact match on the bare name stopped resolving. What the test actually
+     * cares about is that everybody has a row.
+     */
     for (const name of ["Wei", "Ken", "Rina", "Jas", "Mr Tan", "Nadia", "Arif"]) {
-      await expect(page.getByText(name, { exact: true })).toBeVisible();
+      await expect(page.locator("li").filter({ hasText: name }).first()).toBeVisible();
     }
   });
 

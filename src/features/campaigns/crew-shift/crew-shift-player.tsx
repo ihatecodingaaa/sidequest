@@ -37,6 +37,14 @@ export interface CrewShiftOutcome {
   finalOptionId: string;
   /** How many seats answered differently the second time. Never which seats. */
   movedCount: number;
+  /**
+   * True when this was a Solo Preview.
+   *
+   * Carried so nothing downstream can mistake a worked example for group
+   * participation. Crew progression, crew metrics and any claim about peer
+   * influence are all conditional on this being false.
+   */
+  preview?: boolean;
 }
 
 /**
@@ -71,6 +79,20 @@ export function CrewShiftPlayer({
 
   const [step, setStep] = useState<Step>("setup");
   const [playerCount, setPlayerCount] = useState(3);
+  /**
+   * Solo Preview.
+   *
+   * A judge, or a young person on their own, needs to be able to see what this
+   * mechanic does. The alternative is a mechanic nobody ever understands
+   * because it cannot be shown, and removing it would lose the one interaction
+   * in the product that makes peer influence visible.
+   *
+   * The rules are absolute: it says PREVIEW on every screen, the other answers
+   * are labelled as prototype, and no crew progression is recorded. It never
+   * says "your crew changed their minds", because there is no crew.
+   */
+  const [preview, setPreview] = useState(false);
+  const previewSeats = round.preview.first.length;
   const [currentPlayer, setCurrentPlayer] = useState(1);
   /** Round 1 runs before the discussion, round 2 after it. */
   const [voteRound, setVoteRound] = useState<1 | 2>(1);
@@ -80,7 +102,9 @@ export function CrewShiftPlayer({
   const [finalOptionId, setFinalOptionId] = useState<string | null>(null);
   const [result, setResult] = useState<AwardResult | null>(null);
 
-  const isSolo = playerCount === 1;
+  const isSolo = playerCount === 1 && !preview;
+  /** In preview the real person is seat one, and the rest are the worked example. */
+  const seats = preview ? previewSeats + 1 : playerCount;
 
   /** Counts per option, in the order the options are declared. Never re-sorted. */
   const tallyFor = (source: Record<number, string>): TallyRow[] =>
@@ -106,7 +130,7 @@ export function CrewShiftPlayer({
   /** Seats that answered differently the second time. The count only, never the seat. */
   const movedCount = (): number => {
     let moved = 0;
-    for (let seat = 1; seat <= playerCount; seat += 1) {
+    for (let seat = 1; seat <= seats; seat += 1) {
       const before = firstAnswers[seat];
       const after = secondAnswers[seat];
       if (before && after && before !== after) moved += 1;
@@ -116,11 +140,17 @@ export function CrewShiftPlayer({
 
   const finish = (optionId: string, second: Record<number, string>) => {
     let moved = 0;
-    for (let seat = 1; seat <= playerCount; seat += 1) {
+    for (let seat = 1; seat <= seats; seat += 1) {
       if (firstAnswers[seat] && second[seat] && firstAnswers[seat] !== second[seat]) moved += 1;
     }
     setFinalOptionId(optionId);
-    onResult?.({ playerCount, shifted: moved > 0, finalOptionId: optionId, movedCount: moved });
+    onResult?.({
+      playerCount: preview ? 1 : playerCount,
+      shifted: moved > 0,
+      finalOptionId: optionId,
+      movedCount: moved,
+      preview,
+    });
     setStep("shift");
   };
 
@@ -130,8 +160,19 @@ export function CrewShiftPlayer({
     setPending(null);
 
     if (voteRound === 1) {
-      setFirstAnswers((current) => ({ ...current, [currentPlayer]: answer }));
-      if (currentPlayer < playerCount) {
+      /*
+       * In preview the player answers once and the written example fills the
+       * rest. No phone is passed, because there is nobody to pass it to.
+       */
+      const first = preview
+        ? {
+            ...firstAnswers,
+            1: answer,
+            ...Object.fromEntries(round.preview.first.map((id, i) => [i + 2, id])),
+          }
+        : { ...firstAnswers, [currentPlayer]: answer };
+      setFirstAnswers(first);
+      if (!preview && currentPlayer < playerCount) {
         setCurrentPlayer(currentPlayer + 1);
         setStep("handoff");
       } else {
@@ -140,9 +181,15 @@ export function CrewShiftPlayer({
       return;
     }
 
-    const next = { ...secondAnswers, [currentPlayer]: answer };
+    const next = preview
+      ? {
+          ...secondAnswers,
+          1: answer,
+          ...Object.fromEntries(round.preview.second.map((id, i) => [i + 2, id])),
+        }
+      : { ...secondAnswers, [currentPlayer]: answer };
     setSecondAnswers(next);
-    if (currentPlayer < playerCount) {
+    if (!preview && currentPlayer < playerCount) {
       setCurrentPlayer(currentPlayer + 1);
       setStep("handoff");
       return;
@@ -158,7 +205,7 @@ export function CrewShiftPlayer({
     setVoteRound(2);
     setCurrentPlayer(1);
     setPending(null);
-    setStep(playerCount > 1 ? "handoff" : "private");
+    setStep(!preview && playerCount > 1 ? "handoff" : "private");
   };
 
   const grant = () => {
@@ -166,17 +213,35 @@ export function CrewShiftPlayer({
     setStep("complete");
   };
 
+  /**
+   * The preview banner.
+   *
+   * On every screen of a preview run, not just the first, because the screen a
+   * judge photographs is rarely the one they started on.
+   */
+  const previewBanner = preview ? (
+    <p className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-gold-500/30 bg-gold-500/10 px-3.5 py-2.5 text-xs leading-relaxed text-gold-300">
+      <span className="rounded-full bg-gold-500/20 px-2 py-0.5 text-[0.6rem] font-bold tracking-[0.1em] uppercase">
+        Solo preview
+      </span>
+      <span className="text-mist">
+        The other three answers are a written example. Nobody else answered these.
+      </span>
+    </p>
+  ) : null;
+
   const shell = (
     children: React.ReactNode,
     options: { progress: number; footer?: React.ReactNode },
   ) => (
     <MissionShell
-      title="Crew Shift"
+      title={preview ? "Crew Shift preview" : "Crew Shift"}
       accent={accent}
       progress={options.progress}
       exitHref={host.exitHref}
       footer={options.footer}
     >
+      {previewBanner}
       {children}
     </MissionShell>
   );
@@ -231,6 +296,32 @@ export function CrewShiftPlayer({
             ? "Solo works, but this one is built for arguing. Grab someone if you can."
             : "Nobody sees anyone else's answer until all of them are in. That is the whole trick."}
         </SidekickLine>
+
+        {/*
+          On your own, and want to see what it does?
+
+          The honest answer to "this needs a few people" is not to fake a few
+          people. It is to show the mechanic with a worked example and say so
+          in the same breath.
+        */}
+        <div className="mt-6 rounded-2xl border border-white/10 bg-white/3 p-4">
+          <p className="text-sm font-bold text-chalk">On your own right now?</p>
+          <p className="mt-1 text-sm leading-relaxed text-muted">
+            See how Crew Shift works using a written example group. It is labelled throughout, it
+            does not pretend anybody answered, and it counts for nothing.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setPreview(true);
+              setStep("situation");
+            }}
+            className="sq-pressable mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-gold-500/40 bg-gold-500/10 text-sm font-bold text-gold-300"
+          >
+            Solo preview
+            <ArrowRight aria-hidden className="size-4" />
+          </button>
+        </div>
       </div>,
       {
         progress: 0.05,
@@ -383,20 +474,24 @@ export function CrewShiftPlayer({
     return shell(
       <div className="animate-rise py-2">
         <h1 className="font-display text-2xl leading-tight font-extrabold tracking-tight text-chalk">
-          {isSolo
-            ? "Your answer"
-            : unanimous
-              ? "You all picked the same thing"
-              : "You did not agree"}
+          {preview
+            ? "Where the example group started"
+            : isSolo
+              ? "Your answer"
+              : unanimous
+                ? "You all picked the same thing"
+                : "You did not agree"}
         </h1>
         <p className="mt-2 text-sm text-mist">
-          {isSolo
-            ? "Nothing to compare against yet. Answer again after you have thought about it."
-            : "No score, and nobody is wrong. This is just where the group actually is."}
+          {preview
+            ? "Your answer plus three written ones. This is the before picture."
+            : isSolo
+              ? "Nothing to compare against yet. Answer again after you have thought about it."
+              : "No score, and nobody is wrong. This is just where the group actually is."}
         </p>
 
         <div className="mt-6">
-          <TallyBars rows={rows} total={playerCount} accent="pulse" showNotes />
+          <TallyBars rows={rows} total={seats} accent="pulse" showNotes />
         </div>
       </div>,
       {
@@ -482,7 +577,7 @@ export function CrewShiftPlayer({
     return shell(
       <div className="animate-rise py-2">
         <h1 className="font-display text-2xl leading-tight font-extrabold tracking-tight text-chalk">
-          {shiftHeadline(isSolo, moved, totalsChanged)}
+          {preview ? "This is what a shift looks like" : shiftHeadline(isSolo, moved, totalsChanged)}
         </h1>
 
         <ShiftReveal
@@ -491,25 +586,28 @@ export function CrewShiftPlayer({
           beforeLabel={isSolo ? "Before you thought about it" : "Before discussion"}
           afterLabel={isSolo ? "After" : "After discussion"}
           connector={<MessagesSquare aria-hidden className="size-4" />}
-          before={<TallyBars rows={beforeRows} total={playerCount} accent="pulse" />}
+          before={<TallyBars rows={beforeRows} total={seats} accent="pulse" />}
           after={
-            <TallyBars
-              rows={afterRows}
-              total={playerCount}
-              accent="volt"
-              animate={!reduced}
-            />
+            <TallyBars rows={afterRows} total={seats} accent="volt" animate={!reduced} />
           }
           summary={
-            isSolo
-              ? round.soloNote
-              : moved > 0
-                ? round.shiftedNote
-                : round.heldNote
+            preview
+              ? "Two distributions, one discussion between them. With a real crew this is the group's own before and after, and it is theirs rather than an example."
+              : isSolo
+                ? round.soloNote
+                : moved > 0
+                  ? round.shiftedNote
+                  : round.heldNote
           }
         />
 
-        {!isSolo ? (
+        {preview ? (
+          <p className="mt-3 text-sm text-muted">
+            In this written example, {moved === 1 ? "one answer" : `${moved} answers`} changed
+            between the rounds. Nobody actually answered them, and none of this counts towards
+            anything.
+          </p>
+        ) : !isSolo ? (
           <p className="mt-3 text-sm text-muted">{movedLine(moved, playerCount)}</p>
         ) : null}
 
@@ -523,7 +621,9 @@ export function CrewShiftPlayer({
         <WhatChanged factorIds={outcome.protectiveFactorIds} />
 
         <SidekickLine mood={moved > 0 ? "thinking" : "pleased"} className="mt-6">
-          {echoLine(isSolo, moved, totalsChanged)}
+          {preview
+            ? "That is the mechanic. The version that means something has your actual friends in it."
+            : echoLine(isSolo, moved, totalsChanged)}
         </SidekickLine>
       </div>,
       {

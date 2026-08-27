@@ -5,7 +5,18 @@ import { useAppStore } from "@/store/app-store";
 import { useProfile } from "@/hooks/use-profile";
 import { resolveEchoStyle } from "@/data/echo-styles";
 import { getMission } from "@/data/missions";
-import { STREET_CHECKS, type Npc, type NpcAction } from "@/features/streets/streets-data";
+import { NPCS, STREET_CHECKS, type Npc, type NpcAction } from "@/features/streets/streets-data";
+import {
+  PREVENTION_THREADS,
+  getThread,
+  requiredSteps,
+  stepKey,
+  threadKey,
+  type PreventionThread,
+  type ThreadStep,
+} from "@/data/prevention-threads";
+import { crewRole, type CrewRole } from "@/lib/crew-roles";
+import type { SignalMarker } from "@/features/streets/game/world-engine";
 import type { AwardResult } from "@/lib/xp";
 import type { EchoStyleId } from "@/data/echo-styles";
 
@@ -42,12 +53,53 @@ export interface StreetsBridge {
   open: (action: NpcAction) => void;
   /** Banks a Street Check. Idempotent: a replay grants nothing. */
   completeCheck: (checkId: string) => AwardResult | null;
+
+  /* ------------------------------------------------- Prevention Threads */
+
+  /** Step keys already banked, as `threadId:stepId`. */
+  threadSteps: string[];
+  /** Which option was taken where, for the world to react to. */
+  threadChoices: Record<string, string>;
+  /** Progress on one thread. */
+  threadState: (threadId: string) => ThreadState;
+  /** The step this NPC is currently offering, if any. */
+  stepFor: (npc: Npc) => { thread: PreventionThread; step: ThreadStep } | null;
+  /** Banks one step. Idempotent, and never scaled by signal mode. */
+  completeStep: (
+    thread: PreventionThread,
+    step: ThreadStep,
+    choiceId?: string,
+  ) => AwardResult | null;
+
+  /* ------------------------------------------------------------ Signals */
+
+  /**
+   * Every live Signal, keyed by whoever raises it.
+   *
+   * Derived rather than stored, so a resolved situation cannot leave a marker
+   * behind and a marker cannot exist without a situation to belong to.
+   */
+  signals: Record<string, SignalMarker>;
+
+  /** The Crew role this profile currently reads as. A view, not a rank. */
+  role: CrewRole;
+}
+
+export interface ThreadState {
+  started: boolean;
+  complete: boolean;
+  /** Required steps banked, over required steps total. */
+  done: number;
+  total: number;
+  /** Steps available right now. More than one means a genuine branch. */
+  available: ThreadStep[];
 }
 
 export function useStreetsBridge(): StreetsBridge {
   const router = useRouter();
   const { profile, ready } = useProfile();
   const completeStreetCheck = useAppStore((state) => state.completeStreetCheck);
+  const completeThreadStep = useAppStore((state) => state.completeThreadStep);
 
   const completedMissionIds = useMemo(
     () => (ready ? profile.completedMissionIds : []),
@@ -69,6 +121,14 @@ export function useStreetsBridge(): StreetsBridge {
       const action = npc.action;
       if (action.kind === "mission") return completedMissionIds.includes(action.missionId);
       if (action.kind === "check") return checksDone.includes(action.checkId);
+      if (action.kind === "thread") {
+        const thread = getThread(action.threadId);
+        if (!thread) return false;
+        const banked = profile.threadSteps ?? [];
+        return requiredSteps(thread).every((step) =>
+          banked.includes(stepKey(thread.id, step.id)),
+        );
+      }
       if (action.kind === "campaign") {
         const campaigns = profile.campaigns ?? {};
         return Object.values(campaigns).some(
@@ -82,7 +142,7 @@ export function useStreetsBridge(): StreetsBridge {
        */
       return false;
     },
-    [completedMissionIds, checksDone, profile.campaigns],
+    [completedMissionIds, checksDone, profile.campaigns, profile.threadSteps],
   );
 
   const open = useCallback(
@@ -103,6 +163,8 @@ export function useStreetsBridge(): StreetsBridge {
         case "check":
         case "rewards":
         case "info":
+        case "thread":
+        case "hub":
           /*
            * Handled inside the world by the dialogue overlay rather than by a
            * route change. Claiming a reward at the counter runs the store's
@@ -124,6 +186,111 @@ export function useStreetsBridge(): StreetsBridge {
     [completeStreetCheck],
   );
 
+  /* --------------------------------------------------- Prevention Threads */
+
+  const threadSteps = useMemo(
+    () => (ready ? (profile.threadSteps ?? []) : []),
+    [ready, profile.threadSteps],
+  );
+  const threadChoices = useMemo(
+    () => (ready ? (profile.threadChoices ?? {}) : {}),
+    [ready, profile.threadChoices],
+  );
+
+  /**
+   * Where a thread has got to.
+   *
+   * A step is available once every **required** step before it is banked. That
+   * is what makes the optional trusted-adult conversation a real branch rather
+   * than a detour: it and the next required step become available together, so
+   * a player can go straight to the hard conversation or go and find out what
+   * actually happens first.
+   */
+  const threadState = useCallback(
+    (threadId: string): ThreadState => {
+      const thread = getThread(threadId);
+      if (!thread) {
+        return { started: false, complete: false, done: 0, total: 0, available: [] };
+      }
+      const required = requiredSteps(thread);
+      const isDone = (step: ThreadStep) => threadSteps.includes(stepKey(threadId, step.id));
+      const done = required.filter(isDone).length;
+      const complete = done === required.length;
+
+      const available = complete
+        ? []
+        : thread.steps.filter((step) => {
+            if (isDone(step)) return false;
+            const index = thread.steps.indexOf(step);
+            return thread.steps
+              .slice(0, index)
+              .filter((earlier) => !earlier.optional)
+              .every(isDone);
+          });
+
+      return {
+        started: thread.steps.some(isDone),
+        complete,
+        done,
+        total: required.length,
+        available,
+      };
+    },
+    [threadSteps],
+  );
+
+  const stepFor = useCallback(
+    (npc: Npc) => {
+      if (npc.action.kind !== "thread") return null;
+      const thread = getThread(npc.action.threadId);
+      if (!thread) return null;
+      const step = threadState(thread.id).available.find((entry) => entry.npcId === npc.id);
+      return step ? { thread, step } : null;
+    },
+    [threadState],
+  );
+
+  const completeStep = useCallback(
+    (thread: PreventionThread, step: ThreadStep, choiceId?: string) =>
+      completeThreadStep({
+        threadId: thread.id,
+        stepId: step.id,
+        xp: step.xp,
+        skillId: step.skillId,
+        choiceId,
+      }),
+    [completeThreadStep],
+  );
+
+  /* ---------------------------------------------------------- Signals */
+
+  /**
+   * Which situations are live, and what each of them needs.
+   *
+   * Two sources, and neither of them is a person. Standing encounters raise a
+   * Signal until their linked experience is finished. Threads raise one at
+   * whichever step is currently available, which is what makes the marker move
+   * through the story rather than sit on somebody's head forever.
+   */
+  const signals = useMemo(() => {
+    const live: Record<string, SignalMarker> = {};
+
+    for (const npc of NPCS) {
+      if (!npc.signal) continue;
+      if (npc.action.kind === "thread") continue;
+      if (isNpcDone(npc)) continue;
+      live[npc.id] = { mode: npc.signal };
+    }
+
+    for (const thread of PREVENTION_THREADS) {
+      for (const step of threadState(thread.id).available) {
+        live[step.npcId] = { mode: step.mode };
+      }
+    }
+
+    return live;
+  }, [isNpcDone, threadState]);
+
   return {
     ready,
     equippedEcho: ready ? resolveEchoStyle(profile).id : null,
@@ -133,5 +300,15 @@ export function useStreetsBridge(): StreetsBridge {
     isNpcDone,
     open,
     completeCheck,
+    threadSteps,
+    threadChoices,
+    threadState,
+    stepFor,
+    completeStep,
+    signals,
+    role: crewRole(profile),
   };
 }
+
+/** Ledger key for a finished thread, re-exported so screens can read it. */
+export { threadKey };

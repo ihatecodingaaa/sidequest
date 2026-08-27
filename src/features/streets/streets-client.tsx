@@ -11,6 +11,7 @@ import { useStreetsBridge } from "@/features/streets/game/quest-bridge";
 import { useCompactLandscape } from "@/features/streets/game/use-orientation";
 import { DialogueOverlay } from "@/features/streets/components/dialogue-overlay";
 import { Minimap } from "@/features/streets/components/minimap";
+import { CrewHub } from "@/features/streets/components/crew-hub";
 import { RewardsCounter } from "@/features/streets/components/rewards-counter";
 import { TouchPad } from "@/features/streets/components/touch-pad";
 import { QuestList } from "@/features/streets/components/quest-list";
@@ -49,7 +50,7 @@ export function StreetsClient() {
    * not on the bridge object, which is rebuilt every render. Listing `bridge`
    * would restart the engine on every keystroke.
    */
-  const { ready: bridgeReady, equippedEcho, isNpcDone } = bridge;
+  const { ready: bridgeReady, equippedEcho, isNpcDone, signals } = bridge;
   const setStreetsAvatar = useAppStore((state) => state.setStreetsAvatar);
   const storedLook = useAppStore((state) => state.profile.streetsAvatar);
 
@@ -57,10 +58,13 @@ export function StreetsClient() {
   const engineRef = useRef<WorldEngine | null>(null);
   const keysRef = useRef<Set<string>>(new Set());
   /** Everything about the engine that changes without the engine changing. */
-  const liveRef = useRef<Pick<EngineOptions, "look" | "echo" | "npcs" | "reducedMotion">>({
+  const liveRef = useRef<
+    Pick<EngineOptions, "look" | "echo" | "npcs" | "signals" | "reducedMotion">
+  >({
     look: DEFAULT_AVATAR,
     echo: null,
     npcs: [],
+    signals: {},
     reducedMotion: false,
   });
 
@@ -72,12 +76,13 @@ export function StreetsClient() {
   const [talkingTo, setTalkingTo] = useState<Npc | null>(null);
   const [listOpen, setListOpen] = useState(false);
   const [counterOpen, setCounterOpen] = useState(false);
+  const [hubOpen, setHubOpen] = useState(false);
   const [hint, setHint] = useState(true);
 
   const look: AvatarLook = storedLook ?? DEFAULT_AVATAR;
   const needsAvatar = bridgeReady && !storedLook;
   const place = MAPS[placeId] ?? MAPS[DISTRICT_ID];
-  const busy = Boolean(talkingTo) || listOpen || counterOpen;
+  const busy = Boolean(talkingTo) || listOpen || counterOpen || hubOpen;
 
   /* --------------------------------------------------------- Engine boot */
 
@@ -99,11 +104,12 @@ export function StreetsClient() {
       look,
       echo: equippedEcho,
       npcs: NPCS.map((npc) => ({ npc, done: isNpcDone(npc) })),
+      signals,
       reducedMotion: reduced,
     };
     liveRef.current = live;
     engineRef.current?.update(live);
-  }, [look, equippedEcho, isNpcDone, reduced]);
+  }, [look, equippedEcho, isNpcDone, signals, reduced]);
 
   useEffect(() => {
     if (!bridgeReady || needsAvatar) return;
@@ -366,6 +372,7 @@ export function StreetsClient() {
         <Minimap
           tile={tile}
           npcs={NPCS.filter((npc) => !npc.mapId).map((npc) => ({ npc, done: isNpcDone(npc) }))}
+          signals={signals}
           className={cn(
             "absolute right-2",
             landscape ? "top-14 w-24" : "top-2 w-28",
@@ -424,10 +431,16 @@ export function StreetsClient() {
             setTalkingTo(null);
             setCounterOpen(true);
           }}
+          onOpenHub={() => {
+            setTalkingTo(null);
+            setHubOpen(true);
+          }}
         />
       ) : null}
 
       {counterOpen ? <RewardsCounter onClose={() => setCounterOpen(false)} /> : null}
+
+      {hubOpen ? <CrewHub bridge={bridge} onClose={() => setHubOpen(false)} /> : null}
 
       {listOpen ? (
         <QuestList
@@ -437,6 +450,7 @@ export function StreetsClient() {
           onTalkTo={(npc) => {
             setListOpen(false);
             if (npc.action.kind === "rewards") setCounterOpen(true);
+            else if (npc.action.kind === "hub") setHubOpen(true);
             else openNpc(npc);
           }}
         />

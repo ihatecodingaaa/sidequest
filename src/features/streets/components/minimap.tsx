@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef } from "react";
 
 import { cn } from "@/lib/cn";
+import { SIGNAL_MODES } from "@/data/signals";
+import type { SignalMarker } from "@/features/streets/game/world-engine";
 import {
   DISTRICT_01,
   LANDMARKS,
@@ -52,10 +54,13 @@ function surface(code: string): string | null {
 export function Minimap({
   tile,
   npcs,
+  signals,
   className,
 }: {
   tile: { x: number; y: number };
   npcs: { npc: Npc; done: boolean }[];
+  /** Live Signals, keyed by whoever raises them. Same source as the world. */
+  signals: Record<string, SignalMarker>;
   className?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -74,7 +79,8 @@ export function Minimap({
     return best;
   }, [tile.x, tile.y]);
 
-  const openCount = npcs.filter((entry) => !entry.done).length;
+  const open = npcs.filter((entry) => !entry.done && signals[entry.npc.id]);
+  const openCount = open.length;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -117,13 +123,26 @@ export function Minimap({
     }
 
     /*
-     * Anybody with something available. Gold, the same spark colour used above
-     * their head in the world, never red and never an alert glyph: it means
-     * there is something here, not that a person is a problem.
+     * Live Signals, in the mode colour they have in the world.
+     *
+     * A situation, never a person: this loop draws a dot for something that
+     * needs doing, and the only reason it sits on somebody's tile is that the
+     * situation is where they are. There is nothing to draw for an NPC who has
+     * no live Signal, which is why a finished thread quietly empties the map.
+     *
+     * Colour alone would be an accessibility failure, so nothing here is
+     * colour-only: every dot is also a row in the Quest List with its mode
+     * spelled out, and the accessible name below counts them in words.
      */
     for (const entry of npcs) {
-      if (entry.done) continue;
-      g.fillStyle = "#f5b93f";
+      const marker = signals[entry.npc.id];
+      if (entry.done || !marker) continue;
+      const spec = SIGNAL_MODES[marker.mode];
+      g.fillStyle = "rgba(10,14,22,0.5)";
+      g.beginPath();
+      g.arc(entry.npc.x * SCALE + 1, entry.npc.y * SCALE + 1, 2.8, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = spec.colour;
       g.beginPath();
       g.arc(entry.npc.x * SCALE + 1, entry.npc.y * SCALE + 1, 2, 0, Math.PI * 2);
       g.fill();
@@ -140,7 +159,7 @@ export function Minimap({
     g.beginPath();
     g.arc(px, py, 2, 0, Math.PI * 2);
     g.fill();
-  }, [tile.x, tile.y, npcs]);
+  }, [tile.x, tile.y, npcs, signals]);
 
   return (
     <div
@@ -153,7 +172,9 @@ export function Minimap({
         ref={canvasRef}
         role="img"
         aria-label={`Map of District 01. You are near ${nearest?.name ?? "the block"}. ${
-          openCount === 0 ? "Nothing left open." : `${openCount} people have something for you.`
+          openCount === 0
+            ? "Nothing open on the block right now."
+            : `${openCount} ${openCount === 1 ? "situation" : "situations"} on the block. The quest list names each one.`
         }`}
         className="block h-auto w-full"
         style={{ aspectRatio: `${MAP_W} / ${MAP_H}` }}

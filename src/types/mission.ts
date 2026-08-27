@@ -10,6 +10,17 @@ export type MissionType =
 
 export type Difficulty = "starter" | "core" | "advanced";
 
+/**
+ * Whether this needs other people.
+ *
+ * Declared on the content and shown **before** it opens. A young person who
+ * starts something alone and discovers three tiles in that it needs three
+ * friends has been wasted, and a judge who does it has been misled. Real user
+ * testing produced exactly that feedback about Crew Shift, which is why this
+ * exists rather than being inferred from `missionType`.
+ */
+export type PlayMode = "solo" | "crew" | "either";
+
 export type MissionStatus = "available" | "locked" | "coming-soon";
 
 /**
@@ -41,6 +52,10 @@ export interface Mission {
   missionType: MissionType;
   player: MissionPlayer;
   durationMinutes: number;
+  /** How many people this wants. Rendered on the card, never after entry. */
+  playMode: PlayMode;
+  /** Only for crew and either. Shown as written, for example "2-4". */
+  crewSize?: string;
   xp: number;
   difficulty: Difficulty;
   ageBands: AgeBand[];

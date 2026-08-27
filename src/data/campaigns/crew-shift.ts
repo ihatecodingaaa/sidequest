@@ -54,6 +54,20 @@ export interface CrewShiftRound {
   heldNote: string;
   /** Shown in solo mode, where there is nobody to disagree with. */
   soloNote: string;
+  /**
+   * Prototype answers for Solo Preview, written down rather than simulated.
+   *
+   * Three seats, before and after the discussion, in the order they would have
+   * been passed the phone. They exist so one person can see what the mechanic
+   * actually does, and they are **authored** rather than generated because a
+   * heuristic that produces plausible peer behaviour is a claim about peer
+   * behaviour. These are a worked example, and the screen says so on itself.
+   *
+   * Nothing here is presented as data, as research, or as what real people
+   * did. A product whose entire subject is peer influence does not get to
+   * fabricate peer responses.
+   */
+  preview: { first: string[]; second: string[] };
 }
 
 export const CREW_SHIFT_ROUNDS: Record<string, CrewShiftRound> = {
@@ -97,6 +111,10 @@ export const CREW_SHIFT_ROUNDS: Record<string, CrewShiftRound> = {
         tradeoff: "Keeps the friendship easy. Also the option that changes nothing.",
       },
     ],
+    preview: {
+      first: ["watch", "private", "together"],
+      second: ["private", "private", "adult"],
+    },
     discussionPrompts: [
       "Who is actually going to do it, and when?",
       "What happens if he says no?",

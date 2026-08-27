@@ -6,7 +6,9 @@ import { ArrowRight, Check, Monitor, StickyNote, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { CharacterPortrait } from "@/components/story/character-portrait";
 import { EchoMascot } from "@/components/echo/echo-mascot";
-import { ProvenanceTag } from "@/components/ui/primitives";
+import { ExternalLink, ProvenanceTag } from "@/components/ui/primitives";
+import { getOfficialResource } from "@/lib/official-links";
+import { ThreadPanel } from "@/features/streets/components/thread-panel";
 import { STREET_CHECKS, type Npc } from "@/features/streets/streets-data";
 import type { StreetsBridge } from "@/features/streets/game/quest-bridge";
 import type { AwardResult } from "@/lib/xp";
@@ -29,6 +31,7 @@ export function DialogueOverlay({
   bridge,
   onClose,
   onOpenRewards,
+  onOpenHub,
 }: {
   npc: Npc;
   done: boolean;
@@ -36,6 +39,8 @@ export function DialogueOverlay({
   onClose: () => void;
   /** The rewards counter is a screen of its own, opened from Mei's line. */
   onOpenRewards: () => void;
+  /** The Crew board, likewise. */
+  onOpenHub: () => void;
 }) {
   const panelRef = useRef<HTMLDivElement | null>(null);
   const [beat, setBeat] = useState(0);
@@ -43,7 +48,27 @@ export function DialogueOverlay({
   const check = npc.action.kind === "check" ? STREET_CHECKS[npc.action.checkId] : undefined;
   const figure = npc.figure ?? "person";
   const isFixture = figure !== "person";
-  const lines = done ? npc.doneLines : npc.lines;
+  /*
+   * The thread step this conversation opened on.
+   *
+   * Resolved through the bridge rather than from the data, because whether a
+   * step is live is a question about progress and progress lives in the store.
+   *
+   * **Latched once, on purpose.** Banking a step is exactly what makes it stop
+   * being available, so reading it live meant the panel showing the outcome,
+   * the XP and the way out was destroyed by the very action that produced
+   * them: the sheet snapped back to the character's idle lines the instant the
+   * player chose something. The conversation belongs to the step it started
+   * with, and closing the sheet is what ends it.
+   */
+  const [threadStep] = useState(() => bridge.stepFor(npc));
+  const official = npc.official ? getOfficialResource(npc.official) : undefined;
+  /*
+   * A live thread step speaks for itself. The NPC's standing lines are what
+   * they say when they have nothing to hand you, which is why a finished
+   * thread falls back to them.
+   */
+  const lines = threadStep ? threadStep.step.lines : done ? npc.doneLines : npc.lines;
   const linesDone = beat >= lines.length - 1;
 
   /* Street Check state, kept local: the ledger lives in the store. */
@@ -209,6 +234,16 @@ export function DialogueOverlay({
           </div>
         ) : null}
 
+        {/* -------------------------------------------- Prevention Thread */}
+        {threadStep && linesDone ? (
+          <ThreadPanel
+            thread={threadStep.thread}
+            step={threadStep.step}
+            bridge={bridge}
+            onClose={onClose}
+          />
+        ) : null}
+
         {/* ------------------------------------------------ Just to read */}
         {npc.action.kind === "info" && linesDone ? (
           <div className="mt-5">
@@ -223,6 +258,18 @@ export function DialogueOverlay({
                 <p className="mt-1.5 text-xs leading-relaxed text-mist">{npc.provenance}</p>
               </div>
             ) : null}
+            {/*
+              The world summarises and attributes. It never restates an
+              agency's page, and the way out is to the people who own it.
+            */}
+            {official ? (
+              <ExternalLink
+                href={official.href}
+                className="sq-pressable mt-3 flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#3d7de0] text-sm font-bold text-white"
+              >
+                {official.label}
+              </ExternalLink>
+            ) : null}
             <button
               type="button"
               onClick={onClose}
@@ -234,7 +281,7 @@ export function DialogueOverlay({
         ) : null}
 
         {/* ------------------------------------------------- Hand over */}
-        {!check && npc.action.kind !== "info" && linesDone ? (
+        {!check && !threadStep && npc.action.kind !== "info" && npc.action.kind !== "thread" && linesDone ? (
           <div className="mt-5">
             {
               <div className="space-y-2.5">
@@ -250,9 +297,11 @@ export function DialogueOverlay({
                 ) : null}
                 <button
                   type="button"
-                  onClick={() =>
-                    npc.action.kind === "rewards" ? onOpenRewards() : bridge.open(npc.action)
-                  }
+                  onClick={() => {
+                    if (npc.action.kind === "rewards") onOpenRewards();
+                    else if (npc.action.kind === "hub") onOpenHub();
+                    else bridge.open(npc.action);
+                  }}
                   className={cn(
                     "sq-pressable flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold",
                     npc.action.kind === "safe"

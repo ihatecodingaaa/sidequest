@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Check, Clock, Zap } from "lucide-react";
 
 import { cn } from "@/lib/cn";
+import { PlayModeChip } from "@/components/mission/play-mode-chip";
 import { ACCENT_BG_SOFT, ACCENT_BORDER, ACCENT_TEXT } from "@/lib/accent";
 import { formatDuration } from "@/lib/format";
 import { MISSION_TYPE_LABELS } from "@/data/missions";
@@ -78,6 +79,8 @@ export function MissionCard({
           <Zap aria-hidden className="size-3.5" />
           {mission.xp} XP
         </span>
+        {/* Whether this needs other people, before it is opened rather than after. */}
+        <PlayModeChip mode={mission.playMode} crewSize={mission.crewSize} />
         {mission.location ? (
           <span className="truncate text-faint">{mission.location.area}</span>
         ) : null}

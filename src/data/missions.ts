@@ -16,6 +16,7 @@ export const MISSIONS: Mission[] = [
     description:
       "A call, a code and thirty seconds of pressure. The quickest way to find out whether you would hold the line.",
     missionType: "quick",
+    playMode: "solo",
     player: "scenario",
     durationMinutes: 2,
     xp: 40,
@@ -39,6 +40,7 @@ export const MISSIONS: Mission[] = [
     description:
       "A recruiter with no company, a job with no interview and a first payment that actually lands. Work out where this is going before your bank account does.",
     missionType: "quick",
+    playMode: "solo",
     player: "scenario",
     durationMinutes: 2,
     xp: 60,
@@ -63,6 +65,7 @@ export const MISSIONS: Mission[] = [
     description:
       "The listing is fine. The chat is where it goes wrong. Practise noticing the moment your protection disappears.",
     missionType: "quick",
+    playMode: "solo",
     player: "scenario",
     durationMinutes: 3,
     xp: 55,
@@ -86,6 +89,7 @@ export const MISSIONS: Mission[] = [
     description:
       "Play a night out with your friends the way it actually happens. Then go back to the one moment where a sentence would have changed everything.",
     missionType: "quick",
+    playMode: "solo",
     player: "rewind",
     durationMinutes: 6,
     xp: 120,
@@ -111,6 +115,7 @@ export const MISSIONS: Mission[] = [
     description:
       "Guess what most people your age would do. Then see the gap between what you assumed and what they actually said.",
     missionType: "quick",
+    playMode: "solo",
     player: "norm-mirror",
     durationMinutes: 4,
     xp: 90,
@@ -136,6 +141,8 @@ export const MISSIONS: Mission[] = [
     description:
       "A self-checkout that quietly pushes people towards the wrong outcome. Find what makes the honest choice hard, then rebuild it.",
     missionType: "build",
+    playMode: "either",
+    crewSize: "2-4",
     player: "breaksafe",
     durationMinutes: 7,
     xp: 150,
@@ -161,6 +168,8 @@ export const MISSIONS: Mission[] = [
     description:
       "Walk a public space and record three places where the safe or honest action is harder than it needs to be. Check in on site, submit what you found.",
     missionType: "field",
+    playMode: "either",
+    crewSize: "2-5",
     player: "field-checkin",
     durationMinutes: 25,
     xp: 140,
@@ -191,6 +200,8 @@ export const MISSIONS: Mission[] = [
     description:
       "Reduce missed scans without profiling anyone. Submit a design, pick the principle behind it, and put it in your Safety Passport.",
     missionType: "build",
+    playMode: "either",
+    crewSize: "2-4",
     player: "build-submission",
     durationMinutes: 15,
     xp: 130,
@@ -221,6 +232,8 @@ export const MISSIONS: Mission[] = [
     description:
       "Each member takes one scam signal and explains it in a single sentence. The crew scores on how clearly the whole set reads together.",
     missionType: "crew",
+    playMode: "crew",
+    crewSize: "2-4",
     player: "scenario",
     durationMinutes: 8,
     xp: 80,
@@ -245,6 +258,8 @@ export const MISSIONS: Mission[] = [
     description:
       "Help run a community prevention session: set up, talk to residents, hand out materials. Signup happens with the organisation, not with SIDEQUEST.",
     missionType: "service",
+    playMode: "either",
+    crewSize: "2-6",
     player: "external",
     durationMinutes: 120,
     xp: 200,
@@ -274,6 +289,8 @@ export const MISSIONS: Mission[] = [
     description:
       "A season-long challenge. Crews pick one everyday system in Singapore and redesign its default so the safe action becomes the easy one.",
     missionType: "boss",
+    playMode: "either",
+    crewSize: "2-4",
     player: "external",
     durationMinutes: 0,
     xp: 500,
