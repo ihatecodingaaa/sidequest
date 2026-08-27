@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { unlockedEchoStyles, type EchoStyleId } from "@/data/echo-styles";
+import type { AvatarLook } from "@/features/streets/streets-data";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { AgeBand, Interest, SkillId } from "@/types/core";
@@ -77,6 +78,10 @@ interface AppState {
 
   /** Idempotent. Returns whether XP was actually granted. */
   completeMission: (missionId: string) => AwardResult;
+  /** Banks a Street Check once. Replays grant nothing. */
+  completeStreetCheck: (check: { id: string; xp: number }) => AwardResult;
+  /** Cosmetic only. Stored locally, never a photograph. */
+  setStreetsAvatar: (look: AvatarLook) => void;
   isMissionComplete: (missionId: string) => boolean;
 
   toggleSavedPulse: (pulseId: string) => void;
@@ -184,6 +189,38 @@ export const useAppStore = create<AppState>()(
 
         return result;
       },
+
+      /*
+       * Street Checks keep their own ledger and run through the same
+       * `awardMission` engine as everything else, exactly as Campaign chapter
+       * grants do. One XP engine, one once-only rule, and no inflation of the
+       * mission count on You.
+       */
+      completeStreetCheck: (check) => {
+        const profile = get().profile;
+        const done = profile.streetChecksDone ?? [];
+
+        const result = awardMission(
+          { xp: profile.xp, completedMissionIds: done, skillPoints: profile.skillPoints },
+          { id: check.id, xp: check.xp, skillRewards: [{ skillId: "scam-awareness", points: 10 }] },
+        );
+
+        if (result.awarded) {
+          set({
+            profile: {
+              ...profile,
+              xp: result.xp,
+              skillPoints: result.skillPoints,
+              streetChecksDone: result.completedMissionIds,
+            },
+          });
+        }
+
+        return result;
+      },
+
+      setStreetsAvatar: (look) =>
+        set((state) => ({ profile: { ...state.profile, streetsAvatar: look } })),
 
       isMissionComplete: (missionId) => get().profile.completedMissionIds.includes(missionId),
 

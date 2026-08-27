@@ -1,4 +1,5 @@
 import type { EchoStyleId } from "@/data/echo-styles";
+import type { AvatarLook } from "@/features/streets/streets-data";
 import type { AgeBand, Interest, SkillId } from "./core";
 import type { CampaignProgress } from "./campaign";
 
@@ -49,4 +50,16 @@ export interface UserProfile {
    * stored, so this can never claim something that was not earned.
    */
   echoStyleId?: EchoStyleId;
+  /**
+   * Street Checks banked in SIDEQUEST Streets, as their own ledger.
+   *
+   * Deliberately not folded into `completedMissionIds`: these are ten to thirty
+   * second encounters, not catalogue missions, and counting them there would
+   * inflate "played N missions" on You. Same pattern the Campaign uses for
+   * chapter grants, and the same XP engine either way, so the once-only rule
+   * comes for free. Optional so older persisted profiles rehydrate.
+   */
+  streetChecksDone?: string[];
+  /** Chosen Streets avatar. Cosmetic, local, and never a real photograph. */
+  streetsAvatar?: AvatarLook;
 }
