@@ -114,6 +114,8 @@ dialogue, proximity and the camera have one code path each.
 | Interior cast | Ordinary NPCs with a `mapId`, so a self checkout and a neighbour are the same thing to the engine, the dialogue overlay and the Quest List |
 | Terrain | Cached per map, so stepping back outside is instant |
 | Interact | One button. Whichever of the nearest person and the nearest doorway is closer wins |
+| Residents | Ambient people on authored loops. No quest, no signal, no dialogue, and they pause when the player comes close |
+| Signals | Derived from progress every render and pushed into the engine. The engine draws what it is told and owns none of it |
 
 ## Rendering
 
@@ -215,6 +217,51 @@ player walking straight past the person the test was waiting for.
 
 ---
 
+## Prevention Signals
+
+A Signal marks a **situation**. The mode names the response it needs, not how
+serious it is, and it is drawn near whoever raises it because that is where the
+situation is.
+
+**There is no risk field on a person anywhere in this codebase.**
+`tests/unit/integrity.test.ts` fails the build if `riskLevel`, `riskScore`,
+`suspicionScore`, `dangerScore`, `threatLevel` or `criminality` appears in
+`src/`. That is a structural guarantee rather than a convention, because a
+product that hangs a colour off a person's identifier teaches, through
+thousands of repetitions, that people carry a risk colour.
+
+Signals are **derived, never stored**: a resolved situation cannot leave a
+marker behind and a marker cannot exist without a situation to belong to. Two
+sources feed them, and neither is a person:
+
+1. A standing encounter, until its linked experience is finished.
+2. The currently available step of a Prevention Thread, which is what makes a
+   marker travel through a story rather than sit on somebody's head.
+
+Four redundant channels, because colour alone would fail one man in twelve and
+WCAG 1.4.1 outright: colour and silhouette on the canvas, label and accessible
+name in the DOM.
+
+## Prevention Threads
+
+Three to five steps across more than one person and more than one place, where
+different people know different things.
+
+| | |
+| - | - |
+| Ledger | `profile.threadSteps`, keys of `threadId:stepId`, through the same `awardMission` engine as everything else |
+| Availability | A step opens when every **required** step before it is banked, so an optional trusted adult and the next required step open together. That is the branch |
+| Missions | A `hero-mission` step hands off to the existing player and resumes on return. Nothing is reimplemented |
+| XP | Banded by length and structure. `signalMode` never enters the calculation |
+
+### The step is latched when a conversation opens
+
+Banking a step is exactly what makes it stop being available. Reading it live
+meant the panel showing the outcome, the XP and the way out was destroyed by
+the action that produced them: the sheet snapped back to idle lines the instant
+somebody chose something. The conversation belongs to the step it opened with,
+and closing the sheet is what ends it.
+
 ## What the world deliberately does not have
 
 | Not built | Why |
@@ -226,6 +273,10 @@ player walking straight past the person the test was waiting for.
 | A leaderboard | Demotivates exactly the people this is for. |
 | Combat, chasing, arresting | SIDEQUEST is prevention. The hero action is noticing and redirecting. |
 | Appearance signalling risk | The product does not profile people, so the world does not draw offenders. |
-| Anything playful in Safe | Unchanged across four passes. |
+| Anything playful in Safe | Unchanged across five passes. |
+| A risk score on anybody | The product does not profile people, so nothing in it can represent the idea. |
+| Severity tiers on signals | A severity scale makes the worst thing on the map the most interesting thing on it. |
+| Randomly spawning signals | Every one is authored. A farmable red teaches people to walk towards danger. |
+| Police roleplay, ranks, case files | The Crew has roles and no powers. |
 | Audio | Deferred. See the research doc. |
 | A bigger map | A sparse world feels empty and costs more to build. |

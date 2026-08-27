@@ -107,6 +107,32 @@ That is the Track B moment, and it is worth one sentence:
 > "No chase, no arrest, nobody in a uniform. Just an ordinary few seconds with
 > somebody watching to see what you do."
 
+Now the sentence the whole pass exists for. Point at an amber chevron over
+somebody's head, and say it before a judge can misread it:
+
+> "The colour says what the situation needs, not who that person is. Amber is
+> redirect: pressure is building and it can still be interrupted. There is no
+> risk score on anybody in this product, and a test fails the build if somebody
+> tries to add one."
+
+Then walk to Devi and take one step of **The favour**.
+
+> "Her friend wants to borrow her bank login. That is a police advisory for
+> thirteen to nineteen year olds, put inside a moment where saying no costs
+> something."
+
+Tap through. Then the important part:
+
+> "The next person who knows something is somewhere else on the block. Threads
+> run across several people, and different people know different things."
+
+**If a judge asks about the red one,** it is the only red in the district, it
+is three steps rather than five, and it is worth **less** than the amber one.
+That is the point:
+
+> "The most dangerous situation on the map is not the most rewarding one. If it
+> were, we would have told a sixteen year old to go and find danger."
+
 Do not tour the whole district. Two NPCs and one interior is plenty.
 
 **If a judge asks about the rewards counter,** it is inside the kopitiam and it
@@ -118,6 +144,27 @@ ask it:
 > of a number, and that is the opposite of what this is for."
 
 The screen says on itself that no retailer has agreed to any of it.
+
+## The honesty moment: Crew Shift alone
+
+Whenever Crew Shift comes up, and it should, this is the strongest thirty
+seconds in the demo.
+
+The card says **Crew, 2-4** before it opens. Say so, then open it anyway.
+
+> "This one is designed for two to four friends in the same room. I am on my
+> own, so here is the Solo Preview."
+
+Tap it. Every screen from here carries a banner.
+
+> "The other three answers are written examples. Nobody answered them, it says
+> so on every screen, and it counts for nothing. A product about peer influence
+> does not get to fabricate peer responses."
+
+Play one round, discuss, play the second, show the two distributions.
+
+> "That is the mechanic. The version that means something has their actual
+> friends in it, and that is still there."
 
 ## Moment 3: information to action, 45 seconds
 

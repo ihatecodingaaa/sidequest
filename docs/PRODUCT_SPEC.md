@@ -98,7 +98,40 @@ guidance and worth XP once each.
 
 **Both orientations are first class.** The camera reframes when the phone
 turns, and the controls move from below the world to the outer edges where the
-thumbs already are.
+thumbs already are. A defect found on a real iPhone on 27 August 2026 is
+recorded in `docs/SESSION_STATE.md` and is the next thing to fix.
+
+**Prevention Signals** mark situations, in four modes that name the response
+needed rather than the seriousness: **Connect**, **Prevent**, **Redirect**,
+**Protect**. The mode belongs to the situation and can never belong to a
+person: there is no risk field on anybody anywhere, and a test fails the build
+if one appears. Each mode carries colour, a silhouette, a one-word label and an
+accessible name, so nothing depends on colour vision.
+
+**Prevention Threads** are connected stories across several people and places.
+*The Favour* runs five steps and four people, with a real branch between a
+trusted adult and the hard conversation, built on SPF's own advisory about
+lending accounts. *The Shout* is the district's only red: three steps that
+teach distance, support and getting help, ending at the Police emergency SMS
+route for when it is not safe to speak. It is deliberately shorter than the
+amber thread, so it pays less. **XP never scales with how serious a situation
+is**, because whatever pays most is what people go and do.
+
+**The Community Safety Crew** is a fictional youth crew with roles and no
+powers, each role a view over a capability the profile already stored. Its room
+is in the void deck, with a signal board, the role card, and a **Build a Quest**
+board where a young person writes a scenario. Nothing written there becomes
+live content: drafts are marked review required, and the pipeline is facilitator
+review first.
+
+**Residents walk.** Ambient people on authored loops make the district a
+neighbourhood. Quest givers stay put, because a person you were sent to find
+who wanders behind a building is how a demo dies.
+
+**Every mission and thread declares whether it needs other people,** before it
+opens. Crew Shift keeps its real group mechanic and adds a **Solo Preview**
+that shows what the mechanic does using written example answers, labelled on
+every screen, granting no crew progression and never claiming anybody answered.
 
 The world owns no product state. It reads the store, asks the product to act,
 and reflects the result. Everything reachable by walking is reachable from the

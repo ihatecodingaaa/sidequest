@@ -4,8 +4,18 @@ Kept current so another session can pick this up cold. Update after every major
 stage.
 
 **Last updated:** 27 August 2026
-**Status:** Streets world upgrade complete and verified. Lit district, both
-orientations, three interiors, in-world claiming.
+**Status:** Living prevention world complete and verified. Signals, threads,
+moving residents, the Community Safety Crew, Solo Preview and the rubric
+evidence set.
+
+**One known defect, carried forward as the next P0.** Landscape fails on a real
+iPhone: the world collapses to a strip across the top and the controls take
+most of the height. Reported from a real device on 27 August 2026 with
+screenshots. Emulated landscape at 844x390 renders correctly, which points at
+the orientation test rather than the landscape layout: the symptom is exactly
+what the portrait stacked layout looks like in a short viewport, so the likely
+cause is `useCompactLandscape` returning false on that device. **Root cause it
+before changing any CSS.**
 **Repository:** https://github.com/ihatecodingaaa/sidequest
 **Deployment:** not yet deployed to Vercel. CLI installed, not authenticated.
 
@@ -245,8 +255,14 @@ system in `docs/STREETS_ART_DIRECTION.md` and
 | Street Checks | Three optional encounters. The shop floor one is the Track B hero: a friend scans three of five and waits to see what you do. |
 | Rewards counter | The existing `claimReward`, in a room, from a person. XP stays a threshold and is never spent. |
 | Minimap | Real terrain silhouette, blocks in their own shopfront colours, gold dots on anybody with something available. District only. |
-| Quest List | A peer of the map. Every destination openable without walking a step, interiors included. |
+| Quest List | A peer of the map. Every destination openable without walking a step, interiors included. Rows carry the Signal mode as text. |
 | Safe | Behind the community post desk. No XP, no reward, no quest, no playfulness. |
+| Prevention Signals | Four modes naming the response a situation needs: Connect, Prevent, Redirect, Protect. Never a property of a person, enforced by a test. Colour, silhouette, label and accessible name. |
+| Prevention Threads | The Favour (5 steps, 4 people, 2 places, one real branch) and The Shout (3 steps, the district's only red). |
+| Residents | Nine ambient people on authored loops. No quest, no dialogue, and they stop when you come close. |
+| Community Safety Crew | A room in the void deck: signal board, role card, Build a Quest. Roles read existing skill points. No ranks and no powers. |
+| Play mode | Every mission and thread says whether it needs other people, before it opens. |
+| Solo Preview | Crew Shift, shown with written example answers, labelled on every screen, granting no crew progression. |
 
 **Engine.** Phaser 4.2.1 was installed, integrated and proven working on this
 stack, then removed. It costs 1343 KB raw / 347 KB gzipped for a feature set
@@ -274,14 +290,14 @@ Campaign.
 
 Baseline before this stage, then after.
 
-| Check | Start | Campaigns | UX | Signature | Game feel | Delight | Streets | World |
-| ----- | ----- | --------- | -- | --------- | --------- | ------- | ------- | ----- |
-| `npm run lint` | clean | clean | clean | clean | clean | clean | clean | clean |
-| `npm run typecheck` | clean | clean | clean | clean | clean | clean | clean | clean |
-| `npm run test` | 65 | 129 | 129 | 143 | 143 | 143 | 143 | **143** |
-| `npx playwright test` | 79 (+1) | 135 (+1) | 149 (+7) | 177 (+7) | 207 (+7) | 239 (+7) | 273 (+7) | **295 (+7)** |
-| `npm run build` | passes | passes | passes | passes | passes | passes | passes | passes |
-| client JS | ~1.3 MB | ~1.6 MB | 1559 KB | 1574 KB | 1611 KB | 1660 KB | 1733 KB | **1763 KB** |
+| Check | Start | Campaigns | UX | Signature | Game feel | Delight | Streets | World | Prevention |
+| ----- | ----- | --------- | -- | --------- | --------- | ------- | ------- | ----- | ---------- |
+| `npm run lint` | clean | clean | clean | clean | clean | clean | clean | clean | clean |
+| `npm run typecheck` | clean | clean | clean | clean | clean | clean | clean | clean | clean |
+| `npm run test` | 65 | 129 | 129 | 143 | 143 | 143 | 143 | 143 | **161** |
+| `npx playwright test` | 79 (+1) | 135 (+1) | 149 (+7) | 177 (+7) | 207 (+7) | 239 (+7) | 273 (+7) | 295 (+7) | **329 (+7)** |
+| `npm run build` | passes | passes | passes | passes | passes | passes | passes | passes | passes |
+| client JS | ~1.3 MB | ~1.6 MB | 1559 KB | 1574 KB | 1611 KB | 1660 KB | 1733 KB | 1763 KB | **1809 KB** |
 
 The world upgrade cost **30 KB** across the whole app: the renderer chunk grew
 from 8 KB to 17 KB and the world's UI chunk carries the minimap and the rewards
@@ -296,8 +312,18 @@ across seven routes: **no horizontal overflow anywhere, no console errors, no
 page errors.** The only sub-44px control found by the audit is the skip link,
 which is `sr-only` until focused.
 
-Three real bugs were found by looking rather than by testing, and all three are
+Four real bugs were found by looking rather than by testing, and all four are
 now pinned:
+
+- Banking a thread step made that step stop being available, which unmounted
+  the panel showing the outcome, the XP and the way out. The sheet snapped back
+  to idle dialogue the instant somebody chose something. The conversation is
+  now latched to the step it opened with.
+- Adding the Police emergency SMS route exposed that `ExternalLink` refuses
+  anything that is not http(s), so it would have rendered as inert text. The
+  worst possible failure mode for the one route somebody uses when it is not
+  safe to speak. `sms:` joined the allowlist, and a test now fails the build if
+  the allowlist grows again.
 
 - Finishing a Street Check rebuilt the engine, because `isNpcDone` was a
   dependency of the boot effect. That threw the player back to the spawn point
