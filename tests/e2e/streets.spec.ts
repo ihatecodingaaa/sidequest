@@ -28,6 +28,21 @@ async function walk(page: Page, key: string, ms: number) {
   await page.waitForTimeout(120);
 }
 
+/**
+ * Walks a route in short bursts until a control appears.
+ *
+ * One long press sails past whatever the test was walking towards, which is
+ * correct behaviour for a world you can explore and a bad way to write a test.
+ */
+async function reach(page: Page, label: RegExp, legs: [string, number][]) {
+  for (const [key, steps] of legs) {
+    for (let i = 0; i < steps; i += 1) {
+      if (await page.getByRole("button", { name: label }).isVisible().catch(() => false)) return;
+      await walk(page, key, 220);
+    }
+  }
+}
+
 /* --------------------------------------------------------------- Loading */
 
 test.describe("the world loads and stays out of the rest of the app", () => {
@@ -215,18 +230,22 @@ test.describe("street checks", () => {
    * single line, so there is nothing to advance. That is the world reacting to
    * progress, not an inconsistency.
    */
-  const openCheck = async (page: Page, index: "first" | "last" = "first") => {
+  const openCheck = async (page: Page, who: string) => {
     await page.goto("/streets");
     await page.getByRole("button", { name: /Quests/ }).click();
-    const cta = page.getByRole("button", { name: "Take a look" });
-    await (index === "first" ? cta.first() : cta.last()).click();
+    await page
+      .locator("li")
+      .filter({ hasText: who })
+      .first()
+      .getByRole("button", { name: "Take a look" })
+      .click();
     const next = page.getByRole("button", { name: "Continue" });
     if (await next.isVisible().catch(() => false)) await next.click();
   };
 
   test("grants XP exactly once", async ({ page }) => {
     await seedPlayer(page, { xp: 0 });
-    await openCheck(page);
+    await openCheck(page, "Nadia");
 
     await page.getByRole("button", { name: /Nobody legitimate needs your bank account/ }).click();
     await expect(page.getByText("+25 XP")).toBeVisible();
@@ -234,7 +253,7 @@ test.describe("street checks", () => {
 
     // The ledger is the existing one, so a replay is free and pays nothing.
     await page.getByRole("button", { name: "Back to the block" }).click();
-    await openCheck(page);
+    await openCheck(page, "Nadia");
     await page.getByRole("button", { name: /Nobody legitimate needs your bank account/ }).click();
     await expect(page.getByText(/Already counted/)).toBeVisible();
     expect((await readProfile(page)).xp).toBe(25);
@@ -242,7 +261,7 @@ test.describe("street checks", () => {
 
   test("never punishes a choice, and cites its source afterwards", async ({ page }) => {
     await seedPlayer(page, { xp: 0 });
-    await openCheck(page);
+    await openCheck(page, "Nadia");
 
     // The least safe option still gets an honest consequence, never a verdict.
     await page.getByRole("button", { name: /Try it once and see if the money is real/ }).click();
@@ -257,11 +276,7 @@ test.describe("street checks", () => {
 
   test("teaches verifying the request rather than inspecting the video", async ({ page }) => {
     await seedPlayer(page, { xp: 0 });
-    await page.goto("/streets");
-    await page.getByRole("button", { name: /Quests/ }).click();
-    await page.getByRole("button", { name: "Take a look" }).last().click();
-    const next = page.getByRole("button", { name: "Continue" });
-    if (await next.isVisible().catch(() => false)) await next.click();
+    await openCheck(page, "Arif");
 
     /*
      * The design rule for fabricated media: current guidance is that it can be
@@ -275,7 +290,167 @@ test.describe("street checks", () => {
   });
 });
 
-/* --------------------------------------------------------- World reacts */
+/* --------------------------------------------------------------- Doors */
+
+test.describe("buildings open", () => {
+  /** Uses the list rather than walking, which is what the list is for. */
+  const goInside = async (page: Page, who: string) => {
+    await page.goto("/streets");
+    await page.getByRole("button", { name: /Quests/ }).click();
+    await page.locator("li").filter({ hasText: who }).first().getByRole("button", { name: "Go there" }).click();
+  };
+
+  test("the district names where you are, and so does an interior", async ({ page }) => {
+    await seedPlayer(page);
+    await page.goto("/streets");
+    await expect(page.getByText("District 01")).toBeVisible();
+
+    await goInside(page, "Bea");
+    await expect(page.getByText("Sunrise Minimart")).toBeVisible();
+  });
+
+  test("arriving next to somebody puts them in range", async ({ page }) => {
+    /*
+     * "Go there" used to land two tiles below, which is just outside talking
+     * range, so the world greeted you with "Nobody nearby" immediately after
+     * taking you to a person. This is that regression pinned.
+     */
+    await seedPlayer(page);
+    await goInside(page, "Bea");
+    await expect(page.getByRole("button", { name: /^Talk/ })).toBeEnabled();
+  });
+
+  test("a door works in both directions, on foot", async ({ page }) => {
+    await seedPlayer(page);
+    await goInside(page, "Bea");
+
+    // The mat is at the front of the shop, so leaving is a walk, not a teleport.
+    await reach(page, /Step out/, [
+      ["ArrowRight", 6],
+      ["ArrowDown", 5],
+    ]);
+    await page.getByRole("button", { name: /Step out/ }).click();
+    await expect(page.getByText("District 01")).toBeVisible();
+
+    /*
+     * And you arrive on the pavement outside the door you came through, close
+     * enough that it offers to take you back. That is the street side of the
+     * same proximity test, without any dead reckoning in the test itself.
+     */
+    await expect(page.getByRole("button", { name: /Go in/ })).toBeEnabled();
+    await page.getByRole("button", { name: /Go in/ }).click();
+    await expect(page.getByText("Sunrise Minimart")).toBeVisible();
+  });
+});
+
+/* ----------------------------------------------------- Rewards counter */
+
+test.describe("the rewards counter is the existing claim flow, in a room", () => {
+  const openCounter = async (page: Page) => {
+    await page.goto("/streets");
+    await page.getByRole("button", { name: /Quests/ }).click();
+    await page.getByRole("button", { name: "Open the counter" }).click();
+  };
+
+  test("claims through the store and never spends XP", async ({ page }) => {
+    await seedPlayer(page, { xp: 520 });
+    await openCounter(page);
+
+    await expect(page.getByRole("dialog", { name: "Rewards counter" })).toBeVisible();
+    await page
+      .locator("li")
+      .filter({ hasText: "Crew banner" })
+      .getByRole("button", { name: "Claim at the counter" })
+      .click();
+
+    await expect(page.getByText(/Claimed. Recorded in your Safety Passport/)).toBeVisible();
+
+    // XP is a threshold, not a balance. Claiming deducts nothing, ever.
+    const profile = await readProfile(page);
+    expect(profile.xp).toBe(520);
+    expect((profile.rewardClaims as unknown[]).length).toBe(1);
+  });
+
+  test("says plainly that nothing here is a partnership", async ({ page }) => {
+    await seedPlayer(page, { xp: 520 });
+    await openCounter(page);
+
+    await expect(page.getByText("Partner concept")).toBeVisible();
+    await expect(
+      page.getByText(/No retailer, brand or organisation has agreed to any of it/),
+    ).toBeVisible();
+  });
+
+  test("keeps a reward locked below its threshold", async ({ page }) => {
+    await seedPlayer(page, { xp: 10 });
+    await openCounter(page);
+
+    await expect(page.getByText("140 XP to go")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Claim at the counter" })).toHaveCount(0);
+  });
+});
+
+/* ------------------------------------------------------- Noticeboards */
+
+test.describe("seeded world copy declares itself", () => {
+  test("labels the noticeboard as demo content", async ({ page }) => {
+    await seedPlayer(page);
+    await page.goto("/streets");
+    await page.getByRole("button", { name: /Quests/ }).click();
+    await page.getByRole("button", { name: "Read the board" }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
+
+    await expect(page.getByText("Seeded")).toBeVisible();
+    await expect(page.getByText(/Not a live community feed/)).toBeVisible();
+  });
+
+  test("names the shop counter as a concept and nothing more", async ({ page }) => {
+    await seedPlayer(page);
+    await page.goto("/streets");
+    await page.getByRole("button", { name: /Quests/ }).click();
+    await page.getByRole("button", { name: "Read the notice" }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
+
+    await expect(page.getByText(/No shop has agreed to it/)).toBeVisible();
+  });
+});
+
+/* -------------------------------------------------------- Orientation */
+
+test.describe("landscape is a first class orientation", () => {
+  test.use({ viewport: { width: 844, height: 390 } });
+
+  test("moves the controls to the edges and keeps everything working", async ({ page }) => {
+    await seedPlayer(page);
+    await page.goto("/streets");
+
+    const root = page.getByTestId("streets-root");
+    await expect(root).toHaveAttribute("data-orientation", "landscape");
+    await expect(page.getByTestId("streets-canvas")).toBeVisible();
+
+    // The pad and the interact button sit at opposite edges, world between.
+    const pad = page.getByRole("application", { name: /Movement pad/ });
+    const box = await pad.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.x).toBeLessThan(200);
+
+    // And the same experiences open.
+    await page.getByRole("button", { name: /Quests/ }).click();
+    await expect(page.getByRole("heading", { name: "Around the block" })).toBeVisible();
+  });
+
+  test("has no axe violations in landscape", async ({ page }) => {
+    await seedPlayer(page);
+    await page.goto("/streets");
+    await expect(page.getByTestId("streets-canvas")).toBeVisible();
+
+    const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+      .analyze();
+
+    expect(results.violations.map((v) => v.id)).toEqual([]);
+  });
+});
 
 test.describe("the world reflects progress", () => {
   test("changes what an NPC says once their mission is done", async ({ page }) => {
