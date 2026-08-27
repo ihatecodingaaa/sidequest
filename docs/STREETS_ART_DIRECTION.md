@@ -4,6 +4,14 @@ The district's visual system. Extends `docs/VISUAL_ART_DIRECTION.md` rather than
 replacing it: the mascot, cast portraits and mission marks are unchanged, and
 the world adds a brighter register beneath them.
 
+**This document is the standing rulebook:** what may be drawn at all,
+originality, the cast, and the three prohibitions. None of it has changed.
+
+**How the world is lit and built now lives in
+`docs/NEXT_WORLD_ART_DIRECTION.md`:** the lighting model, the current palette,
+building facades, interiors, orientation framing and the minimap. Go there for
+hex values.
+
 ---
 
 ## Originality
@@ -37,10 +45,12 @@ approach, talk, decide. Not any game's assets.
 ## Geometry
 
 - **Tiles are 16 world units.** Everything snaps to that grid.
-- **The world buffer is 320 x 232 units**, blitted up with smoothing disabled.
-  That is what makes vector drawing read as crisp low-resolution art.
-- **Flat fills, no gradients, no dithering, no outlines.** Depth comes from a
-  ground shadow and from depth-sorting, never from strokes.
+- **The buffer is world resolution**, blitted up with smoothing disabled. That
+  is what makes vector drawing read as crisp low-resolution art. Its size is no
+  longer fixed: the camera picks a scale from the container and the viewport
+  decides how much world fits.
+- **No gradients, no dithering, no strokes.** Depth comes from a three-tone
+  bevel lit from the top left, from ground shadows, and from depth-sorting.
 - **Corridors are three tiles wide.** Two is walkable and makes the player fight
   the geometry.
 
@@ -52,21 +62,18 @@ Bright, warm and green. The shell stays dark; the world is where the colour
 lives, and the contrast between them is deliberate: stepping outside should feel
 like stepping outside.
 
-| Role | Colour | Note |
-| ---- | ------ | ---- |
-| Grass | `#3f7a46` / `#478a4e` | Checkered, with a deterministic tuft scatter |
-| Path | `#c8bda4` / `#bfb298` | Warm pavement |
-| Covered walkway | `#d6cdb8` with `#9aa0ac` posts | Beams only at the ends of a run |
-| Road | `#5a5f6b`, stripes `#d9dee6` | Zebra crossings at three points |
-| Court | `#7a6bd6` | The one saturated ground surface |
-| Block facade | `#e8e2d4`, roof `#2f4a86` | Windows in `rgba(52,72,120,0.75)` |
-| Quest marker | `#f5b93f` | A SIDEQUEST spark, never an exclamation mark |
+The current values, and the lighting rule that governs them, are in
+`docs/NEXT_WORLD_ART_DIRECTION.md`. Two constants survive every revision:
+
+- **The court is the one saturated ground surface.**
+- **The quest marker is `#f5b93f`,** a SIDEQUEST spark and never an exclamation
+  mark.
 
 ### Shopfront signs
 
 Each block gets one sign colour so it is identifiable from across the district:
 minimart coral, void deck violet, kopitiam gold, bus stop cyan, community post
-**blue**.
+**blue**. A building that opens carries the same colour inside it.
 
 ---
 
@@ -110,8 +117,11 @@ Nadia, Arif. Recurring characters make a district feel like a place rather than
 a menu.
 
 World sprites are composed at draw time from legs, torso, arms, head and a hair
-silhouette. Direction changes the hair silhouette and which eyes are drawn, so
-turning reads without a sprite sheet.
+silhouette, plus one optional accessory. Direction changes the hair silhouette,
+the accessory and which eyes are drawn, so turning reads without a sprite sheet.
+
+Fixtures are not people. A self checkout is a box with a screen and a
+noticeboard is a panel on two legs, in the world and in the dialogue sheet.
 
 ### Three prohibitions, and none of them is stylistic
 
@@ -137,6 +147,9 @@ and stopping dead under reduced motion.
 It means **there is something here**. It does not mean *this person is
 suspicious*, which is why it is a spark rather than an alert glyph, and why the
 same information is carried in words in the Quest List.
+
+Only things that can be finished get one. Safe, the rewards counter and the
+noticeboards have no done state, so a marker over them would never go out.
 
 ---
 

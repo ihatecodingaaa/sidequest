@@ -80,18 +80,34 @@ REWIND at the minimart, Norm Mirror at the kopitiam, BREAKSAFE from the uncle
 whose card got charged twice, Crew Shift at the court, ONE BAD MINUTE from Ken
 at the void deck, and Safe from the community post.
 
-Two optional Street Checks sit at the sides, sourced to SPF and ScamShield
-guidance and worth XP once. They are side content: Track B's hero material is
-peer pressure, impulsivity, account misuse and peer intervention, and the four
-hero missions carry it.
+**Three buildings open.** The minimart holds the self checkout that REWIND and
+BREAKSAFE both talk about, and a Street Check that happens while standing at
+it: a friend scans three things out of five and waits to see what you do. The
+community post is the calm door to Safe, and the one place the world stops
+being playful. The kopitiam holds a rewards counter.
+
+**The rewards counter is the existing claim flow, in a room.** It calls the
+same `claimReward`, obeys the same thresholds and writes the same Safety
+Passport entry. **XP is a threshold, never a balance:** reaching a number
+unlocks recognition and nothing is deducted. There is no second currency, no
+stock pressure, no timer and nothing randomised, because a spendable balance
+would turn every scenario into an obstacle in front of a number.
+
+Three Street Checks sit around the district, sourced to SPF and ScamShield
+guidance and worth XP once each.
+
+**Both orientations are first class.** The camera reframes when the phone
+turns, and the controls move from below the world to the outer edges where the
+thumbs already are.
 
 The world owns no product state. It reads the store, asks the product to act,
 and reflects the result. Everything reachable by walking is reachable from the
-Quest List without walking a step.
+Quest List without walking a step, interiors included.
 
 Scope is deliberately one district. Full reasoning in
-`docs/STREETS_RESEARCH.md`, `docs/STREETS_ARCHITECTURE.md` and
-`docs/STREETS_ART_DIRECTION.md`.
+`docs/STREETS_RESEARCH.md`, `docs/NEXT_WORLD_RESEARCH.md`,
+`docs/STREETS_ARCHITECTURE.md`, `docs/STREETS_ART_DIRECTION.md` and
+`docs/NEXT_WORLD_ART_DIRECTION.md`.
 
 ### Echo, and the collection
 

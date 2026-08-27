@@ -3,8 +3,9 @@
 Kept current so another session can pick this up cold. Update after every major
 stage.
 
-**Last updated:** 26 August 2026
-**Status:** SIDEQUEST Streets vertical slice complete and verified.
+**Last updated:** 27 August 2026
+**Status:** Streets world upgrade complete and verified. Lit district, both
+orientations, three interiors, in-world claiming.
 **Repository:** https://github.com/ihatecodingaaa/sidequest
 **Deployment:** not yet deployed to Vercel. CLI installed, not authenticated.
 
@@ -225,20 +226,27 @@ visual. That is the largest remaining gap in the story layer.
 ## SIDEQUEST Streets
 
 An original top-down explorable district, added as a vertical slice rather than
-an open world. Research in `docs/STREETS_RESEARCH.md`, build in
-`docs/STREETS_ARCHITECTURE.md`, visual system in `docs/STREETS_ART_DIRECTION.md`.
+an open world. Research in `docs/STREETS_RESEARCH.md` and
+`docs/NEXT_WORLD_RESEARCH.md`, build in `docs/STREETS_ARCHITECTURE.md`, visual
+system in `docs/STREETS_ART_DIRECTION.md` and
+`docs/NEXT_WORLD_ART_DIRECTION.md`.
 
 | Piece | State |
 | ----- | ----- |
 | District 01 | 40 x 28 tiles, six landmarks, drawn entirely in code. Minimart, void deck, kopitiam, community post, court, bus stop. |
+| Graphics | Every surface lit from the top left with a three-tone bevel, drawn between surfaces rather than tile codes. Blocks are facades: roof, fascia, lit windows, awning, doorway, ground shadow. |
+| Orientation | Portrait and landscape are both first class. The camera picks a scale and the viewport decides how much world fits; controls move to the outer edges in landscape. |
+| Interiors | Three buildings open: minimart, community post, kopitiam. Each is a `WorldMap` like the district, so nothing about movement, collision, dialogue or the camera is duplicated. |
 | Movement | Keyboard (arrows/WASD) and a touch thumb pad. Axis-separated collision so walls are slid along, never stuck on. |
-| Avatar | Four axes, layered at draw time, works in all four walking directions. Randomise and Skip both present. |
+| Avatar | Five axes including a covered head and one visible accessory, layered at draw time, works in all four walking directions. Randomise and Skip both present. Nothing earned, priced or dropped. |
 | Echo | The equipped variant follows the player. The collection became a companion instead of a settings tile. |
-| Cast | Eight NPCs, reusing the campaign characters. Situations, not quiz questions. |
+| Cast | Twelve NPCs and fixtures, reusing the campaign characters. Situations, not quiz questions. A machine is drawn as a machine. |
 | Missions | NPCs open the existing REWIND, Norm Mirror, BREAKSAFE, Crew Shift and ONE BAD MINUTE. Nothing was rebuilt inside the world. |
-| Street Checks | Two optional encounters, sourced to SPF and ScamShield guidance, XP once through the existing ledger. |
-| Quest List | A peer of the map. Every destination openable without walking a step. |
-| Safe | Reachable from the world as a calm door. No XP, no reward, no quest, no playfulness. |
+| Street Checks | Three optional encounters. The shop floor one is the Track B hero: a friend scans three of five and waits to see what you do. |
+| Rewards counter | The existing `claimReward`, in a room, from a person. XP stays a threshold and is never spent. |
+| Minimap | Real terrain silhouette, blocks in their own shopfront colours, gold dots on anybody with something available. District only. |
+| Quest List | A peer of the map. Every destination openable without walking a step, interiors included. |
+| Safe | Behind the community post desk. No XP, no reward, no quest, no playfulness. |
 
 **Engine.** Phaser 4.2.1 was installed, integrated and proven working on this
 stack, then removed. It costs 1343 KB raw / 347 KB gzipped for a feature set
@@ -246,26 +254,42 @@ this district uses about a fifth of. The original renderer is **8 KB**, and the
 whole feature added **73 KB** to the app. Full measurements in the architecture
 doc.
 
-**Also in this pass.** REWIND's separate debrief screen was folded into the
-comparison: the player had already seen the consequence and both runs side by
-side, and a third full screen teaching the same thing is where a game stops
-being a game. The mechanism sits behind one disclosure.
+**Also in the first Streets pass.** REWIND's separate debrief screen was folded
+into the comparison: the player had already seen the consequence and both runs
+side by side, and a third full screen teaching the same thing is where a game
+stops being a game. The mechanism sits behind one disclosure.
 
-Deferred deliberately: world audio, mementos, and the wider text compression
-across Crew, You and Campaign.
+**Two decisions were reversed by measurement during the world upgrade,** and
+both are written up in `docs/NEXT_WORLD_RESEARCH.md`. Holding the visible area
+constant collapses on a tall container, so the camera picks a scale instead.
+And rooms built 18 wide by 12 deep cannot be framed on a portrait phone without
+either cropping them or surrounding them with nothing, so they were turned to
+face the same way the screen does: 14 wide by 18 deep.
+
+Deferred deliberately: a second district, world audio, mementos, emotes, a
+spendable currency, and the wider text compression across Crew, You and
+Campaign.
 
 ## Verification
 
 Baseline before this stage, then after.
 
-| Check | Start | Campaigns | UX | Signature | Game feel | Delight | Streets |
-| ----- | ----- | --------- | -- | --------- | --------- | ------- | ------- |
-| `npm run lint` | clean | clean | clean | clean | clean | clean | clean |
-| `npm run typecheck` | clean | clean | clean | clean | clean | clean | clean |
-| `npm run test` | 65 | 129 | 129 | 143 | 143 | 143 | **143** |
-| `npx playwright test` | 79 (+1) | 135 (+1) | 149 (+7) | 177 (+7) | 207 (+7) | 239 (+7) | **273 (+7)** |
-| `npm run build` | passes | passes | passes | passes | passes | passes | passes |
-| client JS | ~1.3 MB | ~1.6 MB | 1559 KB | 1574 KB | 1611 KB | 1660 KB | **1733 KB** |
+| Check | Start | Campaigns | UX | Signature | Game feel | Delight | Streets | World |
+| ----- | ----- | --------- | -- | --------- | --------- | ------- | ------- | ----- |
+| `npm run lint` | clean | clean | clean | clean | clean | clean | clean | clean |
+| `npm run typecheck` | clean | clean | clean | clean | clean | clean | clean | clean |
+| `npm run test` | 65 | 129 | 129 | 143 | 143 | 143 | 143 | **143** |
+| `npx playwright test` | 79 (+1) | 135 (+1) | 149 (+7) | 177 (+7) | 207 (+7) | 239 (+7) | 273 (+7) | **293 (+7)** |
+| `npm run build` | passes | passes | passes | passes | passes | passes | passes | passes |
+| client JS | ~1.3 MB | ~1.6 MB | 1559 KB | 1574 KB | 1611 KB | 1660 KB | 1733 KB | **1763 KB** |
+
+The world upgrade cost **30 KB** across the whole app: the renderer chunk grew
+from 8 KB to 17 KB and the world's UI chunk carries the minimap and the rewards
+counter. Both are still absent from every other route, verified by watching
+network responses rather than by reading the config: on `/`, `/safe` and
+`/pulse` neither chunk is requested, and on `/streets` the renderer is not
+requested either until a canvas actually exists, because a first-time visitor
+sees the avatar screen first.
 
 The seven skips are the new bottom-bar geometry tests, which are phone-only by
 design and skip on the desktop project. Six existing assertions were updated

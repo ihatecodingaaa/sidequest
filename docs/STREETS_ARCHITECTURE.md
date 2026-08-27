@@ -35,6 +35,14 @@ Home entry.
 | `open(action)` | Routes to `/play/:id`, `/campaigns/:slug` or `/safe` |
 | `completeCheck(id)` | Banks a Street Check through the existing XP engine |
 
+Two action kinds are handled inside the world rather than by a route change:
+`check` and `info` open in the dialogue sheet, and `rewards` opens the counter,
+which calls the store's existing `claimReward` untouched. **XP is a threshold,
+not a balance.** Claiming deducts nothing, so the counter is a place to stand
+rather than a second economy. A spendable currency would have made every
+scenario an obstacle in front of a number, which is the one thing this product
+cannot afford.
+
 **Street Checks keep their own ledger** (`profile.streetChecksDone`) and run
 through the same `awardMission` in `src/lib/xp.ts` that every other experience
 uses. That is the precedent the Campaign already set with `awardedKeys`, and it
@@ -93,15 +101,41 @@ commit history.
 
 ---
 
+## Maps
+
+The district and the three interiors are the same shape of thing: a `WorldMap`
+with rows, dimensions, doors, a surround colour and a tint. Entering a shop
+swaps the map and repaints. **Nothing else changes**: movement, collision,
+dialogue, proximity and the camera have one code path each.
+
+| | |
+| - | - |
+| Doors | Derived from the landmarks that declare an `interiorId`, so a door can never point at a building that is not there |
+| Interior cast | Ordinary NPCs with a `mapId`, so a self checkout and a neighbour are the same thing to the engine, the dialogue overlay and the Quest List |
+| Terrain | Cached per map, so stepping back outside is instant |
+| Interact | One button. Whichever of the nearest person and the nearest doorway is closer wins |
+
 ## Rendering
 
 Two stages, and the first one is what gives the look.
 
-1. **Terrain is painted once** into an offscreen canvas at world resolution
-   (640 x 448) and thereafter copied. A frame costs one camera-cropped blit plus
+1. **Terrain is painted once per map** into an offscreen canvas at world
+   resolution and thereafter copied. A frame costs one camera-cropped blit plus
    a handful of entities.
-2. **Everything draws into a small buffer** (320 x 232 world units) which is then
-   blitted up with `imageSmoothingEnabled = false`.
+2. **Everything draws into a buffer** at world resolution, blitted up with
+   `imageSmoothingEnabled = false`.
+
+### The camera picks a scale, not a rectangle
+
+The buffer is not a fixed size. Its scale comes from the shorter side of the
+container, clamped, then raised far enough to cover a small map, then capped so
+a room never over-zooms. A person is therefore the same physical size on screen
+in both orientations, and turning the phone widens the view rather than
+resizing anybody.
+
+An earlier version held the visible area constant. That collapses on a very
+tall container: the height clamps, the width shrinks to compensate, and a
+portrait phone ends up looking through a nine tile slot.
 
 That second stage is what produces a crisp low-resolution look from vector
 drawing commands: no sprite sheet to author, no image to download, no licence to
@@ -154,6 +188,9 @@ screen reader, unreachable by keyboard focus, and unaffected by text sizing.
 | ------- | ----------------- |
 | Reading | All dialogue is DOM, in a focused `role="dialog"` with a live region |
 | Alternative route | The **Quest List** lists every destination with its state and opens the same experiences, without walking a step |
+| Interiors | Listed under their building, not hidden behind a door. A room whose contents could only be reached by walking into it would put the shop floor check out of reach of exactly the people this rule exists for |
+| Arrival | "Go there" lands on a standable tile beside the person, inside talking range. Arriving and being told nobody is nearby is not an answer to "take me to this person" |
+| Minimap | Decorative. Every marker it draws is also a row in the list, and its accessible name says where you are in words |
 | Keyboard | Arrows and WASD move, Enter / Space / E interact, Escape closes |
 | Touch | A thumb pad with a dead zone, and a 44px+ interact button |
 | Focus theft | Key handling bails out when the event target is a control |
@@ -183,6 +220,8 @@ player walking straight past the person the test was waiting for.
 | Not built | Why |
 | --------- | --- |
 | A second currency | One XP economy. A thing to farm turns the scenario into an obstacle. |
+| Spendable XP | Same reason, decided again when the rewards counter was built. |
+| A second district | The first is not finished. Breadth before polish is how a vertical slice becomes a demo. |
 | Random drops, loot boxes, gacha | Youth product. Exploitative by construction. |
 | A leaderboard | Demotivates exactly the people this is for. |
 | Combat, chasing, arresting | SIDEQUEST is prevention. The hero action is noticing and redirecting. |

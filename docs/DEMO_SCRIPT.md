@@ -1,7 +1,8 @@
 # Demo script
 
-Target: about seven minutes with both the Campaign section and SIDEQUEST
-Streets (425 seconds across ten moments), four to five without them. Practise it twice before judging.
+Target: about seven and a half minutes with both the Campaign section and
+SIDEQUEST Streets (455 seconds across ten moments), four to five without them.
+Practise it twice before judging.
 
 If you only have three minutes, cut Moments 5 and 7 and keep Campaigns. It is
 the part judges have not seen from anybody else, and Moment 6 now carries the
@@ -54,7 +55,7 @@ Point at the bottom bar without tapping it yet.
 > "And that shield in the middle is Safe. Same place on every screen, so nobody
 > has to remember where it is. We will come back to it."
 
-## Moment 2b: SIDEQUEST Streets, 60 seconds
+## Moment 2b: SIDEQUEST Streets, 90 seconds
 
 The thing nobody else will have. Do not narrate it, just start walking.
 
@@ -84,7 +85,39 @@ identical experiences and is a peer of the map, not a fallback. Say so:
 > "Anybody who cannot use the pad gets the same content from the list. The
 > learning is never behind the dexterity."
 
-Do not tour the whole district. Two NPCs is plenty.
+Then **turn the phone sideways.** Do not explain it first. Let them see the
+camera widen and the pad slide to the left edge, then say it:
+
+> "Same world, same save, different hands."
+
+Turn it back.
+
+Now walk into the minimart. The awning over the door is coral, and the button
+changes from Talk to **Go in** when you reach the pavement outside it.
+
+> "Buildings open. This is the self checkout that two of the missions are
+> about, and now you are standing at it."
+
+Press **Talk** on Bea.
+
+> "Five things in the basket. She scanned three and she is watching me."
+
+That is the Track B moment, and it is worth one sentence:
+
+> "No chase, no arrest, nobody in a uniform. Just an ordinary few seconds with
+> somebody watching to see what you do."
+
+Do not tour the whole district. Two NPCs and one interior is plenty.
+
+**If a judge asks about the rewards counter,** it is inside the kopitiam and it
+is worth thirty seconds, because it answers the incentive question before they
+ask it:
+
+> "Claiming does not spend anything. XP is a threshold, not a balance. The
+> moment it becomes a balance, every scenario turns into an obstacle in front
+> of a number, and that is the opposite of what this is for."
+
+The screen says on itself that no retailer has agreed to any of it.
 
 ## Moment 3: information to action, 45 seconds
 
