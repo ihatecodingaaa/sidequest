@@ -86,9 +86,16 @@ identical experiences and is a peer of the map, not a fallback. Say so:
 > learning is never behind the dexterity."
 
 Then **turn the phone sideways.** Do not explain it first. Let them see the
-camera widen and the pad slide to the left edge, then say it:
+world take the whole screen and the controls slide to the corners, then say it:
 
-> "Same world, same save, different hands."
+> "We built this for how people actually hold a phone. Portrait works with one
+> hand. Sideways, the world is the screen and the controls float on the edges."
+
+Keep walking while it is sideways. Nothing resets, nobody moves, and the
+character is exactly where you left them. That is worth one more sentence if a
+judge is technical:
+
+> "Rotating is not a reload. Same session, same position, same frame."
 
 Turn it back.
 

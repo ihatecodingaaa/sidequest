@@ -125,7 +125,13 @@ test.describe("movement", () => {
     await expect(page.getByTestId("streets-canvas")).toBeVisible();
 
     // Nobody is in range at spawn: the player has to go and find them.
-    await expect(page.getByRole("button", { name: /Nobody nearby/ })).toBeDisabled();
+    /*
+     * The interact control is small and quiet when there is nothing to press,
+     * and grows into the accent colour when something is in range. A large
+     * dead control saying "nobody nearby" spent the most valuable corner of
+     * the screen saying no, which real device feedback picked up on.
+     */
+    await expect(page.getByRole("button", { name: /Nothing in reach/ })).toBeDisabled();
     const startTile = await page.getByTestId("streets-canvas").getAttribute("data-player-tile");
 
     /*
@@ -274,6 +280,9 @@ test.describe("street checks", () => {
 
     await expect(page.getByText(/WRONG/i)).toHaveCount(0);
     await expect(page.getByText(/The first payment is often real/)).toBeVisible();
+    // Detail on request: the source is one tap away rather than four lines down.
+    await expect(page.getByText(/Singapore Police Force advisories/)).toHaveCount(0);
+    await page.getByRole("button", { name: /Why this/ }).click();
     await expect(page.getByText(/Singapore Police Force advisories/)).toBeVisible();
 
     // XP is for taking part, not for picking the approved answer.

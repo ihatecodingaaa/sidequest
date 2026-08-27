@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Check, Info, Lock, X } from "lucide-react";
 
 import { cn } from "@/lib/cn";
@@ -10,6 +10,7 @@ import { REWARDS } from "@/data/rewards";
 import { ProvenanceTag } from "@/components/ui/primitives";
 import { useAppStore } from "@/store/app-store";
 import { useProfile } from "@/hooks/use-profile";
+import { WorldSheet } from "@/features/streets/components/world-sheet";
 
 /**
  * The rewards counter, inside the kopitiam.
@@ -31,24 +32,17 @@ import { useProfile } from "@/hooks/use-profile";
  * So: no currency, no stock pressure, no timers, no bundles, no randomised
  * anything.
  */
-export function RewardsCounter({ onClose }: { onClose: () => void }) {
-  const panelRef = useRef<HTMLDivElement | null>(null);
+export function RewardsCounter({
+  onClose,
+  landscape,
+}: {
+  onClose: () => void;
+  landscape: boolean;
+}) {
   const { profile, ready } = useProfile();
   const claimReward = useAppStore((state) => state.claimReward);
   const [justClaimed, setJustClaimed] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    panelRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
 
   const xp = ready ? profile.xp : 0;
   const claimed = new Set((profile.rewardClaims ?? []).map((entry) => entry.rewardId));
@@ -64,22 +58,12 @@ export function RewardsCounter({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col justify-end bg-black/55 backdrop-blur-sm">
-      <button
-        type="button"
-        aria-label="Leave the counter"
-        onClick={onClose}
-        className="absolute inset-0 cursor-default"
-      />
-
-      <div
-        ref={panelRef}
-        tabIndex={-1}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Rewards counter"
-        className="relative max-h-[88dvh] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-ink-900 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
-      >
+    <WorldSheet
+      label="Rewards counter"
+      landscape={landscape}
+      onClose={onClose}
+      closeLabel="Leave the counter"
+    >
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold tracking-[0.1em] text-gold-400 uppercase">
@@ -205,7 +189,6 @@ export function RewardsCounter({ onClose }: { onClose: () => void }) {
         >
           Back to the block
         </button>
-      </div>
-    </div>
+    </WorldSheet>
   );
 }

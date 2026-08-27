@@ -8,14 +8,16 @@ stage.
 moving residents, the Community Safety Crew, Solo Preview and the rubric
 evidence set.
 
-**One known defect, carried forward as the next P0.** Landscape fails on a real
-iPhone: the world collapses to a strip across the top and the controls take
-most of the height. Reported from a real device on 27 August 2026 with
-screenshots. Emulated landscape at 844x390 renders correctly, which points at
-the orientation test rather than the landscape layout: the symptom is exactly
-what the portrait stacked layout looks like in a short viewport, so the likely
-cause is `useCompactLandscape` returning false on that device. **Root cause it
-before changing any CSS.**
+**The landscape defect is fixed, and it was not a layout problem.** Rotating
+the phone was destroying the canvas: the two orientations rendered different
+JSX trees, React reconciles children by position, so a rotation unmounted the
+whole subtree and mounted a fresh canvas while the engine went on drawing into
+the old detached one. The world was not thin, it was dead. Full write-up in
+`docs/LANDSCAPE_RECOVERY.md`.
+
+**The next action is real iPhone testing**, and rotation during play is the
+first thing to try. Everything here was measured in Chromium, which is what
+missed the bug in the first place.
 **Repository:** https://github.com/ihatecodingaaa/sidequest
 **Deployment:** not yet deployed to Vercel. CLI installed, not authenticated.
 
@@ -290,14 +292,14 @@ Campaign.
 
 Baseline before this stage, then after.
 
-| Check | Start | Campaigns | UX | Signature | Game feel | Delight | Streets | World | Prevention |
-| ----- | ----- | --------- | -- | --------- | --------- | ------- | ------- | ----- | ---------- |
-| `npm run lint` | clean | clean | clean | clean | clean | clean | clean | clean | clean |
-| `npm run typecheck` | clean | clean | clean | clean | clean | clean | clean | clean | clean |
-| `npm run test` | 65 | 129 | 129 | 143 | 143 | 143 | 143 | 143 | **161** |
-| `npx playwright test` | 79 (+1) | 135 (+1) | 149 (+7) | 177 (+7) | 207 (+7) | 239 (+7) | 273 (+7) | 295 (+7) | **329 (+7)** |
-| `npm run build` | passes | passes | passes | passes | passes | passes | passes | passes | passes |
-| client JS | ~1.3 MB | ~1.6 MB | 1559 KB | 1574 KB | 1611 KB | 1660 KB | 1733 KB | 1763 KB | **1809 KB** |
+| Check | Start | Campaigns | UX | Signature | Game feel | Delight | Streets | World | Prevention | Landscape |
+| ----- | ----- | --------- | -- | --------- | --------- | ------- | ------- | ----- | ---------- | --------- |
+| `npm run lint` | clean | clean | clean | clean | clean | clean | clean | clean | clean | clean |
+| `npm run typecheck` | clean | clean | clean | clean | clean | clean | clean | clean | clean | clean |
+| `npm run test` | 65 | 129 | 129 | 143 | 143 | 143 | 143 | 143 | 161 | **161** |
+| `npx playwright test` | 79 (+1) | 135 (+1) | 149 (+7) | 177 (+7) | 207 (+7) | 239 (+7) | 273 (+7) | 295 (+7) | 329 (+7) | **357 (+7)** |
+| `npm run build` | passes | passes | passes | passes | passes | passes | passes | passes | passes | passes |
+| client JS | ~1.3 MB | ~1.6 MB | 1559 KB | 1574 KB | 1611 KB | 1660 KB | 1733 KB | 1763 KB | 1809 KB | **1810 KB** |
 
 The world upgrade cost **30 KB** across the whole app: the renderer chunk grew
 from 8 KB to 17 KB and the world's UI chunk carries the minimap and the rewards

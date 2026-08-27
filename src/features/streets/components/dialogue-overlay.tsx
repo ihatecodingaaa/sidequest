@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Check, Monitor, StickyNote, X } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, Check, ChevronDown, Monitor, StickyNote, X } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import { CharacterPortrait } from "@/components/story/character-portrait";
@@ -9,6 +9,7 @@ import { EchoMascot } from "@/components/echo/echo-mascot";
 import { ExternalLink, ProvenanceTag } from "@/components/ui/primitives";
 import { getOfficialResource } from "@/lib/official-links";
 import { ThreadPanel } from "@/features/streets/components/thread-panel";
+import { WorldSheet } from "@/features/streets/components/world-sheet";
 import { STREET_CHECKS, type Npc } from "@/features/streets/streets-data";
 import type { StreetsBridge } from "@/features/streets/game/quest-bridge";
 import type { AwardResult } from "@/lib/xp";
@@ -32,6 +33,7 @@ export function DialogueOverlay({
   onClose,
   onOpenRewards,
   onOpenHub,
+  landscape,
 }: {
   npc: Npc;
   done: boolean;
@@ -41,8 +43,9 @@ export function DialogueOverlay({
   onOpenRewards: () => void;
   /** The Crew board, likewise. */
   onOpenHub: () => void;
+  /** Sideways, the sheet becomes a side panel and the world stays visible. */
+  landscape: boolean;
 }) {
-  const panelRef = useRef<HTMLDivElement | null>(null);
   const [beat, setBeat] = useState(0);
 
   const check = npc.action.kind === "check" ? STREET_CHECKS[npc.action.checkId] : undefined;
@@ -74,18 +77,7 @@ export function DialogueOverlay({
   /* Street Check state, kept local: the ledger lives in the store. */
   const [chosen, setChosen] = useState<string | null>(null);
   const [award, setAward] = useState<AwardResult | null>(null);
-
-  useEffect(() => {
-    panelRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  const [why, setWhy] = useState(false);
 
   const option = check && chosen ? check.options.find((entry) => entry.id === chosen) : undefined;
 
@@ -96,22 +88,12 @@ export function DialogueOverlay({
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col justify-end bg-black/55 backdrop-blur-sm">
-      <button
-        type="button"
-        aria-label="Close conversation"
-        onClick={onClose}
-        className="absolute inset-0 cursor-default"
-      />
-
-      <div
-        ref={panelRef}
-        tabIndex={-1}
-        role="dialog"
-        aria-modal="true"
-        aria-label={`Talking to ${npc.name}`}
-        className="relative max-h-[85dvh] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-ink-900 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
-      >
+    <WorldSheet
+      label={`Talking to ${npc.name}`}
+      landscape={landscape}
+      onClose={onClose}
+      closeLabel="Close conversation"
+    >
         <div className="flex items-start gap-3">
           {/* A screen or a board gets a glyph. Only people get faces. */}
           {isFixture ? (
@@ -216,11 +198,35 @@ export function DialogueOverlay({
                   <p className="mt-3 text-xs text-muted">Already counted. Replays add nothing.</p>
                 )}
 
-                {/* Provenance after the interaction, never interrupting it. */}
-                <p className="mt-4 text-xs leading-relaxed text-faint">
-                  <span className="font-bold text-mist">{check.source.label}.</span>{" "}
-                  {check.source.body}
-                </p>
+                {/*
+                  Detail on request.
+
+                  The contract for a quick street encounter is: play first, one
+                  takeaway, detail on request. Real screenshots showed this
+                  screen running to a character line, a paragraph, a callout,
+                  an XP chip, a source paragraph, a button and a mascot line,
+                  which is a lot of reading for something that took ten
+                  seconds. The source is one tap away rather than four lines
+                  down, and it is still always reachable.
+                */}
+                <button
+                  type="button"
+                  onClick={() => setWhy((open) => !open)}
+                  aria-expanded={why}
+                  className="sq-pressable mt-3 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-mist hover:text-chalk"
+                >
+                  Why this
+                  <ChevronDown
+                    aria-hidden
+                    className={cn("size-4 transition-transform", why && "rotate-180")}
+                  />
+                </button>
+                {why ? (
+                  <p className="mt-1 text-xs leading-relaxed text-faint">
+                    <span className="font-bold text-mist">{check.source.label}.</span>{" "}
+                    {check.source.body}
+                  </p>
+                ) : null}
 
                 <button
                   type="button"
@@ -333,7 +339,6 @@ export function DialogueOverlay({
             That one is behind you.
           </p>
         ) : null}
-      </div>
-    </div>
+    </WorldSheet>
   );
 }

@@ -1,27 +1,42 @@
 "use client";
 
-import { useCallback, useRef } from "react";
-import { DoorOpen } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
+import { DoorOpen, MessageSquare } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import type { Door, Npc } from "@/features/streets/streets-data";
 
 /**
- * Mobile movement and the interact control.
+ * Movement and the interact control.
  *
  * A thumb pad rather than a four-button cross: analogue input from one contact
  * point means no corner cases where two buttons are half pressed, and it lets
  * somebody drift diagonally without thinking about it. Movement here is for
  * exploring, so the control should be forgiving rather than precise.
  *
- * Every target is at least 44 CSS pixels.
+ * ---
  *
- * Two layouts, because one cannot serve both orientations. Held upright the
- * phone is a one-handed device and the controls belong under the world, where
- * they never cover it. Held sideways both thumbs are already at the outer
- * edges and the middle of the screen is where nothing should ever be placed,
- * so the pad and the button move out to the corners and the world fills the
- * screen behind them.
+ * ## Two layouts, and why controls got quieter
+ *
+ * Held upright the phone is a one-handed device and the controls belong under
+ * the world, where they never cover it. Held sideways both thumbs are already
+ * at the outer edges and the middle of the screen is where nothing should ever
+ * be placed, so the pad and the button move out to the corners and the world
+ * fills the screen behind them.
+ *
+ * Real device feedback said the controls dominated. Two changes came from it,
+ * and neither shrinks a touch target:
+ *
+ * - The pad's **visual** is lighter and slightly smaller. The contact area is
+ *   the whole circle either way, and a pad you can see through is a pad you
+ *   can see past.
+ * - The interact button is **small and quiet when there is nothing to press**,
+ *   and grows into the accent colour when something is in range. A large dead
+ *   control that says "nobody nearby" spends the most valuable corner of the
+ *   screen saying no.
+ *
+ * Safe area insets are respected on all four edges, which matters in landscape
+ * where a notch and a home indicator are on the sides a thumb reaches for.
  */
 export function TouchPad({
   near,
@@ -38,6 +53,8 @@ export function TouchPad({
 }) {
   const padRef = useRef<HTMLDivElement | null>(null);
   const activeId = useRef<number | null>(null);
+  /** Only for the thumb marker. Movement itself never waits on React. */
+  const [knob, setKnob] = useState<{ x: number; y: number } | null>(null);
 
   const apply = useCallback(
     (clientX: number, clientY: number) => {
@@ -54,31 +71,36 @@ export function TouchPad({
       const dist = Math.hypot(dx, dy);
       if (dist < radius * 0.18) {
         onMove(0, 0);
+        setKnob({ x: 0, y: 0 });
         return;
       }
       const scale = Math.min(1, dist / (radius * 0.8));
       onMove((dx / dist) * scale, (dy / dist) * scale);
+      const reach = Math.min(dist, radius * 0.62);
+      setKnob({ x: (dx / dist) * reach, y: (dy / dist) * reach });
     },
     [onMove],
   );
 
   const release = useCallback(() => {
     activeId.current = null;
+    setKnob(null);
     onMove(0, 0);
   }, [onMove]);
 
   const edges = layout === "edges";
-  /* A person beats a doorway, because the engine already hands over whichever
-     is nearer and a person in range means the player walked up to them. */
+  /* A person beats a doorway: the engine already hands over whichever is
+     nearer, and a person in range means the player walked up to them. */
   const target = near ? "npc" : door ? "door" : "none";
+  const idle = target === "none";
 
   return (
     <div
       className={cn(
-        "z-20 flex items-end justify-between",
+        "flex items-end justify-between gap-4",
         edges
-          ? "pointer-events-none absolute inset-x-0 bottom-0 gap-4 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
-          : "relative gap-4 px-5 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]",
+          ? "pointer-events-none px-[max(1rem,env(safe-area-inset-left))] pb-[max(0.75rem,env(safe-area-inset-bottom))] pr-[max(1rem,env(safe-area-inset-right))]"
+          : "px-5 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]",
       )}
     >
       <div
@@ -86,8 +108,9 @@ export function TouchPad({
         role="application"
         aria-label="Movement pad. Arrow keys and WASD also work."
         className={cn(
-          "relative touch-none rounded-full border border-white/15 bg-black/35 backdrop-blur",
-          edges ? "pointer-events-auto size-28" : "size-32",
+          "relative size-28 touch-none rounded-full border border-white/12 bg-black/25 backdrop-blur transition-colors",
+          edges && "pointer-events-auto",
+          knob && "border-white/25 bg-black/35",
         )}
         onPointerDown={(event) => {
           if (activeId.current !== null) return;
@@ -103,13 +126,15 @@ export function TouchPad({
         onPointerCancel={release}
         onLostPointerCapture={release}
       >
+        {/* The thumb marker follows the contact, so the pad reads as analogue. */}
         <span
           aria-hidden
-          className="absolute top-1/2 left-1/2 size-12 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/18"
+          className="pointer-events-none absolute top-1/2 left-1/2 size-11 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/15"
+          style={knob ? { transform: `translate(calc(-50% + ${knob.x}px), calc(-50% + ${knob.y}px))` } : undefined}
         />
         <span
           aria-hidden
-          className="absolute inset-x-0 top-2 text-center text-[0.6rem] font-bold text-white/45"
+          className="absolute inset-x-0 top-2 text-center text-[0.55rem] font-bold tracking-[0.1em] text-white/35"
         >
           MOVE
         </span>
@@ -118,15 +143,17 @@ export function TouchPad({
       <button
         type="button"
         onClick={onInteract}
-        disabled={target === "none"}
+        disabled={idle}
         className={cn(
-          "sq-pressable grid size-20 shrink-0 place-items-center rounded-full text-center text-sm font-extrabold transition-colors",
+          "sq-pressable grid shrink-0 place-items-center rounded-full text-center font-extrabold transition-all duration-200",
           edges && "pointer-events-auto",
-          target === "npc"
-            ? "bg-volt-500 text-ink-900 shadow-[0_10px_30px_-8px_rgba(182,242,74,0.8)]"
-            : target === "door"
-              ? "bg-gold-500 text-ink-900 shadow-[0_10px_30px_-8px_rgba(245,185,63,0.75)]"
-              : "cursor-not-allowed bg-black/35 text-white/35 backdrop-blur",
+          idle
+            ? "size-14 cursor-default border border-white/10 bg-black/25 text-white/30 backdrop-blur"
+            : "size-20 text-sm",
+          target === "npc" &&
+            "bg-volt-500 text-ink-900 shadow-[0_10px_30px_-8px_rgba(182,242,74,0.8)]",
+          target === "door" &&
+            "bg-gold-500 text-ink-900 shadow-[0_10px_30px_-8px_rgba(245,185,63,0.75)]",
         )}
       >
         {target === "npc" ? (
@@ -141,10 +168,10 @@ export function TouchPad({
             <span className="sr-only"> {door?.name}</span>
           </span>
         ) : (
-          <span className="text-[0.7rem] leading-tight font-semibold">
-            Nobody
-            <span className="block">nearby</span>
-          </span>
+          <>
+            <MessageSquare aria-hidden className="size-5" />
+            <span className="sr-only">Nothing in reach. Walk up to somebody or a door.</span>
+          </>
         )}
       </button>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Check, PenLine, Users, X } from "lucide-react";
 
 import { cn } from "@/lib/cn";
@@ -11,6 +11,7 @@ import { crewStanding } from "@/lib/crew-roles";
 import { ProvenanceTag } from "@/components/ui/primitives";
 import { useAppStore } from "@/store/app-store";
 import { useProfile } from "@/hooks/use-profile";
+import { WorldSheet } from "@/features/streets/components/world-sheet";
 import type { StreetsBridge } from "@/features/streets/game/quest-bridge";
 
 /**
@@ -28,39 +29,24 @@ import type { StreetsBridge } from "@/features/streets/game/quest-bridge";
 
 type Tab = "board" | "role" | "build";
 
-export function CrewHub({ bridge, onClose }: { bridge: StreetsBridge; onClose: () => void }) {
-  const panelRef = useRef<HTMLDivElement | null>(null);
+export function CrewHub({
+  bridge,
+  onClose,
+  landscape,
+}: {
+  bridge: StreetsBridge;
+  onClose: () => void;
+  landscape: boolean;
+}) {
   const [tab, setTab] = useState<Tab>("board");
 
-  useEffect(() => {
-    panelRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   return (
-    <div className="fixed inset-0 z-40 flex flex-col justify-end bg-black/55 backdrop-blur-sm">
-      <button
-        type="button"
-        aria-label="Leave the Crew board"
-        onClick={onClose}
-        className="absolute inset-0 cursor-default"
-      />
-
-      <div
-        ref={panelRef}
-        tabIndex={-1}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Community Safety Crew board"
-        className="relative max-h-[88dvh] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-ink-900 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
-      >
+    <WorldSheet
+      label="Community Safety Crew board"
+      landscape={landscape}
+      onClose={onClose}
+      closeLabel="Leave the Crew board"
+    >
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold tracking-[0.1em] text-volt-300 uppercase">
@@ -113,8 +99,7 @@ export function CrewHub({ bridge, onClose }: { bridge: StreetsBridge; onClose: (
         {tab === "board" ? <SignalBoard bridge={bridge} /> : null}
         {tab === "role" ? <RoleBoard bridge={bridge} /> : null}
         {tab === "build" ? <BuildBoard /> : null}
-      </div>
-    </div>
+    </WorldSheet>
   );
 }
 

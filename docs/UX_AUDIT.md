@@ -496,3 +496,38 @@ Recorded rather than built, per the no-feature-creep constraint:
 - Push notifications for Campaign follow-ups.
 - Per-crew custom challenges.
 - A shareable Campaign completion card.
+
+## Landscape, and what real hardware found
+
+Added 27 August 2026, after a real iPhone.
+
+Everything in this document before this section was found by reading screens.
+This entry was found by a person turning their phone, which no emulated
+screenshot in this project had ever done.
+
+**The finding:** rotating during play left the world blank. Two JSX trees
+differed by child position, React unmounted the canvas and mounted a new one,
+and the renderer went on drawing into the detached node. The reported symptom
+was "the world collapses into a thin strip", and the actual state was a dead
+canvas behind a working HUD.
+
+**The lesson worth keeping:** a layout that branches on a condition should
+change classes, not trees. Anything holding an imperative resource, a canvas,
+a video, a map, a chart, must sit at a stable position in the tree or it will
+be silently recreated under the thing that holds it.
+
+**Three smaller things came out of the same screenshots:**
+
+- The interact control was a large circle reading "Nobody nearby", spending
+  the most valuable corner of the screen saying no. It is now small and quiet
+  when there is nothing to press, and grows into the accent colour when
+  something is in range.
+- A conversation in landscape was a full width sheet across the world, which
+  turned Streets back into a dark app with a form in it after every
+  interaction. It is now a side panel, and the district stays visible beside
+  it.
+- The Street Check debrief ran to a character line, a paragraph, a callout, an
+  XP chip, a source paragraph, a button and a mascot line, for an encounter
+  that took ten seconds. The source moved behind a disclosure, on the same
+  contract the thread panel uses: **play first, one takeaway, detail on
+  request.**

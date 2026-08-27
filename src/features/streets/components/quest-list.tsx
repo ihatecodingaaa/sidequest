@@ -74,11 +74,14 @@ function groupsOf(npcs: Npc[]) {
 
 export function QuestList({
   bridge,
+  landscape,
   onClose,
   onWalkTo,
   onTalkTo,
 }: {
   bridge: StreetsBridge;
+  /** Sideways it becomes a column rather than a wall of full width rows. */
+  landscape: boolean;
   onClose: () => void;
   onWalkTo: (npc: Npc) => void;
   onTalkTo: (npc: Npc) => void;
@@ -89,7 +92,13 @@ export function QuestList({
   const groups = groupsOf(NPCS);
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-ink-900/96 backdrop-blur">
+    <div
+      className={cn(
+        "fixed inset-0 z-40 flex flex-col bg-ink-900/96 backdrop-blur",
+        // A 1180px wide list is a line length nobody wants to read.
+        landscape && "mx-auto max-w-[34rem] border-x border-white/10",
+      )}
+    >
       <div className="flex items-center gap-3 px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-3">
         <div className="min-w-0 flex-1">
           <h2 className="font-display text-xl font-extrabold tracking-tight text-chalk">

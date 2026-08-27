@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn";
 import { usePrefersReducedMotion } from "@/hooks/use-profile";
 import { useAppStore } from "@/store/app-store";
 import { useStreetsBridge } from "@/features/streets/game/quest-bridge";
-import { useCompactLandscape } from "@/features/streets/game/use-orientation";
+import { useStreetsLayout } from "@/features/streets/game/use-orientation";
 import { DialogueOverlay } from "@/features/streets/components/dialogue-overlay";
 import { Minimap } from "@/features/streets/components/minimap";
 import { CrewHub } from "@/features/streets/components/crew-hub";
@@ -43,7 +43,7 @@ import type { EngineOptions, WorldEngine } from "@/features/streets/game/world-e
  */
 export function StreetsClient() {
   const reduced = usePrefersReducedMotion();
-  const landscape = useCompactLandscape();
+  const { ref: rootRef, overlay: landscape, height: viewportHeight } = useStreetsLayout();
   const bridge = useStreetsBridge();
   /*
    * Destructured because the effects below depend on these two specifically,
@@ -290,13 +290,29 @@ export function StreetsClient() {
     );
   }
 
+  /*
+   * One tree, both orientations.
+   *
+   * The three children below are always the same three elements in the same
+   * order, and only their classes change. That is not tidiness, it is the
+   * whole fix: the previous version rendered a different JSX tree per
+   * orientation, React reconciles children by position, and rotating the phone
+   * therefore unmounted the canvas and mounted a fresh one. The engine kept
+   * its reference to the old, detached node and went on drawing into nothing.
+   *
+   * A rotation is not a navigation event and must never cost the player their
+   * position, the camera, or the frame.
+   *
+   * Stacking is stated explicitly rather than left to document order, because
+   * in overlay mode the world comes after the top bar in the DOM.
+   */
   const topBar = (
     <div
       className={cn(
-        "z-20 flex items-center gap-2",
+        "z-20 flex items-center gap-2 px-3",
         landscape
-          ? "pointer-events-none absolute inset-x-0 top-0 px-3 pt-[max(0.5rem,env(safe-area-inset-top))]"
-          : "relative px-3 pt-[max(0.6rem,env(safe-area-inset-top))] pb-2",
+          ? "pointer-events-none absolute inset-x-0 top-0 pt-[max(0.5rem,env(safe-area-inset-top))] pr-[max(0.75rem,env(safe-area-inset-right))] pl-[max(0.75rem,env(safe-area-inset-left))]"
+          : "relative pt-[max(0.6rem,env(safe-area-inset-top))] pb-2",
       )}
     >
       <Link
@@ -330,96 +346,94 @@ export function StreetsClient() {
     </div>
   );
 
-  const world = (
-    <>
-      <canvas
-        ref={canvasRef}
-        data-testid="streets-canvas"
-        aria-label="District 01. Use the quest list for a version without walking."
-        role="img"
-        className="absolute inset-0 size-full"
-      />
-
-      {!engineReady ? (
-        <p className="absolute inset-0 grid place-items-center text-sm text-chalk/70">
-          Loading the block...
-        </p>
-      ) : null}
-
-      {/*
-        Where you are, in words, opposite the minimap.
-        It sits over the world rather than in the top bar because on a 390px
-        phone the bar already carries four controls, and "Corner kopiti..." is
-        not a place name.
-      */}
-      {engineReady ? (
-        <p
-          className={cn(
-            "pointer-events-none absolute left-2 max-w-[52%] truncate rounded-full bg-black/45 px-3 py-1.5 text-sm font-semibold text-chalk backdrop-blur",
-            landscape ? "top-14" : "top-2",
-          )}
-        >
-          {place?.name ?? "District 01"}
-        </p>
-      ) : null}
-
-      {/*
-        The minimap is for the district. An eighteen by twelve room does not
-        need one, and drawing it anyway would be the debug-panel look this
-        deliberately avoids.
-      */}
-      {engineReady && placeId === DISTRICT_ID ? (
-        <Minimap
-          tile={tile}
-          npcs={NPCS.filter((npc) => !npc.mapId).map((npc) => ({ npc, done: isNpcDone(npc) }))}
-          signals={signals}
-          className={cn(
-            "absolute right-2",
-            landscape ? "top-14 w-24" : "top-2 w-28",
-          )}
-        />
-      ) : null}
-
-      {hint && engineReady ? (
-        <p className="pointer-events-none absolute inset-x-0 bottom-4 mx-auto w-fit rounded-full bg-black/55 px-4 py-2 text-sm font-semibold text-chalk backdrop-blur">
-          Move with the pad. Doors open.
-        </p>
-      ) : null}
-    </>
-  );
-
-  const controls = !busy ? (
-    <TouchPad
-      near={near}
-      door={doorway}
-      layout={landscape ? "edges" : "stacked"}
-      onMove={(x, y) => {
-        engineRef.current?.setInput(x, y);
-        if (x !== 0 || y !== 0) setHint(false);
-      }}
-      onInteract={interact}
-    />
-  ) : null;
-
   return (
     <div
-      className={cn("fixed inset-0 bg-[#1a2a1e]", landscape ? "block" : "flex flex-col")}
+      ref={rootRef}
+      className={cn("fixed inset-0 flex flex-col bg-[#1a2a1e]", landscape && "block")}
+      /*
+       * The height a person can actually see.
+       *
+       * `fixed inset-0` sizes to the layout viewport, which on iOS Safari is
+       * taller than the visible area, so anything anchored to the bottom ends
+       * up under the browser chrome. `100dvh` is the fallback for browsers
+       * with no visualViewport.
+       */
+      style={{ height: viewportHeight ? `${viewportHeight}px` : "100dvh" }}
       data-testid="streets-root"
       data-orientation={landscape ? "landscape" : "portrait"}
     >
-      {landscape ? (
-        <>
-          {world}
-          {topBar}
-          {controls}
-        </>
-      ) : (
-        <>
-          {topBar}
-          <div className="relative min-h-0 flex-1">{world}</div>
-          {controls}
-        </>
-      )}
+      {topBar}
+
+      <div
+        data-testid="streets-world"
+        className={cn(landscape ? "absolute inset-0 z-0" : "relative z-0 min-h-0 flex-1")}
+      >
+        <canvas
+          ref={canvasRef}
+          data-testid="streets-canvas"
+          aria-label="District 01. Use the quest list for a version without walking."
+          role="img"
+          className="absolute inset-0 size-full"
+        />
+
+        {!engineReady ? (
+          <p className="absolute inset-0 grid place-items-center text-sm text-chalk/70">
+            Loading the block...
+          </p>
+        ) : null}
+
+        {/*
+          Where you are, in words, opposite the minimap.
+          It sits over the world rather than in the top bar because on a 390px
+          phone the bar already carries three controls, and "Corner kopiti..."
+          is not a place name.
+        */}
+        {engineReady ? (
+          <p
+            className={cn(
+              "pointer-events-none absolute left-2 max-w-[52%] truncate rounded-full bg-black/45 px-3 py-1.5 text-sm font-semibold text-chalk backdrop-blur",
+              landscape ? "top-14" : "top-2",
+            )}
+          >
+            {place?.name ?? "District 01"}
+          </p>
+        ) : null}
+
+        {/*
+          The minimap is for the district. An eighteen by fourteen room does
+          not need one, and drawing it anyway would be the debug-panel look
+          this deliberately avoids.
+        */}
+        {engineReady && placeId === DISTRICT_ID ? (
+          <Minimap
+            tile={tile}
+            npcs={NPCS.filter((npc) => !npc.mapId).map((npc) => ({ npc, done: isNpcDone(npc) }))}
+            signals={signals}
+            className={cn("absolute right-2", landscape ? "top-14 w-24" : "top-2 w-28")}
+          />
+        ) : null}
+
+        {hint && engineReady ? (
+          <p className="pointer-events-none absolute inset-x-0 bottom-4 mx-auto w-fit rounded-full bg-black/55 px-4 py-2 text-sm font-semibold text-chalk backdrop-blur">
+            Move with the pad. Doors open.
+          </p>
+        ) : null}
+      </div>
+
+      <div className={cn("z-20", landscape ? "absolute inset-x-0 bottom-0" : "relative")}>
+        {!busy ? (
+          <TouchPad
+            near={near}
+            door={doorway}
+            layout={landscape ? "edges" : "stacked"}
+            onMove={(x, y) => {
+              engineRef.current?.setInput(x, y);
+              if (x !== 0 || y !== 0) setHint(false);
+            }}
+            onInteract={interact}
+          />
+        ) : null}
+      </div>
 
       {talkingTo ? (
         <DialogueOverlay
@@ -435,16 +449,22 @@ export function StreetsClient() {
             setTalkingTo(null);
             setHubOpen(true);
           }}
+          landscape={landscape}
         />
       ) : null}
 
-      {counterOpen ? <RewardsCounter onClose={() => setCounterOpen(false)} /> : null}
+      {counterOpen ? (
+        <RewardsCounter onClose={() => setCounterOpen(false)} landscape={landscape} />
+      ) : null}
 
-      {hubOpen ? <CrewHub bridge={bridge} onClose={() => setHubOpen(false)} /> : null}
+      {hubOpen ? (
+        <CrewHub bridge={bridge} onClose={() => setHubOpen(false)} landscape={landscape} />
+      ) : null}
 
       {listOpen ? (
         <QuestList
           bridge={bridge}
+          landscape={landscape}
           onClose={() => setListOpen(false)}
           onWalkTo={walkTo}
           onTalkTo={(npc) => {
