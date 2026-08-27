@@ -299,9 +299,8 @@ export function RewindPlayer({
         progress={progressFor()}
         exitHref={exitHref}
         footer={
-          <Button size="lg" full onClick={() => setPhase("debrief")}>
-            What this trains
-            <ArrowRight aria-hidden className="size-4" />
+          <Button variant="volt" size="lg" full onClick={finish}>
+            Finish mission
           </Button>
         }
       >
@@ -328,6 +327,27 @@ export function RewindPlayer({
           />
 
           <WhatChanged factorIds={second.protectiveFactorIds} />
+
+          {/*
+            One optional disclosure instead of a second screen.
+            
+            The player has now seen the consequence, seen both runs side by
+            side, and read what changed. A further full screen headed "What
+            REWIND is actually training" taught the same thing a third time,
+            which is where a game stops being a game. The behavioural rigour is
+            not removed, it is one tap away for whoever wants it.
+          */}
+          <WhyThisWorks>
+            <p>{scenario.debrief.mechanism}</p>
+            <ul className="mt-3 space-y-2">
+              {scenario.debrief.points.map((point) => (
+                <li key={point} className="flex gap-2.5">
+                  <span aria-hidden className="mt-1.5 size-1.5 shrink-0 rounded-full bg-coral-400" />
+                  <span>{point}</span>
+                </li>
+              ))}
+            </ul>
+          </WhyThisWorks>
         </div>
       </MissionShell>
     );
