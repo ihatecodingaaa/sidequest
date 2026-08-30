@@ -1,0 +1,346 @@
+{
+  "document": {
+    "title": "SIDEQUEST",
+    "subtitle": "Content and Experience Synopsis",
+    "meta": "Delta Challenge 2026, Track B: Crime Prevention",
+    "hero": "Crime prevention youths can practise, not only read about.",
+    "url": "https://sidequest-q81t.vercel.app",
+    "urlShort": "sidequest-q81t.vercel.app",
+    "languageRules": "No em dashes, no en dashes, no contractions. Professional Singapore English.",
+    "budgetNote": "Word budgets are ceilings, not targets. Where a page runs long the words are cut, never the type size or the images."
+  },
+
+  "pages": [
+    {
+      "n": 1,
+      "id": "cover",
+      "kind": "cover",
+      "budget": 45,
+      "title": "SIDEQUEST",
+      "subtitle": "Content and Experience Synopsis",
+      "meta": "Delta Challenge 2026, Track B: Crime Prevention",
+      "hero": "Crime prevention youths can practise, not only read about.",
+      "descriptor": "A playable neighbourhood where a young person meets the moment before the offence.",
+      "availability": "Functional prototype available",
+      "qrCaption": "Scan to open",
+      "image": "01-streets-hero-landscape.png",
+      "imageCaption": "District 01, live prototype"
+    },
+
+    {
+      "n": 2,
+      "id": "problem",
+      "kind": "problem",
+      "budget": 140,
+      "title": "The difficult moment happens before the offence.",
+      "lead": "Many youths already know that stealing, misusing an account or following a risky dare is wrong. The difficulty is deciding safely while it is happening and friends are watching.",
+      "figure": {
+        "value": "4,109",
+        "unit": "shop theft cases",
+        "caption": "Down approximately 3 per cent in 2025, from 4,237 cases in 2024."
+      },
+      "statements": [
+        "At 19.7 per cent of total physical crime cases, shop theft remained one of the top offences committed by youths arrested in 2025.",
+        "SPF credits its Shop Theft Awareness for Retailers programme, which had more than 1,100 outlets signed up as at 31 December 2025."
+      ],
+      "sourceLine": "Singapore Police Force, Annual Crime Brief 2025.",
+      "argument": "Retailer side prevention is working, measurably. The gap SIDEQUEST addresses is the youth side decision moment, which a retailer programme cannot reach.",
+      "comparison": {
+        "beforeLabel": "Passive",
+        "before": ["READ", "REMEMBER", "HOPE"],
+        "afterLabel": "Practised",
+        "after": ["EXPLORE", "ENCOUNTER", "DECIDE", "SEE CONSEQUENCE", "PRACTISE AGAIN"]
+      }
+    },
+
+    {
+      "n": 3,
+      "id": "world",
+      "kind": "world",
+      "budget": 110,
+      "title": "Crime prevention becomes somewhere you can explore.",
+      "body": [
+        "Participants enter a fictional Singapore inspired neighbourhood rather than opening a directory of lessons. District 01 has shopfronts, a void deck, a kopitiam, a court and a community post, and every building that opens is the front door of something a participant can actually do.",
+        "The world is the interaction layer. Mission state, XP, the Safety Passport and every safety rule stay deterministic underneath it, in the same product logic that runs without the world. Delete Streets and every point earned is still valid."
+      ],
+      "image": "02-streets-district-landscape.png",
+      "imageCaption": "District 01 in landscape, live prototype"
+    },
+
+    {
+      "n": 4,
+      "id": "alive",
+      "kind": "alive",
+      "budget": 130,
+      "title": "The block is alive, and nothing is gated behind walking.",
+      "features": [
+        {
+          "label": "Residents",
+          "text": "Nine residents walk authored routes. They carry no quest and no signal, and they are the only figures that move between places."
+        },
+        {
+          "label": "Interiors",
+          "text": "Four buildings open: the minimart, the kopitiam, the community post and the Crew room."
+        },
+        {
+          "label": "Minimap",
+          "text": "It answers what is out there and where you are, never what you should do."
+        },
+        {
+          "label": "Both orientations",
+          "text": "Turning the phone widens the view rather than resizing anybody."
+        }
+      ],
+      "loopLabel": "The world loop",
+      "loop": ["Explore", "Encounter", "Mission", "Consequence", "Return to the same place"],
+      "accessibility": "The Quest List is a peer of the map, not a fallback. Every destination is openable without walking, because a prevention product must never gate its learning behind dexterity.",
+      "images": [
+        { "file": "03-streets-portrait-minimap.png", "caption": "Portrait, one handed" },
+        { "file": "04-streets-quest-list-landscape.png", "caption": "The Quest List" }
+      ],
+      "imageAlternates": {
+        "landscapeSlot": ["04-streets-quest-list-landscape.png", "05-streets-interior-landscape.png"]
+      }
+    },
+
+    {
+      "n": 5,
+      "id": "mechanics",
+      "kind": "mechanics",
+      "budget": 150,
+      "title": "Four ways to practise prevention.",
+      "mechanics": [
+        {
+          "name": "REWIND",
+          "text": "Play the scene, reach an outcome, then return to the decision that produced it and take a different route. Both outcomes stay on screen."
+        },
+        {
+          "name": "Norm Mirror",
+          "text": "Predict what most people your age would do, then say what you would do. The gap between them is the misperception peer pressure runs on."
+        },
+        {
+          "name": "BREAKSAFE",
+          "text": "Prevention as engineering. Find what makes the honest action hard at a self checkout, then change it."
+        },
+        {
+          "name": "Crew Shift",
+          "text": "Two private rounds, one either side of a group discussion. The second round is both the after distribution and the crew decision."
+        }
+      ],
+      "crewShiftNote": "Crew Shift runs inside Chapter 4 of the ONE BAD MINUTE campaign, not as a standalone mode. Played alone it offers a Solo preview whose example answers are written down rather than simulated, labelled throughout, and counted for nothing.",
+      "noScores": "None of the four has a correct answer or awards a score.",
+      "imageCandidates": [
+        "07-rewind-affordance-portrait.png",
+        "08-norm-mirror-reveal-portrait.png",
+        "09-breaksafe-terminal-portrait.png"
+      ],
+      "imageCaptions": {
+        "07-rewind-affordance-portrait.png": "REWIND, at the return to the decision",
+        "08-norm-mirror-reveal-portrait.png": "Norm Mirror, predicted against prototype data",
+        "09-breaksafe-terminal-portrait.png": "BREAKSAFE, finding the design problems"
+      }
+    },
+
+    {
+      "n": 6,
+      "id": "threads",
+      "kind": "threads",
+      "budget": 150,
+      "title": "One situation can connect people, places and decisions.",
+      "threadName": "The favour",
+      "thread": "Devi is asked to lend her bank login to a friend, just for a week. Five steps across the void deck, the bus stop and the court: hear what she was asked, ask someone who refused first, ask an adult who knows what follows, then decide what to say. Every option carries an honest consequence and none costs XP.",
+      "signalsLabel": "Prevention Signals",
+      "signalsNote": "A Signal marks a situation, never a person. There is no risk field on anybody in this product.",
+      "channelsNote": "Colour is one of four channels. The silhouette is the one that survives a red-green colour vision deficiency, and the label travels into the Quest List.",
+      "guardrail": "No profiling, no vigilante gameplay, no confrontation.",
+      "image": "06-thread-devi-portrait.png",
+      "imageCaption": "The favour, step one"
+    },
+
+    {
+      "n": 7,
+      "id": "participation",
+      "kind": "participation",
+      "budget": 140,
+      "title": "Do not turn youths into police. Help them become capable peers.",
+      "roles": [
+        { "name": "Scout", "text": "Notices a situation early, while it is still small enough to change." },
+        { "name": "Ally", "text": "Stays with the person it is happening to, which is usually what they needed." },
+        { "name": "Connector", "text": "Brings in the adult, the staff member or the official channel." },
+        { "name": "Designer", "text": "Changes the place so the situation is less likely next time." },
+        { "name": "Creator", "text": "Makes the version of this that other young people will actually watch." }
+      ],
+      "rolesNote": "These are participation identities, not law enforcement ranks. A role is a view of a capability the profile already holds. Nothing is unlocked for it and a role cannot be lost.",
+      "crewNote": "The Community Safety Crew has roles and no powers. Nobody in it is police or pretending to be.",
+      "images": [
+        { "file": "11-crew-screen-portrait.png", "caption": "The Crew and its weekly challenge" },
+        { "file": "12-passport-portrait.png", "caption": "The Safety Passport" }
+      ]
+    },
+
+    {
+      "n": 8,
+      "id": "rewards",
+      "kind": "rewards",
+      "budget": 150,
+      "title": "Recognition, not currency.",
+      "points": [
+        {
+          "label": "XP",
+          "text": "XP is progression and identity, not a balance. It is awarded once per mission, claiming costs nothing, and nothing is ever deducted."
+        },
+        {
+          "label": "Rewards",
+          "text": "Partner rewards are bounded participation milestones. No reward scales with incident severity."
+        },
+        {
+          "label": "Proposed ceiling",
+          "text": "Up to S$10 per participant across the pilot, subject to confirmed in kind sponsorship."
+        }
+      ],
+      "partnerHonesty": "No merchant partnership is confirmed at submission. Any retailer shown in the prototype is illustrative, and the product states so on the screen where the claim is made.",
+      "guardrails": [
+        "Safe sits outside reward logic entirely.",
+        "No profiling, no individual risk scores, no public crime map.",
+        "No reward for reporting, photographing or identifying anybody.",
+        "Every prototype aggregate is labelled as prototype."
+      ],
+      "image": "13-rewards-counter-portrait.png",
+      "imageCaption": "The rewards counter, prototype concept"
+    },
+
+    {
+      "n": 9,
+      "id": "pilot",
+      "kind": "pilot",
+      "budget": 130,
+      "title": "Six months, one honest starting position.",
+      "startingPosition": "Participants to date: zero. Data collected: none. Organisations engaged: none. Everything below starts from there.",
+      "timeline": [
+        { "when": "Nov 2026", "what": "Co-design and partner preparation" },
+        { "when": "Dec 2026", "what": "Dry run, then Pilot Wave 1" },
+        { "when": "Jan to Feb 2027", "what": "Iteration, then Pilot Wave 2" },
+        { "when": "Mar 2027", "what": "Activation" },
+        { "when": "Apr 2027", "what": "Evaluation" }
+      ],
+      "target": "Target: approximately 150 secondary and post-secondary youths.",
+      "sessionsNote": "Sessions run a fortnight apart rather than in one sitting, because multiple sessions is one of the three moderators the serious games literature identifies, and a single session tests the wrong thing.",
+      "risk": "The largest scheduling risk is Crew Shift, which needs real groups of three or four. If it is not run with real groups, the pilot has tested the solo product and will say so."
+    },
+
+    {
+      "n": 10,
+      "id": "measurement",
+      "kind": "measurement",
+      "budget": 150,
+      "title": "Measure what SIDEQUEST can reasonably influence.",
+      "columns": ["Measure", "What it asks", "Expected"],
+      "measures": [
+        {
+          "measure": "Risk recognition",
+          "asks": "Names what is developing before it resolves. Facilitator scored.",
+          "expected": "Upward"
+        },
+        {
+          "measure": "Intervention confidence",
+          "asks": "Confidence in responding safely, across three scenarios.",
+          "expected": "Upward"
+        },
+        {
+          "measure": "Escalation route",
+          "asks": "Knows 999 and the emergency SMS route.",
+          "expected": "Clearest movement"
+        },
+        {
+          "measure": "Perceived peer norms",
+          "asks": "Distance between what I would do and what I think others would.",
+          "expected": "Gap narrows"
+        },
+        {
+          "measure": "Willingness to redirect",
+          "asks": "Said something to a friend about something risky.",
+          "expected": "Upward, weakly"
+        },
+        {
+          "measure": "Behavioural traces",
+          "asks": "Steps completed, replays with a different choice, return visits.",
+          "expected": "Rises across sessions"
+        }
+      ],
+      "privacy": "Every measure is anonymous and aggregate. No names of other people are collected, ever.",
+      "boundary": "The pilot measures proximal behavioural and learning outcomes. It does not claim that a small pilot directly reduces the crime rate in Singapore. Without a comparison group the evaluation is descriptive.",
+      "verbatim": "Not enough for a claim about effect.",
+      "verbatimSource": "docs/SIX_MONTH_PILOT_PLAN.md"
+    },
+
+    {
+      "n": 11,
+      "id": "scale",
+      "kind": "scale",
+      "budget": 130,
+      "title": "One engine, many rooms.",
+      "diagram": {
+        "engine": "SIDEQUEST ENGINE",
+        "packs": "SCENARIO PACKS",
+        "destinations": [
+          "Secondary school",
+          "Post-secondary",
+          "Youth space",
+          "Roadshow",
+          "Community activation"
+        ]
+      },
+      "body": "The mechanics do not change between settings. A pack is content: scenarios, threads and the age band they are written for. The architecture already carries two age bands, so proving a second pack is a month of writing rather than a rebuild.",
+      "hero": "Crime prevention youths can practise, not only read about.",
+      "qrCaption": "Scan to open the prototype",
+      "sources": [
+        "Singapore Police Force, Annual Crime Brief 2025.",
+        "Singapore Police Force youth advisory, ages 13 to 19.",
+        "Wouters et al. (2013), Journal of Educational Psychology 105(2).",
+        "All prototype figures are invented and labelled as such in the product."
+      ]
+    }
+  ],
+
+  "signals": {
+    "note": "Read from src/data/signals.ts and world-engine.ts drawSignal. Colours, labels and silhouettes are the product values, not values chosen for this document.",
+    "modes": [
+      {
+        "id": "connect",
+        "label": "CONNECT",
+        "means": "Somebody needs information, a trusted adult, or an official source.",
+        "colour": "#3d9be0",
+        "colourLight": "#7ec2f2",
+        "shape": "ring",
+        "shapeNote": "Open, and the only round one."
+      },
+      {
+        "id": "prevent",
+        "label": "PREVENT",
+        "means": "Nothing has gone wrong yet, and there is a way to make this safer.",
+        "colour": "#6fbf4a",
+        "colourLight": "#a6e07f",
+        "shape": "shield",
+        "shapeNote": "Point down, flat top, so it never reads as an alert."
+      },
+      {
+        "id": "redirect",
+        "label": "REDIRECT",
+        "means": "Pressure is building. It can still be interrupted.",
+        "colour": "#f5b93f",
+        "colourLight": "#ffd98a",
+        "shape": "chevron",
+        "shapeNote": "Turning aside. The only asymmetric one."
+      },
+      {
+        "id": "protect",
+        "label": "PROTECT",
+        "means": "Someone may not be safe. Distance, support, and get help.",
+        "colour": "#e0574a",
+        "colourLight": "#f59288",
+        "shape": "octagon",
+        "shapeNote": "Borrowed from stop signage, which everybody already reads."
+      }
+    ]
+  }
+}

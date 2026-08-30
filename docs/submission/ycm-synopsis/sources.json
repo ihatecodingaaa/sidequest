@@ -1,0 +1,106 @@
+{
+  "note": "Every external figure used in the YCM synopsis document. A figure that is not in this file may not appear in the PDF. Each entry records the publisher, the document, the URL and the date the figure was retrieved, so a reader can check it rather than trust it.",
+  "retrievedOn": "2026-08-30",
+  "sources": [
+    {
+      "id": "spf-acb-2025",
+      "publisher": "Singapore Police Force",
+      "title": "Annual Crime Brief 2025",
+      "url": "https://www.police.gov.sg/-/media/SPF/Media-Room/Statistics/Annual-Crime-Brief-2025/Annual-Crime-Brief-2025.pdf",
+      "retrievedOn": "2026-08-30",
+      "verifiedBy": "Project owner, externally, against the published brief.",
+      "figures": [
+        {
+          "id": "shop-theft-2025",
+          "claim": "Shop theft cases fell to 4,109 in 2025.",
+          "value": 4109,
+          "year": 2025
+        },
+        {
+          "id": "shop-theft-2024",
+          "claim": "Shop theft cases stood at 4,237 in 2024.",
+          "value": 4237,
+          "year": 2024
+        },
+        {
+          "id": "shop-theft-change",
+          "claim": "Shop theft fell by approximately 3 per cent year on year.",
+          "value": "-3%",
+          "derivedFrom": ["shop-theft-2025", "shop-theft-2024"],
+          "note": "4,109 against 4,237 is a fall of 128 cases, or 3.0 per cent."
+        },
+        {
+          "id": "shop-theft-share",
+          "claim": "Shop theft accounted for 19.7 per cent of total physical crime cases in 2025.",
+          "value": "19.7%",
+          "year": 2025,
+          "warning": "This is shop theft as a share of ALL physical crime. It is not a youth figure and must never be placed where it can be read as one."
+        },
+        {
+          "id": "physical-crime-2025",
+          "claim": "Total physical crime cases stood at 20,857 in 2025.",
+          "value": 20857,
+          "year": 2025
+        },
+        {
+          "id": "physical-crime-2024",
+          "claim": "Total physical crime cases stood at 19,969 in 2024.",
+          "value": 19969,
+          "year": 2024
+        },
+        {
+          "id": "physical-crime-change",
+          "claim": "Total physical crime rose by 4.4 per cent year on year.",
+          "value": "+4.4%",
+          "derivedFrom": ["physical-crime-2025", "physical-crime-2024"]
+        },
+        {
+          "id": "star-outlets",
+          "claim": "More than 1,100 retail outlets had signed up to the Shop Theft Awareness for Retailers (STAR) programme as at 31 December 2025.",
+          "value": "1,100+",
+          "asAt": "2025-12-31",
+          "note": "SPF attributes part of the fall in shop theft to this retailer-side programme."
+        },
+        {
+          "id": "youth-shop-theft",
+          "claim": "Shop theft remained one of the top offences committed by youths arrested in 2025.",
+          "value": "qualitative",
+          "year": 2025,
+          "warning": "Stated qualitatively because that is how the brief supports it. Do not attach a percentage to this claim."
+        }
+      ]
+    },
+    {
+      "id": "spf-youth-advisory",
+      "publisher": "Singapore Police Force",
+      "title": "Youth advisory, ages 13 to 19",
+      "url": "https://www.police.gov.sg/Advisories",
+      "retrievedOn": "2026-08-25",
+      "usedFor": "The factual spine of the Prevention Thread \"The favour\": never share login details or let others use your accounts.",
+      "figures": []
+    },
+    {
+      "id": "wouters-2013",
+      "publisher": "Journal of Educational Psychology",
+      "title": "Wouters et al. (2013), A meta-analysis of the cognitive and motivational effects of serious games, 105(2): 249-265",
+      "url": "https://psycnet.apa.org/record/2013-03370-001",
+      "retrievedOn": "2026-08-25",
+      "usedFor": "Learning effect d = 0.29, no motivational advantage over ordinary instruction, and the multiple-sessions and group-play moderators that Prevention Threads and Crew Shift are built on.",
+      "figures": []
+    },
+    {
+      "id": "pennycook-2020",
+      "publisher": "Management Science",
+      "title": "Pennycook et al. (2020), The implied truth effect",
+      "url": "https://pubsonline.informs.org/doi/10.1287/mnsc.2019.3478",
+      "retrievedOn": "2026-08-25",
+      "usedFor": "Why a provenance declaration must be exhaustive for a screen: warning a subset raises the perceived accuracy of whatever is left unwarned.",
+      "figures": []
+    }
+  ],
+  "prohibited": [
+    "No figure in this file may be presented as a SIDEQUEST pilot result. Nothing has been piloted and no participant data exists.",
+    "No entry in this file implies a partnership. SPF, NCPC and every retailer named in the prototype are sources or potential partners only.",
+    "The 19.7 per cent share figure may not be placed adjacent to a youth statistic block."
+  ]
+}

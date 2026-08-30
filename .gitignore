@@ -57,3 +57,10 @@ next-env.d.ts
 # Written and re-added by `next dev`. Not project content, and it carries
 # punctuation this project does not use.
 /AGENTS.md
+
+# Synopsis captures and page previews. Around 10 MB of PNG, regenerable with
+# capture.js and preview.js, and the provenance that matters is recorded in
+# assets/screenshots/manifest.json, which is committed. The finished PDF is
+# committed because it is the submission artefact.
+/docs/submission/ycm-synopsis/assets/screenshots/*.png
+/docs/submission/ycm-synopsis/assets/preview

@@ -1,0 +1,398 @@
+{
+  "generatedAt": "2026-08-30T10:21:55.474Z",
+  "commit": "68a83737bc7f20003a6d49966282a2048af1d291",
+  "source": "live",
+  "baseUrl": "https://sidequest-q81t.vercel.app",
+  "deviceScaleFactor": 3,
+  "tool": "playwright headless chromium",
+  "playwrightVersion": "1.62.1",
+  "note": "Every image in the synopsis PDF is listed here. Captures are headless browser screenshots: no browser chrome, no device frame, no photography, no retouching. Seeded state is recorded per image.",
+  "captures": [
+    {
+      "file": "01-streets-hero-landscape.png",
+      "what": "Streets, landscape, the block with residents and shopfronts. Cover hero.",
+      "route": "/streets",
+      "url": "https://sidequest-q81t.vercel.app/streets",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "deviceScaleFactor": 3,
+      "pixels": {
+        "width": 2532,
+        "height": 1170
+      },
+      "capturedAt": "2026-08-30T10:20:59.606Z",
+      "commit": "68a83737bc7f20003a6d49966282a2048af1d291",
+      "source": "live",
+      "seededState": {
+        "profile": {
+          "xp": 0,
+          "completedMissionIds": []
+        },
+        "place": {
+          "mapId": "district",
+          "x": 19,
+          "y": 7,
+          "facing": "down"
+        }
+      },
+      "method": "playwright headless chromium, no browser chrome present by construction"
+    },
+    {
+      "file": "02-streets-district-landscape.png",
+      "what": "Streets, landscape, the south of the district: court, park, community post.",
+      "route": "/streets",
+      "url": "https://sidequest-q81t.vercel.app/streets",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "deviceScaleFactor": 3,
+      "pixels": {
+        "width": 2532,
+        "height": 1170
+      },
+      "capturedAt": "2026-08-30T10:21:03.522Z",
+      "commit": "68a83737bc7f20003a6d49966282a2048af1d291",
+      "source": "live",
+      "seededState": {
+        "profile": {
+          "xp": 0,
+          "completedMissionIds": []
+        },
+        "place": {
+          "mapId": "district",
+          "x": 20,
+          "y": 15,
+          "facing": "down"
+        }
+      },
+      "method": "playwright headless chromium, no browser chrome present by construction"
+    },
+    {
+      "file": "03-streets-portrait-minimap.png",
+      "what": "Streets, portrait, one handed, minimap and touch pad visible.",
+      "route": "/streets",
+      "url": "https://sidequest-q81t.vercel.app/streets",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "deviceScaleFactor": 3,
+      "pixels": {
+        "width": 1170,
+        "height": 2532
+      },
+      "capturedAt": "2026-08-30T10:21:07.397Z",
+      "commit": "68a83737bc7f20003a6d49966282a2048af1d291",
+      "source": "live",
+      "seededState": {
+        "profile": {
+          "xp": 0,
+          "completedMissionIds": []
+        },
+        "place": {
+          "mapId": "district",
+          "x": 17,
+          "y": 10,
+          "facing": "down"
+        }
+      },
+      "method": "playwright headless chromium, no browser chrome present by construction"
+    },
+    {
+      "file": "04-streets-quest-list-landscape.png",
+      "what": "The Quest List: every Prevention Signal in words, and every destination openable without walking.",
+      "route": "/streets",
+      "url": "https://sidequest-q81t.vercel.app/streets",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "deviceScaleFactor": 3,
+      "pixels": {
+        "width": 2532,
+        "height": 1170
+      },
+      "capturedAt": "2026-08-30T10:21:12.697Z",
+      "commit": "68a83737bc7f20003a6d49966282a2048af1d291",
+      "source": "live",
+      "seededState": {
+        "profile": {
+          "xp": 0,
+          "completedMissionIds": []
+        },
+        "place": {
+          "mapId": "district",
+          "x": 20,
+          "y": 11,
+          "facing": "down"
+        }
+      },
+      "method": "playwright headless chromium, no browser chrome present by construction"
+    },
+    {
+      "file": "05-streets-interior-landscape.png",
+      "what": "Inside Sunrise Minimart. An interior a player can walk into.",
+      "route": "/streets",
+      "url": "https://sidequest-q81t.vercel.app/streets",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "deviceScaleFactor": 3,
+      "pixels": {
+        "width": 2532,
+        "height": 1170
+      },
+      "capturedAt": "2026-08-30T10:21:16.611Z",
+      "commit": "68a83737bc7f20003a6d49966282a2048af1d291",
+      "source": "live",
+      "seededState": {
+        "profile": {
+          "xp": 0,
+          "completedMissionIds": []
+        },
+        "place": {
+          "mapId": "minimart-in",
+          "x": 9,
+          "y": 14,
+          "facing": "right"
+        }
+      },
+      "method": "playwright headless chromium, no browser chrome present by construction"
+    },
+    {
+      "file": "06-thread-devi-portrait.png",
+      "what": "Prevention Thread 'The favour', first step: Devi in the world.",
+      "route": "/streets",
+      "url": "https://sidequest-q81t.vercel.app/streets",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "deviceScaleFactor": 3,
+      "pixels": {
+        "width": 1170,
+        "height": 2532
+      },
+      "capturedAt": "2026-08-30T10:21:23.148Z",
+      "commit": "68a83737bc7f20003a6d49966282a2048af1d291",
+      "source": "live",
+      "seededState": {
+        "profile": {
+          "xp": 0,
+          "completedMissionIds": []
+        },
+        "place": {
+          "mapId": "district",
+          "x": 14,
+          "y": 13,
+          "facing": "up"
+        }
+      },
+      "method": "playwright headless chromium, no browser chrome present by construction"
+    },
+    {
+      "file": "07-rewind-affordance-portrait.png",
+      "what": "REWIND, at the moment the rewind back to the decision is offered.",
+      "route": "/play/mission-rewind",
+      "url": "https://sidequest-q81t.vercel.app/play/mission-rewind",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "deviceScaleFactor": 3,
+      "pixels": {
+        "width": 1170,
+        "height": 2532
+      },
+      "capturedAt": "2026-08-30T10:21:31.605Z",
+      "commit": "68a83737bc7f20003a6d49966282a2048af1d291",
+      "source": "live",
+      "seededState": {
+        "profile": {
+          "xp": 0,
+          "completedMissionIds": []
+        },
+        "place": null
+      },
+      "method": "playwright headless chromium, no browser chrome present by construction"
+    },
+    {
+      "file": "08-norm-mirror-reveal-portrait.png",
+      "what": "Norm Mirror reveal: predicted against the prototype figure, labelled as prototype data.",
+      "route": "/play/mission-norm-mirror",
+      "url": "https://sidequest-q81t.vercel.app/play/mission-norm-mirror",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "deviceScaleFactor": 3,
+      "pixels": {
+        "width": 1170,
+        "height": 2532
+      },
+      "capturedAt": "2026-08-30T10:21:36.425Z",
+      "commit": "68a83737bc7f20003a6d49966282a2048af1d291",
+      "source": "live",
+      "seededState": {
+        "profile": {
+          "xp": 0,
+          "completedMissionIds": []
+        },
+        "place": null
+      },
+      "method": "playwright headless chromium, no browser chrome present by construction"
+    },
+    {
+      "file": "09-breaksafe-terminal-portrait.png",
+      "what": "BREAKSAFE: the self checkout, with the design problems still to be found.",
+      "route": "/play/mission-breaksafe",
+      "url": "https://sidequest-q81t.vercel.app/play/mission-breaksafe",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "deviceScaleFactor": 3,
+      "pixels": {
+        "width": 1170,
+        "height": 2532
+      },
+      "capturedAt": "2026-08-30T10:21:39.843Z",
+      "commit": "68a83737bc7f20003a6d49966282a2048af1d291",
+      "source": "live",
+      "seededState": {
+        "profile": {
+          "xp": 0,
+          "completedMissionIds": []
+        },
+        "place": null
+      },
+      "method": "playwright headless chromium, no browser chrome present by construction"
+    },
+    {
+      "file": "10-crew-shift-setup-portrait.png",
+      "what": "Crew Shift setup inside Chapter 4 of ONE BAD MINUTE, showing Solo preview labelled.",
+      "route": "/campaigns/one-bad-minute/chapter/crew-shift",
+      "url": "https://sidequest-q81t.vercel.app/campaigns/one-bad-minute/chapter/crew-shift",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "deviceScaleFactor": 3,
+      "pixels": {
+        "width": 1170,
+        "height": 2532
+      },
+      "capturedAt": "2026-08-30T10:21:43.694Z",
+      "commit": "68a83737bc7f20003a6d49966282a2048af1d291",
+      "source": "live",
+      "seededState": {
+        "profile": {
+          "xp": 0,
+          "completedMissionIds": []
+        },
+        "place": null
+      },
+      "method": "playwright headless chromium, no browser chrome present by construction"
+    },
+    {
+      "file": "11-crew-screen-portrait.png",
+      "what": "The Community Safety Crew screen with the weekly crew challenge.",
+      "route": "/crew",
+      "url": "https://sidequest-q81t.vercel.app/crew",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "deviceScaleFactor": 3,
+      "pixels": {
+        "width": 1170,
+        "height": 2532
+      },
+      "capturedAt": "2026-08-30T10:21:45.977Z",
+      "commit": "68a83737bc7f20003a6d49966282a2048af1d291",
+      "source": "live",
+      "seededState": {
+        "profile": {
+          "xp": 480,
+          "completedMissionIds": [
+            "mission-rewind",
+            "mission-norm-mirror",
+            "mission-otp"
+          ]
+        },
+        "place": null
+      },
+      "method": "playwright headless chromium, no browser chrome present by construction"
+    },
+    {
+      "file": "12-passport-portrait.png",
+      "what": "You: Echo, level and the Safety Passport.",
+      "route": "/you",
+      "url": "https://sidequest-q81t.vercel.app/you",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "deviceScaleFactor": 3,
+      "pixels": {
+        "width": 1170,
+        "height": 2532
+      },
+      "capturedAt": "2026-08-30T10:21:48.734Z",
+      "commit": "68a83737bc7f20003a6d49966282a2048af1d291",
+      "source": "live",
+      "seededState": {
+        "profile": {
+          "xp": 480,
+          "completedMissionIds": [
+            "mission-rewind",
+            "mission-norm-mirror",
+            "mission-otp"
+          ]
+        },
+        "place": null
+      },
+      "method": "playwright headless chromium, no browser chrome present by construction"
+    },
+    {
+      "file": "13-rewards-counter-portrait.png",
+      "what": "The rewards counter inside the kopitiam: the reward ladder, what is claimable at this XP, and the declaration that no retailer has agreed to any of it.",
+      "route": "/streets",
+      "url": "https://sidequest-q81t.vercel.app/streets",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "deviceScaleFactor": 3,
+      "pixels": {
+        "width": 1170,
+        "height": 2532
+      },
+      "capturedAt": "2026-08-30T10:21:55.402Z",
+      "commit": "68a83737bc7f20003a6d49966282a2048af1d291",
+      "source": "live",
+      "seededState": {
+        "profile": {
+          "xp": 480,
+          "completedMissionIds": [
+            "mission-rewind",
+            "mission-norm-mirror",
+            "mission-otp"
+          ]
+        },
+        "place": {
+          "mapId": "kopitiam-in",
+          "x": 4,
+          "y": 3,
+          "facing": "up"
+        }
+      },
+      "method": "playwright headless chromium, no browser chrome present by construction"
+    }
+  ],
+  "rejections": []
+}
