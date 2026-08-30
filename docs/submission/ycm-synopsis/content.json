@@ -60,11 +60,11 @@
       "budget": 110,
       "title": "Crime prevention becomes somewhere you can explore.",
       "body": [
-        "Participants enter a fictional Singapore inspired neighbourhood rather than opening a directory of lessons. District 01 has shopfronts, a void deck, a kopitiam, a court and a community post, and every building that opens is the front door of something a participant can actually do.",
-        "The world is the interaction layer. Mission state, XP, the Safety Passport and every safety rule stay deterministic underneath it, in the same product logic that runs without the world. Delete Streets and every point earned is still valid."
+        "Participants enter a fictional Singapore inspired neighbourhood rather than a directory of lessons. District 01 has shopfronts, a void deck, a kopitiam, a court and a community post, and every door that opens leads somewhere a participant can act.",
+        "The world is the interaction layer. Mission state, XP and the Safety Passport stay deterministic underneath it, in the product logic that runs without the world. Delete Streets and every point earned is still valid."
       ],
       "image": "02-streets-district-landscape.png",
-      "imageCaption": "District 01 in landscape, live prototype"
+      "imageCaption": "District 01, live prototype"
     },
 
     {

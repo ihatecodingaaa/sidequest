@@ -3,6 +3,11 @@
 What SIDEQUEST would actually do in six months, with a small team and no
 budget assumptions that have not been checked.
 
+Dates and the participant target match the submitted Delta Challenge 2026
+application and `docs/submission/SIDEQUEST_Content_and_Experience_Synopsis.pdf`.
+Where this plan and the filing disagree, the filing is what was submitted and
+this document is wrong.
+
 Deliberately unambitious about reach and deliberately specific about content,
 because the product's weakness is not that it needs more users. It is that no
 young person in Singapore has written a word of the content yet.
@@ -24,7 +29,7 @@ from that position is not a plan.
 
 ---
 
-## Month 1: co-design, and finding out what is wrong
+## Month 1, November 2026: co-design, and finding out what is wrong
 
 **The goal is to break the content, not to validate it.**
 
@@ -45,7 +50,7 @@ informal group rather than through an institution, and say so in the write-up.
 
 ---
 
-## Month 2: rewrite, and prepare the people who will run it
+## Month 2, November to December 2026: rewrite, and prepare the people who will run it
 
 - Rewrite the shipped content against Month 1. Expect to lose material.
 - Turn the best three youth drafts into playable threads, credited to their
@@ -62,9 +67,10 @@ threads.
 
 ---
 
-## Month 3: first activation
+## Month 3, December 2026: dry run, then Pilot Wave 1
 
-- One school or community group. **One.** 25 to 40 participants.
+- A dry run with staff first, then Pilot Wave 1 with one or two school or
+  community groups. 50 to 60 participants.
 - Two sessions a fortnight apart, because multiple sessions is one of the three
   moderators in the serious games literature and a single session tests the
   wrong thing.
@@ -79,7 +85,7 @@ expensive one in Month 5, which is why it is here.
 
 ---
 
-## Month 4: iterate, and build the second pack
+## Month 4, January 2027: iterate, and build the second pack
 
 - Fix what session feedback exposed.
 - Build the **secondary-band pack**: the same mechanisms, written for a younger
@@ -94,21 +100,28 @@ actually works in retail.
 
 ---
 
-## Month 5: expanded pilot
+## Month 5, February 2027: Pilot Wave 2
 
-- Two more groups, ideally one secondary and one post-secondary, so the age
-  adaptation is tested rather than described.
+- Pilot Wave 2: two more groups, ideally one secondary and one
+  post-secondary, so the age adaptation is tested rather than described. 60 to
+  70 participants.
 - Same instruments, so the numbers are comparable.
-- Total across the pilot: roughly 80 to 120 participants. Enough for a
-  description. **Not** enough for a claim about effect.
+- Total across the pilot: approximately **150** secondary and post-secondary
+  youths, which is the target in the submitted application. Wave 1, Wave 2 and
+  the March activation together. Enough for a description. **Not** enough for a
+  claim about effect.
 
 **Deliverable:** comparable data from three cohorts across two age bands.
 
 ---
 
-## Month 6: evaluation and handover
+## Month 6, March to April 2027: activation, evaluation and handover
 
-- Analyse against the plan, including the measures that did not move.
+- **March 2027: activation.** A roadshow or community session that reaches
+  the remainder of the cohort and puts the content in front of people who did
+  not sit a full pilot session.
+- **April 2027: evaluation.** Analyse against the plan, including the measures
+  that did not move.
 - Write the limitations section first, so the rest is written under it.
 - Hand over: content pack format, facilitator materials, the youth authoring
   route, and a documented list of everything that broke.

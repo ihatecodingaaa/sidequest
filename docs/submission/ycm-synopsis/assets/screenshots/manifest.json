@@ -394,5 +394,36 @@
       "method": "playwright headless chromium, no browser chrome present by construction"
     }
   ],
-  "rejections": []
+  "rejections": [],
+  "derived": [
+    {
+      "file": "02b-streets-district-band.png",
+      "derivedFrom": "02-streets-district-landscape.png",
+      "operation": "crop",
+      "region": {
+        "left": 0,
+        "top": 0,
+        "width": 2532,
+        "height": 974
+      },
+      "why": "Trimmed 196px from the bottom to reach 2.60:1 for the page 3 full bleed band. Removes the first run hint and the chat button. Nothing is added, moved or retouched.",
+      "pixels": {
+        "width": 2532,
+        "height": 974
+      },
+      "aspect": 2.6,
+      "route": "/streets",
+      "url": "https://sidequest-q81t.vercel.app/streets",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "deviceScaleFactor": 3,
+      "capturedAt": "2026-08-30T10:21:03.522Z",
+      "croppedAt": "2026-08-30T11:06:35.240Z",
+      "commit": "fa781015a65125398bb72e58ea46e91d6d236ec1",
+      "source": "live",
+      "method": "sharp extract, from the original capture. No CSS clipping anywhere."
+    }
+  ]
 }

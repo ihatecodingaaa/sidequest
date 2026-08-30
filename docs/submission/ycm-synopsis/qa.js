@@ -152,8 +152,54 @@ async function checkLayout() {
       }
     });
 
+    /* --- Safe area, 14mm inside all four edges ------------------------ */
+    const safe = [];
+    const exempt = [];
+    pages.forEach((pageEl, pageIndex) => {
+      const pr = pageEl.getBoundingClientRect();
+      const mmToPx = pr.width / 297;
+      const margin = 14 * mmToPx;
+      pageEl.querySelectorAll("[data-block]").forEach((el) => {
+        const bleed = el.getAttribute("data-bleed");
+        const r = el.getBoundingClientRect();
+        /*
+         * Measure the content box, not the border box.
+         *
+         * The rule is about where ink lands. A full width container whose own
+         * padding insets its text by 17mm keeps nothing near the edge, and
+         * failing it for the width of its background would be measuring the
+         * wrong thing. Padding is subtracted so the number is the distance from
+         * the page edge to the nearest thing a reader can see.
+         */
+        const cs = getComputedStyle(el);
+        const pad = (v) => parseFloat(cs[v]) || 0;
+        const worst = Math.min(
+          r.top - pr.top + pad("paddingTop"),
+          pr.right - r.right + pad("paddingRight"),
+          pr.bottom - r.bottom + pad("paddingBottom"),
+          r.left - pr.left + pad("paddingLeft"),
+        );
+        if (bleed) {
+          exempt.push({
+            page: pageIndex + 1,
+            name: bleed,
+            worstMm: Number((worst / mmToPx).toFixed(1)),
+          });
+          return;
+        }
+        if (worst < margin - 0.5) {
+          safe.push({
+            page: pageIndex + 1,
+            block: el.getAttribute("data-block"),
+            worstMm: Number((worst / mmToPx).toFixed(1)),
+            text: (el.textContent || "").replace(/[\s]+/g, " ").trim().slice(0, 60),
+          });
+        }
+      });
+    });
+
     const blockCount = document.querySelectorAll("[data-block]").length;
-    return { overflow, overlap, pages: pages.length, blockCount };
+    return { overflow, overlap, safe, exempt, pages: pages.length, blockCount };
   });
 
   await browser.close();
@@ -185,6 +231,28 @@ async function checkLayout() {
     fail("overlap", `${result.overlap.length} colliding block pair(s)`);
   } else {
     console.log("    PASS, no block intersects another");
+  }
+
+  /*
+   * Safe area. Two blocks are exempt and both are named, because both are
+   * deliberate full bleed hero bands. The rule itself is not relaxed: anything
+   * without a `data-bleed` attribute still has to sit 14mm inside every edge,
+   * so a third bleeding block would fail here rather than pass quietly.
+   */
+  console.log(`\n[5] SAFE AREA, 14mm inside all four page edges`);
+  result.exempt.forEach((e) =>
+    console.log(`    exempt  p${e.page} ${e.name}, reaches ${e.worstMm}mm from an edge`),
+  );
+  if (result.safe.length) {
+    result.safe.forEach((v) =>
+      console.log(
+        `    FAIL p${v.page} ${v.block} only ${v.worstMm}mm from an edge
+         "${v.text}"`,
+      ),
+    );
+    fail("safe-area", `${result.safe.length} block(s) inside the 14mm margin`);
+  } else {
+    console.log("    PASS, every other block clears 14mm");
   }
 }
 
@@ -257,14 +325,19 @@ function reportManifest() {
   console.log("\n[report] PROVENANCE, not a build gate");
   const dir = path.join(HERE, "assets", "screenshots");
   const manifest = JSON.parse(fs.readFileSync(path.join(dir, "manifest.json"), "utf8"));
-  const listed = new Set(manifest.captures.map((c) => c.file));
+  const listed = new Set(
+    [...manifest.captures, ...(manifest.derived ?? [])].map((c) => c.file),
+  );
 
   const html = fs.readFileSync(HTML, "utf8");
   const used = [...html.matchAll(/assets\/screenshots\/([^"]+)/g)].map((m) => m[1]);
   const unique = [...new Set(used)];
 
   const missing = unique.filter((f) => !listed.has(f));
-  console.log(`    ${unique.length} distinct screenshots placed, ${listed.size} in the manifest`);
+  console.log(
+    `    ${unique.length} distinct screenshots placed, ${manifest.captures.length} captured` +
+      `${manifest.derived?.length ? `, ${manifest.derived.length} derived by deliberate crop` : ""}`,
+  );
   console.log(`    commit ${manifest.commit}, source ${manifest.source}, scale ${manifest.deviceScaleFactor}x`);
   if (missing.length) {
     console.log(`    WARNING, no manifest entry: ${missing.join(", ")}`);

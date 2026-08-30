@@ -55,7 +55,9 @@ const content = JSON.parse(fs.readFileSync(path.join(HERE, "content.json"), "utf
 const manifest = JSON.parse(
   fs.readFileSync(path.join(HERE, "assets", "screenshots", "manifest.json"), "utf8"),
 );
-const DIMS = Object.fromEntries(manifest.captures.map((c) => [c.file, c.pixels]));
+const DIMS = Object.fromEntries(
+  [...manifest.captures, ...(manifest.derived ?? [])].map((c) => [c.file, c.pixels]),
+);
 const page = (id) => content.pages.find((p) => p.id === id);
 
 /* ------------------------------------------------------- Layout decisions */
@@ -182,6 +184,7 @@ function coverPage() {
       ${block(
         "cover-band",
         `<span class="shot" style="aspect-ratio:${d.width}/${d.height}"><img src="${SHOTS}/${p.image}" alt=""></span>`,
+        'data-bleed="cover-band"',
       )}
       ${block(
         "cover-bottom",
@@ -253,22 +256,43 @@ function problemPage() {
   </section>`;
 }
 
+/*
+ * Page 3 runs its capture full bleed, edge to edge, as the band across the top.
+ *
+ * The band is the cropped 2.60 to 1 frame from crop.js, not the 2.16 to 1
+ * original. At full width the original would be 137.2mm tall and leave about
+ * 44mm for an eyebrow, a two line title, a caption, two paragraphs and the
+ * footer, which does not fit. The alternatives were shrinking the body below
+ * 10.5pt or pushing the footer into the bottom margin, and neither is allowed.
+ * Cropping the picture is the move that costs least.
+ *
+ * The band is the only element on this page outside the 14mm safe area, and it
+ * is named in the safe area whitelist in qa.js rather than exempted by a
+ * relaxed rule.
+ */
 function worldPage() {
   const p = page("world");
-  return `<section class="page">
+  const file = "02b-streets-district-band.png";
+  const d = DIMS[file];
+  return `<section class="page bleed">
     <div class="page-inner">
       ${block(
-        "",
-        `<p class="eyebrow">SIDEQUEST Streets</p><h2 class="page-title">${esc(p.title)}</h2>`,
+        "world-band",
+        `<span class="shot" style="aspect-ratio:${d.width}/${d.height}"><img src="${SHOTS}/${file}" alt=""></span>`,
+        'data-bleed="page-3-band"',
       )}
-      ${block(
-        "world-grid",
-        `${shot(p.image, p.imageCaption)}
-         <div class="world-body">
-           ${p.body.map((t) => `<p class="body">${esc(t)}</p>`).join("")}
-         </div>`,
-      )}
-      ${foot(3, "Streets, the world")}
+      <div class="world-below">
+        ${block(
+          "world-head",
+          `<p class="eyebrow">SIDEQUEST Streets &#183; ${esc(p.imageCaption)}</p>
+           <h2 class="page-title">${esc(p.title)}</h2>`,
+        )}
+        ${block(
+          "world-body",
+          p.body.map((t) => `<p class="body">${esc(t)}</p>`).join(""),
+        )}
+        ${foot(3, "Streets, the world")}
+      </div>
     </div>
   </section>`;
 }

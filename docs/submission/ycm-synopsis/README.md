@@ -22,11 +22,16 @@ date. A figure that is not in that file may not appear in the document.
 
 ```bash
 node docs/submission/ycm-synopsis/capture.js     # screenshots, writes manifest.json
+node docs/submission/ycm-synopsis/crop.js        # deliberate crops, adds manifest.derived
 node docs/submission/ycm-synopsis/wordcount.js   # word budgets and language rules
 node docs/submission/ycm-synopsis/generate.js    # index.html, then the PDF
-node docs/submission/ycm-synopsis/qa.js          # four checks, exits non-zero on failure
+node docs/submission/ycm-synopsis/qa.js          # five checks, exits non-zero on failure
 node docs/submission/ycm-synopsis/preview.js     # PDF pages back to PNG for review
+node docs/submission/ycm-synopsis/bleedcheck.js  # bleed bands reach the paper edge
 ```
+
+`crop.js` must run after `capture.js`, which rewrites `manifest.json` from
+scratch. `bleedcheck.js` must run after `preview.js`, which is what it reads.
 
 `capture.js --local` points at `http://127.0.0.1:3100` instead of the live
 deployment. `generate.js --explicit` passes an explicit page width and height to
@@ -41,9 +46,11 @@ deployment. `generate.js --explicit` passes an explicit page width and height to
 | `styles.css` | Print stylesheet. A4 landscape geometry, type scale, page layouts. |
 | `generate.js` | Builds `index.html` from `content.json`, then renders the PDF. Chooses which capture lands in which slot. |
 | `capture.js` | Playwright screenshot capture. Writes `manifest.json`. |
+| `crop.js` | Deliberate crops from the originals, recorded in `manifest.derived`. |
 | `wordcount.js` | Word budget and language check. Run before layout. |
-| `qa.js` | The four build gates. |
+| `qa.js` | The five build gates. |
 | `preview.js` | Rasterises the finished PDF with pdf.js for visual review. |
+| `bleedcheck.js` | Samples the rasterised pages to confirm each bleed band reaches both paper edges. |
 | `index.html` | Generated. Do not edit by hand: `generate.js` overwrites it. |
 
 ## QA, and why each check exists
@@ -63,6 +70,19 @@ not at one that is merely conceivable.
 4. **Language**, over `pdftotext` output plus the HTML, CSS and `content.json`
    source. No U+2014, no U+2013, no contractions, no shorthand. Apostrophes are
    reported for review rather than failed, because possessives are legitimate.
+5. **Safe area**, every `[data-block]` at least 14 mm inside all four page
+   edges, measured on the content box rather than the border box so that a full
+   width container whose own padding insets its text is not failed for the width
+   of its background. Two blocks are exempt and both are named in the output:
+   `cover-band` on page 1 and `page-3-band` on page 3. The rule is not relaxed.
+   Exemption requires a `data-bleed` attribute, so a third bleeding block fails.
+
+`bleedcheck.js` runs outside the suite and confirms from the rasterised pages
+that each named bleed band actually reaches the paper. It found both bands
+stopping 0.18 mm short on the left and 0.35 mm short on the right: sub pixel
+rounding between the frame box and a contained image. Bands now size by width
+with the height left to follow, so there is no box for the picture to be centred
+in and nothing to round.
 
 Page count, file size and manifest coverage are reported alongside. Manifest
 coverage is a report, not a gate.
@@ -81,7 +101,10 @@ width and height path. The check allows 0.5 pt.
   attribute. Nothing is absolutely positioned over flowing content.
 - No fixed height on anything containing text. Cards size to their content.
 - Images are `object-fit: contain` and each frame carries its capture's own
-  aspect ratio, so nothing is stretched and nothing is cropped by CSS.
+  aspect ratio, so nothing is stretched and nothing is cropped by CSS. Full
+  bleed bands are the exception: they size by width with the height left to
+  follow, which is what removes the sub pixel gap at the paper edge. Where a
+  crop is genuinely needed it is a real file made by `crop.js`, never CSS.
 - Body copy never goes below 10.5 pt. When a page will not fit, the words are
   cut in `content.json`, never the type size and never the images.
 - `::-webkit-scrollbar` is zeroed. Chromium reserves a 15 CSS pixel scrollbar
@@ -113,14 +136,20 @@ the frame. Containing the image in that column instead leaves about 150 mm of
 empty page. The band resolves it in favour of the picture: the hero runs 297 mm
 rather than 178 mm, and the whole street is visible with nothing cropped.
 
-**The page 3 landscape capture occupies 36 per cent of the content area, not the
-60 per cent the brief asked for.** It renders at 192.4 mm by 88.9 mm, which is
-50 per cent of the area actually available between the title and the footer. Sixty
-per cent of the full content area is not reachable: a 2.16 to 1 image spanning
-the full 263 mm text width is 121.5 mm tall, and with a two line title, a caption
-and two paragraphs of body the page has about 130 mm of vertical room in total.
-The theoretical ceiling, with no body copy at all, is 67 per cent. The image is
-still the dominant element on the page.
+**Page 3 crops its capture to 2.60 to 1 rather than running the original 2.16 to
+1 frame.** The page runs the district capture full bleed across all 297 mm. At
+the original ratio that band is 137.2 mm tall and leaves about 44 mm for an
+eyebrow, a two line title, a caption, two paragraphs and the footer, which does
+not fit. Shrinking the body below 10.5 pt and pushing the footer into the bottom
+margin were both ruled out, so the picture gave way instead.
+
+`crop.js` trims 196 pixels from the bottom of the original with a real image
+operation, never with CSS. Taking it all from the bottom rather than splitting it
+removes the first run hint and the chat button and keeps the XP pill, the place
+name and the minimap intact. The result is 114.2 mm tall at full width, which
+leaves 95.8 mm below it, and the band is **71.7 per cent of the content area**,
+comfortably past the 60 per cent the brief asked for. The crop is recorded in
+`manifest.derived` with its parent, its region and its reason.
 
 ## Dependencies
 
