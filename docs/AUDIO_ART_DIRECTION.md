@@ -30,14 +30,25 @@ ship a megabyte of loops. The whole audio system is a few kilobytes of
 JavaScript behind a dynamic import, so Home, Updates and Safe download none of
 it.
 
-**Latency, which turns out to be a hard requirement rather than a nice
-property.** Kaaresoja, Brewster and Lantz (2014) measured the point of
-subjective simultaneity for audio feedback after a touch at about 19ms, found
-perceived button quality dropping significantly once audio lags by 70 to 100ms,
-and found 300ms rated significantly worse than every shorter condition. Their
-published guideline is 20 to 70ms. **Late audio is measurably worse than
-silence.** Synthesis has no fetch, no decode and no first-play stall, so the
-budget is met by construction rather than by hoping the network cooperates.
+**Latency, which is the strongest practical argument for synthesis.**
+Kaaresoja, Brewster and Lantz (2014) measured the point of subjective
+simultaneity for audio feedback after a touch at about 19ms, found perceived
+button quality dropping significantly once audio lags by 70 to 100ms, and found
+300ms rated significantly worse than every shorter condition. Their published
+guideline is 20 to 70ms.
+
+Note carefully what that does **not** say, because an earlier draft of this
+document got it wrong: silence was never one of their conditions, so it does not
+establish that late audio is worse than no audio. It establishes that audio
+feedback degrades in perceived quality as it gets later. A browser also cannot
+report end-to-end touch-to-sound latency, so this is not a number a PWA can gate
+a ship decision on.
+
+What survives is implementable, and is what was built: nothing is fetched or
+decoded on first tap, the context is unlocked on a real gesture, and playback is
+scheduled inside the input handler. Synthesis has no fetch, no decode and no
+first-play stall, so the avoidable share of the delay is zero rather than
+whatever the network happened to do.
 
 **Originality.** There is no sample to be recognised. What identity the sound
 has comes from interval and envelope choices that are ours.
@@ -129,8 +140,17 @@ sonified buttons on a handheld, reduced workload on four subscales, and users
 rating sonified buttons as *less* annoying than silent ones. The mechanism is
 that a finger occludes a small control at the moment of contact, so the visual
 confirmation is unavailable exactly when it is needed. That is a 390px phone
-precisely. It is also the boundary: his desktop study, where visual feedback was
-adequate, found no throughput or workload gain at all.
+precisely.
+
+His earlier desktop study (1995) is often used to draw the boundary, and it does
+not support the obvious one. It found faster error recovery and strong
+preference but no throughput or workload gain, and in that study the audio
+**replaced** the graphical press feedback rather than supplementing it. So it
+compared visual-only against audio-only, and says nothing about audio layered on
+top of intact visual feedback, which is the case this product is actually
+deciding. The measured statement is the narrow one: adding audio to small,
+finger-occluded handheld targets bought throughput, lower workload and lower
+rated annoyance.
 
 ---
 

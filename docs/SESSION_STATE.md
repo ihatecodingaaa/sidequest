@@ -33,11 +33,14 @@ to download (the engine is an isolated 11.2 KB chunk fetched only when somebody
 turns sound on), no first-play stall, and no sample that could be recognised as
 somebody else's.
 
-The latency point turned out to be a hard requirement rather than a nice
-property. Kaaresoja and colleagues put perceived button quality dropping
-significantly once audio lags a touch by 70 to 100ms, so **late audio is
-measurably worse than silence**. A design that lazy-loaded an mp3 on first tap
-would fail that on the very first sound a player ever hears.
+The latency evidence made synthesis the practical choice as well as the honest
+one. Kaaresoja and colleagues put perceived button quality dropping
+significantly once audio lags a touch by 70 to 100ms. It does **not** say late
+audio is worse than silence, which an earlier draft of the docs claimed: silence
+was never one of their conditions, and the fact-check caught it. What it does
+support is that a design lazy-loading an mp3 on first tap is at its worst on the
+very first sound a player ever hears, which is the one that decides whether they
+leave sound on.
 
 ### What the research changed, mid-pass
 

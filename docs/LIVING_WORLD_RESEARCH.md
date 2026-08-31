@@ -91,9 +91,11 @@ background sound at **g = -0.21** on reading comprehension. By type: speech
 indistinguishable from intelligible speech. Non-lyrical music is close to zero
 and not reliably worse than steady noise.
 
-Moreno and Mayer (2000) is sharper on the worst case: background music under a
-narrated animation cost roughly a full standard deviation of retention and
-transfer (d computed at 1.06 and 0.95 from their published cell means).
+Moreno and Mayer (2000) is sharper on the worst case. Background music under a
+narrated animation cost between about half and a full standard deviation of
+retention and transfer across their two experiments: d computed at 1.06 and 0.95
+in Experiment 1, and 0.51 and 0.48 in Experiment 2. Quoting only the larger pair
+would be the selective reading this document exists to avoid.
 
 It is small on average, large in the worst case, and it is **a pure cost with no
 measured learning benefit to trade against it**.
@@ -140,10 +142,17 @@ sound at both button sizes, reduced NASA-TLX workload on four subscales, strong
 preference, and users rating sonified buttons as **less annoying than silent
 ones**.
 
-His desktop study, where visual feedback was adequate, found no throughput or
-workload gain at all. The reconciling mechanism: **auditory feedback pays where
-the visual channel cannot carry the confirmation**, which on a 390px phone is
-every button, because the finger occludes the control at the moment of contact.
+His earlier desktop study (1995) found faster error recovery and strong
+preference but no throughput or workload gain, and the obvious reconciliation
+does not survive the source. In that study the audio **replaced** the graphical
+press feedback rather than supplementing it, so it compared visual-only against
+audio-only. It provides no evidence about audio layered on top of intact visual
+feedback, which is exactly the case a mobile app decides.
+
+So the defensible statement is narrower than "sound pays where vision cannot
+carry it". Adding audio to small, finger-occluded handheld targets bought
+throughput, lower workload and lower rated annoyance, and that is the closest
+measured analogue to a 390px phone.
 
 The limit is equally clear: sound could not rescue 4x4 pixel targets. It is not
 a licence to shrink anything below the 44px rule.
@@ -155,14 +164,17 @@ for audio after touch at about **19ms**, found perceived quality dropping
 significantly once audio lags by 70 to 100ms, and found 300ms rated
 significantly worse than every shorter condition. Their guideline is 20 to 70ms.
 
-**Late audio is measurably worse than silence.** This is the one place where
-"sound helps" flips to "sound hurts" through a purely technical failure.
+**What it does not say**, and an earlier draft of this document got wrong:
+silence was never one of their conditions. It shows perceived quality degrading
+as audio gets later, not that late audio is worse than no audio. A browser also
+cannot report end-to-end touch-to-sound latency, so this cannot be a number a
+PWA gates a ship decision on.
 
-**What this changed.** It is the strongest argument for full synthesis. There is
-no fetch, no decode and no first-play stall, so the budget is met by
-construction rather than by hoping a network request lands. A design that
-lazy-loaded an mp3 on first tap would fail this on the very first sound a player
-ever hears.
+**What this changed.** Still the strongest argument for full synthesis, for a
+smaller reason than "worse than silence". There is no fetch, no decode and no
+first-play stall, so the avoidable share of the delay is zero. A design that
+lazy-loaded an mp3 on first tap would be at its worst on the very first sound a
+player ever hears, which is the one that decides whether they leave sound on.
 
 ### We are not building an earcon vocabulary
 
@@ -213,13 +225,20 @@ motion, and it eases the *view* only. Swink is explicit that easing the
 player-controlled avatar's position costs input latency; easing the camera costs
 none.
 
-**On latency budgets.** Deber and colleagues put the just-noticeable difference
-for discrete tapping at roughly 69ms, against single-digit milliseconds for
-dragging a graphic under the finger. SIDEQUEST's core loop is reading, choosing
-and walking rather than flick-aiming, so it sits comfortably inside the tapping
-budget. This is a reason not to spend effort chasing milliseconds on button
-feedback, and a reason to keep frame time consistent, since Swink's third
-threshold is about consistency rather than peak speed.
+**On latency budgets, with a distinction that is easy to fumble.** Deber and
+colleagues report a just-noticeable difference of roughly 69ms for discrete
+tapping against single digits for dragging a graphic under the finger. A JND is
+the smallest *change* between two latencies somebody can detect. It is not a
+budget under which latency goes unnoticed, and reading it as one is the error an
+earlier draft of this paragraph made: the same work finds the tapping JND
+falling to 50ms when measured from a 66.7ms baseline, which means latency keeps
+getting detectably worse well above 69ms.
+
+The usable reading is that tapping is roughly six times more forgiving of change
+than dragging. SIDEQUEST's core loop is reading, choosing and walking rather
+than flick-aiming or dragging, so effort belongs in never dropping frames rather
+than in shaving milliseconds off button feedback. For an absolute line, Swink
+puts 240ms as where the sense of real-time control breaks.
 
 **What makes movement fun with no goal**, per the same survey: give the movement
 something to push against, and give it consequence at rest. Objects that respond
@@ -334,14 +353,46 @@ four and ten, so a single-session reaction measures novelty rather than value.
 
 ## 8. Verification status
 
-The research behind this document was produced by parallel agents and put
-through an adversarial fact-check for the highest-risk topics. **The check on
-the sound evidence, the Web Audio API claims and the feedback-latency numbers
-did not complete before the session limit was reached**, so the citations here
-are researcher-reported rather than independently re-verified.
+The research was produced by parallel agents and then put through an independent
+adversarial fact-check that re-fetched primary sources. **An earlier version of
+this section said that check had not completed. It had, and this section is the
+correction.**
 
-Effect sizes should be re-checked against primary sources before any of them
-appears in a submission or a claim to a partner. The API-level claims were
-instead verified by implementation: the engine is built, it typechecks, and its
-failure paths are covered by unit tests that simulate a missing Web Audio API
-and a refused resume.
+The check found the numbers this document relies on to be correct. Verified
+verbatim against the authors' manuscripts: coherence g = 0.33 [0.18, 0.48]
+k = 68; persistent g = 0.43 [0.29, 0.57] k = 47; transient g = 0.12
+[-0.33, 0.57] k = 18; modality g = 0.38 [0.33, 0.43] k = 86 and g = 0.20
+[0.15, 0.25] corrected for publication bias; redundancy, audio added to text,
+g = -0.04 [-0.14, 0.06] k = 23. The Vasilev, Perham and Currie, Takacs and
+Moreno and Mayer figures were reproduced independently.
+
+It also found four claims wrong, and all four are corrected above rather than
+left standing:
+
+1. **"Late audio is worse than silence" overread the source.** Silence was never
+   a condition in Kaaresoja et al. Corrected in section 2, and in
+   `docs/AUDIO_ART_DIRECTION.md`.
+2. **The Brewster reconciliation was not what the study tested.** In the 1995
+   desktop study the audio *replaced* the graphical feedback rather than
+   supplementing it, so it cannot support a claim about redundant audio over
+   intact visuals. Corrected in section 2.
+3. **The Moreno and Mayer figure quoted Experiment 1 only.** Experiment 2 is
+   roughly half the size. Both are now given.
+4. **A just-noticeable difference was used as a latency budget.** Corrected in
+   section 3.
+
+Two further cautions worth recording. The Noetel meta-meta-analysis is correctly
+cited as 2022, *Review of Educational Research* 92(3), 413-454, not 2021,
+although every number drawn from it is right. And the metacognition result about
+people knowing when sound is costing them is group-level: the same abstract
+notes that individual judgements are poor predictors of individual
+susceptibility. That supports giving users a mute control, which is what was
+built; it does not support treating any one person's setting as an accurate
+reading of their own performance cost.
+
+The API-level claims were verified by implementation as well as by the check.
+The engine is built, it typechecks, and its failure paths are covered by unit
+tests simulating a missing Web Audio API and a refused resume. It also gives
+every voice its own `GainNode` and uses ramps rather than
+`setValueCurveAtTime`, which sidesteps the `NotSupportedError` retrigger crash
+the check flagged as the likeliest runtime failure in a synthesised design.
