@@ -266,7 +266,7 @@ test.describe("a youth can create a quest draft without typing", () => {
     await expect(page.getByRole("heading", { name: "The dare at the minimart" })).toBeVisible();
     await expect(page.getByText(/because everyone is watching/)).toBeVisible();
     await expect(page.getByText(/Do you go along, walk away, or say something privately\?/)).toBeVisible();
-    await expect(page.getByText(/No AI wrote this/)).toBeVisible();
+    await expect(page.getByText(/Built from your \w+ choices/)).toBeVisible();
 
     await page.getByRole("button", { name: "Save draft" }).click();
     await expect(page.getByText("Saved as a draft")).toBeVisible();
@@ -338,7 +338,7 @@ test.describe("the build mission is three taps, not a blank box", () => {
     await expect(page.getByRole("heading", { name: /Which idea is it leaning on\?/ })).toBeVisible();
     await page.getByRole("button", { name: /Make the state visible/ }).click();
 
-    await expect(page.getByText(/No AI wrote this/)).toBeVisible();
+    await expect(page.getByText(/Built from your \w+ choices/)).toBeVisible();
     await expect(page.locator("input, textarea")).toHaveCount(0);
 
     await page.getByRole("button", { name: "Submit your entry" }).click();

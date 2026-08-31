@@ -775,20 +775,26 @@ describe("youth co-creation survives the removal of typing", () => {
     }
   });
 
-  it("never implies a template wrote something for the player", () => {
+  it("says on screen that the draft was built from the player's own choices", () => {
     /*
      * The draft is string concatenation over four ids. A screen that lets
      * somebody believe otherwise is lying about the one part of the product a
      * young person might repeat to a friend, so the honesty line is checked
      * rather than trusted.
+     *
+     * Both halves are pinned rather than a slogan. The first says whose the
+     * content is, the second says what produced it, and together they rule out
+     * the belief the line exists to prevent. Checked against comment-stripped
+     * source, so a doc comment describing the rule cannot satisfy it.
      */
     for (const path of [
       "src/features/streets/components/quest-builder.tsx",
       "src/features/missions/partner/build-player.tsx",
     ]) {
-      const file = SOURCE_FILES.find((entry) => entry.path === path);
+      const file = CODE.find((entry) => entry.path === path);
       expect(file, path).toBeDefined();
-      expect(file!.text, path).toMatch(/No AI wrote this/);
+      expect(file!.text, path).toMatch(/Built from your \w+ choices/);
+      expect(file!.text, path).toMatch(/fixed template/);
     }
   });
 });

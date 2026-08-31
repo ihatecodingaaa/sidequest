@@ -206,11 +206,18 @@ export function QuestBuilder() {
           A template is not a writer, and a screen that lets somebody believe
           four taps were turned into prose by something clever is lying about
           the one part of the product a young person might repeat to a friend.
+
+          Said as what it is rather than as what it is not. The first version
+          of this line ended "no AI wrote this", which is true, but it is a
+          disclaimer: it answers a question the player was not asking and
+          introduces the idea it exists to rule out. Naming the template and
+          the determinism carries the same guarantee, and a young person can
+          check the second half themselves by running the same four taps twice.
         */}
         <p className="mt-2.5 flex items-start gap-2 text-xs leading-relaxed text-faint">
           <Sparkles aria-hidden className="mt-0.5 size-3.5 shrink-0" />
-          Assembled from your four choices using a fixed template. No AI wrote this, and the same
-          four taps always produce the same draft.
+          Built from your four choices with a fixed template. The same four taps always make the
+          same draft.
         </p>
 
         <button

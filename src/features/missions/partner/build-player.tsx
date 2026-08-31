@@ -334,11 +334,14 @@ export function BuildPlayer({ mission }: { mission: Mission }) {
             screen that lets somebody believe three taps were turned into prose
             by something clever is lying about the part of the product a young
             person might repeat to a friend.
+
+            Said as what it is rather than as what it is not, for the reason
+            written out in `quest-builder.tsx`: a disclaimer answers a question
+            nobody asked, and naming the template carries the same guarantee.
           */}
           <p className="mt-2.5 flex items-start gap-2 text-xs leading-relaxed text-faint">
             <Sparkles aria-hidden className="mt-0.5 size-3.5 shrink-0" />
-            Written from your three choices using a fixed template. No AI wrote this, and it is
-            saved on your device.
+            Built from your three choices with a fixed template, and saved on this device.
           </p>
 
           {!customOpen ? (

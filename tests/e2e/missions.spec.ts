@@ -301,7 +301,7 @@ test.describe("Partner Challenge", () => {
     await page.getByRole("button", { name: /Make the state visible/ }).click();
 
     // The entry is assembled before it is submitted, and says how.
-    await expect(page.getByText(/No AI wrote this/)).toBeVisible();
+    await expect(page.getByText(/Built from your \w+ choices/)).toBeVisible();
     await page.getByRole("button", { name: "Submit your entry" }).click();
 
     await expect(page.getByRole("heading", { name: "Mission complete" })).toBeVisible();
