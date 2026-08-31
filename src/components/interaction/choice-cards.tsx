@@ -3,6 +3,7 @@
 import { ArrowRight, Check } from "lucide-react";
 
 import { cn } from "@/lib/cn";
+import { useAudio } from "@/hooks/use-audio";
 import { ACCENT_BORDER, ACCENT_BG_SOFT, ACCENT_TEXT, type Accent } from "@/lib/accent";
 import type { ChoiceOption } from "@/types/interaction";
 
@@ -72,7 +73,22 @@ export function ChoiceCards({
   showLegend?: boolean;
   className?: string;
 }) {
+  const audio = useAudio();
   const multi = selectedIds !== undefined;
+
+  /*
+   * One cue for every choice, whichever option it was.
+   *
+   * The same sound for all of them is the point. This product does not score a
+   * choice, so the sound must not either: a brighter cue for the safer option
+   * would tell the player they had been graded before they read a word of the
+   * consequence, which is the exact thing the rest of this component exists to
+   * avoid. It is acknowledgement, not approval.
+   */
+  const choose = (id: string) => {
+    audio.play("choice-select");
+    onChoose(id);
+  };
 
   return (
     <div
@@ -99,7 +115,7 @@ export function ChoiceCards({
              * announcing "not pressed" on four options in a row is noise.
              */
             aria-pressed={multi ? selected : undefined}
-            onClick={() => onChoose(option.id)}
+            onClick={() => choose(option.id)}
             className={cn(
               "sq-pressable flex min-h-14 w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left text-[0.95rem] leading-snug font-medium",
               option.disabled

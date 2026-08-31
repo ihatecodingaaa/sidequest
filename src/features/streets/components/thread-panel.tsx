@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, Check } from "lucide-react";
 
 import { cn } from "@/lib/cn";
+import { useAudio } from "@/hooks/use-audio";
 import { ACCENT_BG_SOFT, ACCENT_BORDER, ACCENT_TEXT } from "@/lib/accent";
 import { SIGNAL_MODES } from "@/data/signals";
 import { getMission } from "@/data/missions";
@@ -64,6 +65,7 @@ export function ThreadPanel({
   bridge: StreetsBridge;
   onClose: () => void;
 }) {
+  const audio = useAudio();
   const [chosen, setChosen] = useState<string | null>(null);
   const [award, setAward] = useState<AwardResult | null>(null);
 
@@ -102,6 +104,30 @@ export function ThreadPanel({
     thread,
     choice ? { ...bridge.threadChoices, [`${thread.id}:${step.id}`]: choice.id } : bridge.threadChoices,
   );
+
+  /*
+   * Progress, once, at the moment it is banked.
+   *
+   * Three different weights for three genuinely different events: a step
+   * inside a story, the story finishing, and the district visibly changing
+   * because of it. Using one cue for all three would waste the only channel
+   * that can tell a player, without reading, that this one mattered more.
+   *
+   * Every one of them accompanies something already on screen: an XP chip, a
+   * takeaway, a line naming what changed. Nothing here is announced by sound
+   * alone, which is both the accessibility rule and what makes the product
+   * complete in silence.
+   */
+  useEffect(() => {
+    if (!banked) return;
+    if (finished) {
+      audio.play("quest-resolve");
+      /* The world reacting is its own event, and it lands after the resolve. */
+      const timer = setTimeout(() => audio.play("world-change"), 420);
+      return () => clearTimeout(timer);
+    }
+    audio.play(award?.awarded ? "quest-progress" : "ui-select");
+  }, [banked, finished, award, audio]);
 
   const mission = step.kind === "hero-mission" && step.missionId ? getMission(step.missionId) : null;
   const official = step.official ? getOfficialResource(step.official) : undefined;

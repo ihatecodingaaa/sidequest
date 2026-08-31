@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { List, X } from "lucide-react";
+import { List, Volume2, VolumeX, X } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import { usePrefersReducedMotion } from "@/hooks/use-profile";
+import { useAudio } from "@/hooks/use-audio";
 import { useAppStore } from "@/store/app-store";
 import { useStreetsBridge } from "@/features/streets/game/quest-bridge";
 import { useStreetsLayout } from "@/features/streets/game/use-orientation";
@@ -17,6 +18,10 @@ import { RewardsCounter } from "@/features/streets/components/rewards-counter";
 import { TouchPad } from "@/features/streets/components/touch-pad";
 import { QuestList } from "@/features/streets/components/quest-list";
 import { AvatarSetup } from "@/features/streets/components/avatar-setup";
+import { SoundPrompt } from "@/features/streets/components/sound-prompt";
+import { LookSheet } from "@/features/streets/components/look-sheet";
+import { WorldSheet } from "@/features/streets/components/world-sheet";
+import { AudioControls } from "@/components/ui/audio-controls";
 import {
   DEFAULT_AVATAR,
   DISTRICT_ID,
@@ -27,6 +32,7 @@ import {
   type Door,
   type Npc,
 } from "@/features/streets/streets-data";
+import type { WorldProp } from "@/features/streets/streets-props";
 import type { EngineOptions, WorldEngine } from "@/features/streets/game/world-engine";
 
 /**
@@ -42,12 +48,16 @@ import type { EngineOptions, WorldEngine } from "@/features/streets/game/world-e
  * fallback: every experience reachable by walking is reachable without walking.
  * A prevention product must never gate its learning behind dexterity.
  */
+/* A stable empty array, so an absent ledger does not re-render every frame. */
+const EMPTY_MOMENTS: string[] = [];
+
 export function StreetsClient() {
   const reduced = usePrefersReducedMotion();
   const { ref: rootRef, metrics } = useStreetsLayout();
   const landscape = metrics.overlay;
   const compact = metrics.compact;
   const bridge = useStreetsBridge();
+  const audio = useAudio();
   /*
    * Destructured because the effects below depend on these two specifically,
    * not on the bridge object, which is rebuilt every render. Listing `bridge`
@@ -55,9 +65,24 @@ export function StreetsClient() {
    */
   const { ready: bridgeReady, equippedEcho, isNpcDone, signals } = bridge;
   const setStreetsAvatar = useAppStore((state) => state.setStreetsAvatar);
+  const keepMoment = useAppStore((state) => state.keepMoment);
+  const moments = useAppStore((state) => state.profile.districtMoments) ?? EMPTY_MOMENTS;
   const storedLook = useAppStore((state) => state.profile.streetsAvatar);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  /*
+   * The live audio API, for callbacks the engine holds for its whole life.
+   *
+   * Written in an effect rather than during render. The engine is constructed
+   * once and keeps its callbacks forever, while the audio API is rebuilt every
+   * time a preference changes, so a captured value would freeze at whatever
+   * was true on the first frame and a player who turned sound on afterwards
+   * would get silence. See the note on `onStep`.
+   */
+  const audioRef = useRef(audio);
+  useEffect(() => {
+    audioRef.current = audio;
+  }, [audio]);
   const engineRef = useRef<WorldEngine | null>(null);
   const keysRef = useRef<Set<string>>(new Set());
   /** Everything about the engine that changes without the engine changing. */
@@ -74,6 +99,8 @@ export function StreetsClient() {
   const [engineReady, setEngineReady] = useState(false);
   const [near, setNear] = useState<Npc | null>(null);
   const [doorway, setDoorway] = useState<Door | null>(null);
+  const [nearProp, setNearProp] = useState<WorldProp | null>(null);
+  const [looking, setLooking] = useState<WorldProp | null>(null);
   const [placeId, setPlaceId] = useState<string>(DISTRICT_ID);
   const [tile, setTile] = useState(SPAWN);
   const [talkingTo, setTalkingTo] = useState<Npc | null>(null);
@@ -81,11 +108,13 @@ export function StreetsClient() {
   const [counterOpen, setCounterOpen] = useState(false);
   const [hubOpen, setHubOpen] = useState(false);
   const [hint, setHint] = useState(true);
+  const [soundOpen, setSoundOpen] = useState(false);
 
   const look: AvatarLook = storedLook ?? DEFAULT_AVATAR;
   const needsAvatar = bridgeReady && !storedLook;
   const place = MAPS[placeId] ?? MAPS[DISTRICT_ID];
-  const busy = Boolean(talkingTo) || listOpen || counterOpen || hubOpen;
+  const busy =
+    Boolean(talkingTo) || listOpen || counterOpen || hubOpen || soundOpen || Boolean(looking);
 
   /* --------------------------------------------------------- Engine boot */
 
@@ -132,8 +161,16 @@ export function StreetsClient() {
         ...liveRef.current,
         onNear: setNear,
         onDoor: setDoorway,
+        onProp: setNearProp,
         onTile: setTile,
         onMap: (map) => setPlaceId(map.id),
+        /*
+         * Audio is read through a ref rather than captured, because this
+         * engine is constructed once and the audio API is rebuilt whenever a
+         * preference changes. Capturing it here would freeze the first value
+         * and a player who turned sound on afterwards would get silence.
+         */
+        onStep: (surface) => audioRef.current.play(`step-${surface}` as const),
       });
 
       /*
@@ -183,19 +220,63 @@ export function StreetsClient() {
 
   /* ------------------------------------------------------------- Input */
 
+  /**
+   * Bringing the sound back on a later visit.
+   *
+   * A player who already said yes should not be asked again, but a browser
+   * still will not start a context outside a gesture. So the first movement,
+   * tap or key press in the world is what resumes it: a real gesture, one the
+   * player was making anyway, and it means the world is quiet for exactly as
+   * long as nobody has touched it.
+   *
+   * Idempotent and cheap once the context exists.
+   */
+  const resumeAudio = useCallback(() => {
+    if (audioRef.current.prefs.enabled !== true) return;
+    if (audioRef.current.ready) return;
+    void audioRef.current.enable();
+  }, []);
+
   const applyKeys = useCallback(() => {
+    resumeAudio();
     const keys = keysRef.current;
     const x = (keys.has("right") ? 1 : 0) - (keys.has("left") ? 1 : 0);
     const y = (keys.has("down") ? 1 : 0) - (keys.has("up") ? 1 : 0);
     engineRef.current?.setInput(x, y);
     if (x !== 0 || y !== 0) setHint(false);
-  }, []);
+  }, [resumeAudio]);
 
-  const openNpc = useCallback((npc: Npc) => {
-    // The rewards counter is a screen of its own. Everybody else talks first.
-    setTalkingTo(npc);
-    setHint(false);
-  }, []);
+  /**
+   * Somebody coming into reach gets a quiet acknowledgement.
+   *
+   * Only on the transition into range, never on the way out, and never twice
+   * for the same person. Walking back and forth past a neighbour should not
+   * produce a stutter, and a sound on losing something is a sound that says
+   * you did the wrong thing.
+   */
+  useEffect(() => {
+    if (near) audio.play("npc-notice");
+  }, [near, audio]);
+
+  /*
+   * Something worth stopping at coming into reach.
+   *
+   * Quieter than a person, and only on the way in. The world is full of these
+   * and a cue on every one at conversation volume would be a rattle.
+   */
+  useEffect(() => {
+    if (nearProp) audio.play("prop-near");
+  }, [nearProp, audio]);
+
+  const openNpc = useCallback(
+    (npc: Npc) => {
+      // The rewards counter is a screen of its own. Everybody else talks first.
+      audioRef.current.play("npc-talk");
+      setTalkingTo(npc);
+      setHint(false);
+    },
+    [],
+  );
 
   /**
    * One button, whichever is nearer.
@@ -204,6 +285,7 @@ export function StreetsClient() {
    * only has to prefer the person it was given.
    */
   const interact = useCallback(() => {
+    resumeAudio();
     const engine = engineRef.current;
     if (!engine) return;
     engine.setInput(0, 0);
@@ -214,12 +296,26 @@ export function StreetsClient() {
       openNpc(npc);
       return;
     }
+    const prop = engine.lookAt;
+    if (prop) {
+      audioRef.current.play("prop-look");
+      setLooking(prop);
+      setHint(false);
+      return;
+    }
     const door = engine.doorway;
     if (door) {
+      /*
+       * The latch fires before the map changes, so the sound belongs to the
+       * gesture rather than arriving after the new room has drawn. Audio and
+       * visual feedback for the same action have to land together or they
+       * read as two events.
+       */
+      audioRef.current.play(door.to === DISTRICT_ID ? "door-close" : "door-open");
       engine.enter(door);
       setHint(false);
     }
-  }, [openNpc]);
+  }, [openNpc, resumeAudio]);
 
   useEffect(() => {
     const map: Record<string, string> = {
@@ -271,6 +367,43 @@ export function StreetsClient() {
     };
   }, [applyKeys, interact, busy]);
 
+  /* --------------------------------------------------------------- Audio */
+
+  /**
+   * The music follows the room, and the ambience follows the outdoors.
+   *
+   * Both are keyed on the map rather than on a scene enum the client has to
+   * maintain, so walking through a door is the only thing that has to happen
+   * for the score to thin out and the birds to stop.
+   */
+  useEffect(() => {
+    if (!engineReady || !audio.ready) return;
+    const indoors = placeId !== DISTRICT_ID;
+    audio.setScene(indoors ? "interior" : "streets");
+    if (indoors) audio.stopAmbience();
+    else audio.startAmbience();
+  }, [engineReady, audio, placeId]);
+
+  /** Everything stops when the world is left, whatever the exit was. */
+  useEffect(() => {
+    const api = audioRef.current;
+    return () => {
+      api.setScene(null);
+      api.stopAmbience();
+    };
+  }, []);
+
+  /**
+   * The music steps back under a conversation.
+   *
+   * Ducked rather than stopped: the world should still be there behind the
+   * sheet, so closing it returns the player to a place rather than to a
+   * silence that then has to restart.
+   */
+  useEffect(() => {
+    audio.duck(busy);
+  }, [audio, busy]);
+
   /* Movement stops whenever something is on top of the world. */
   useEffect(() => {
     if (busy) {
@@ -300,7 +433,8 @@ export function StreetsClient() {
     if (!engine) return;
     const mapId = npc.mapId ?? DISTRICT_ID;
     if (mapId === DISTRICT_ID) {
-      engine.moveTo(npc.x, npc.y);
+      const spot = engine.spotFor(npc);
+      engine.moveTo(spot.x, spot.y);
     } else {
       const door = MAPS[DISTRICT_ID]?.doors.find((entry) => entry.to === mapId);
       if (door) engine.enter(door);
@@ -390,6 +524,34 @@ export function StreetsClient() {
 
       <div className="flex-1" />
 
+      {/*
+        Sound, reachable without leaving the world.
+
+        An icon rather than a labelled control, and it is the one place in this
+        bar where that is defensible: a speaker with a line through it is as
+        unambiguous as any word, the accessible name carries the state for
+        anybody who cannot see it, and the alternative is a third labelled pill
+        on a 390px bar that already carries three things.
+      */}
+      <button
+        type="button"
+        onClick={() => setSoundOpen(true)}
+        aria-label={
+          audio.prefs.enabled === true ? "Sound settings. Sound is on." : "Sound settings. Sound is off."
+        }
+        className={cn(
+          "sq-pressable grid size-11 shrink-0 place-items-center rounded-full text-chalk",
+          compact ? "bg-black/45 backdrop-blur" : "bg-black/45 backdrop-blur",
+          landscape && "pointer-events-auto",
+        )}
+      >
+        {audio.prefs.enabled === true ? (
+          <Volume2 aria-hidden className="size-5" />
+        ) : (
+          <VolumeX aria-hidden className="size-5 text-mist" />
+        )}
+      </button>
+
       <button
         type="button"
         onClick={() => setListOpen(true)}
@@ -448,6 +610,12 @@ export function StreetsClient() {
             Loading the block...
           </p>
         ) : null}
+
+        {/*
+          Asked once, over the world rather than in front of it, and never
+          again whichever way it is answered. See `SoundPrompt`.
+        */}
+        {engineReady ? <SoundPrompt /> : null}
 
         {/*
           Where you are, in words, opposite the minimap.
@@ -513,6 +681,7 @@ export function StreetsClient() {
               engineRef.current?.setInput(x, y);
               if (x !== 0 || y !== 0) setHint(false);
             }}
+            prop={nearProp}
             onInteract={interact}
           />
         ) : null}
@@ -538,6 +707,38 @@ export function StreetsClient() {
 
       {counterOpen ? (
         <RewardsCounter onClose={() => setCounterOpen(false)} landscape={landscape} />
+      ) : null}
+
+      {looking ? (
+        <LookSheet
+          prop={looking}
+          found={moments.includes(looking.discovery?.id ?? "")}
+          onKeep={keepMoment}
+          onClose={() => setLooking(null)}
+          landscape={landscape}
+        />
+      ) : null}
+
+      {soundOpen ? (
+        <WorldSheet
+          label="Sound"
+          landscape={landscape}
+          onClose={() => setSoundOpen(false)}
+          closeLabel="Close sound settings"
+        >
+          <h2 className="font-display text-xl font-extrabold tracking-tight text-chalk">Sound</h2>
+          <p className="mt-1 text-sm leading-relaxed text-muted">
+            Off until you ask for it, and it never carries anything the screen does not.
+          </p>
+          <AudioControls className="mt-4" />
+          <button
+            type="button"
+            onClick={() => setSoundOpen(false)}
+            className="sq-pressable mt-4 flex min-h-12 w-full items-center justify-center rounded-2xl bg-volt-500 text-sm font-bold text-ink-900"
+          >
+            Back to the block
+          </button>
+        </WorldSheet>
       ) : null}
 
       {hubOpen ? (

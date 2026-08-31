@@ -6,7 +6,9 @@ import { ArrowRight } from "lucide-react";
 import { useProfile } from "@/hooks/use-profile";
 import { resolveEchoStyle } from "@/data/echo-styles";
 import { EchoMascot } from "@/components/echo/echo-mascot";
-import { DEFAULT_AVATAR, NPCS, type AvatarLook } from "@/features/streets/streets-data";
+import { DEFAULT_AVATAR, type AvatarLook } from "@/features/streets/streets-data";
+import { waitingCount } from "@/features/streets/game/quest-bridge";
+import { DISTRICT_MOMENTS } from "@/features/streets/streets-props";
 
 /**
  * The way into SIDEQUEST Streets, from Home.
@@ -26,11 +28,16 @@ export function StreetsHero() {
   const look: AvatarLook = (ready && profile.streetsAvatar) || DEFAULT_AVATAR;
   const echo = ready ? resolveEchoStyle(profile) : null;
 
-  const waiting = ready
-    ? NPCS.filter(
-        (npc) => npc.action.kind === "mission" && !profile.completedMissionIds.includes(npc.action.missionId),
-      ).length
-    : 0;
+  /*
+   * What is actually waiting down there.
+   *
+   * This used to count hero missions only, so somebody with five live thread
+   * steps and three unplayed checks was told nobody wanted a word. It now uses
+   * the same rule the world does, which is the point of the rule being shared.
+   */
+  const waiting = ready ? waitingCount(profile) : 0;
+  const moments = ready ? (profile.districtMoments ?? []).length : 0;
+  const left = DISTRICT_MOMENTS.length - moments;
 
   return (
     <Link
@@ -62,6 +69,17 @@ export function StreetsHero() {
             ? `Walk around the block. ${waiting} ${waiting === 1 ? "person" : "people"} want a word.`
             : "Walk around the block and see who is out."}
         </p>
+
+        {/*
+          A second reason to go, for somebody who has already seen everybody.
+          Exploring has to be worth something once the objectives run out, or
+          the world is a menu with a walk attached.
+        */}
+        {moments > 0 && left > 0 ? (
+          <p className="mt-1 max-w-[15rem] text-xs leading-snug text-volt-300/90">
+            {left} more thing{left === 1 ? "" : "s"} on the block worth a look.
+          </p>
+        ) : null}
 
         <span className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full bg-volt-500 px-5 text-sm font-bold text-ink-900 transition-transform duration-200 group-active:scale-[0.98]">
           Explore

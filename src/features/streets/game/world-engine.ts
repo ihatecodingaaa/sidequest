@@ -16,6 +16,7 @@ import {
 } from "@/features/streets/streets-data";
 import { SIGNAL_MODES } from "@/data/signals";
 import type { EchoStyleId } from "@/data/echo-styles";
+import { propsOn, type WorldProp } from "@/features/streets/streets-props";
 
 /**
  * The District 01 renderer.
@@ -92,6 +93,15 @@ export const INTERACT_RANGE = 30;
  * past a shop should not keep offering to take you inside it.
  */
 const DOOR_RANGE = 26;
+
+/**
+ * How close the player must be to look at something, in world units.
+ *
+ * Tighter than a conversation, because an object is a specific place. A
+ * generous radius here would mean the button flickering between three benches
+ * while walking down a path, which is worse than the benches being inert.
+ */
+const PROP_RANGE = 20;
 
 /**
  * How close the player has to be before a resident stops walking, in world
@@ -192,6 +202,18 @@ export interface NpcRuntime {
 }
 
 /**
+ * Where somebody is standing right now.
+ *
+ * Resolved rather than stored, because "has this been resolved" lives in the
+ * profile and the engine owns none of it. A person with no `after` never
+ * moves, which is most of them.
+ */
+export function npcSpot(entry: NpcRuntime): { x: number; y: number } {
+  const move = entry.done ? entry.npc.after : undefined;
+  return move ?? { x: entry.npc.x, y: entry.npc.y };
+}
+
+/**
  * A live Signal, as the renderer needs it.
  *
  * The mode describes what the situation needs. It is keyed by the id of
@@ -243,6 +265,31 @@ export interface EngineOptions {
    */
   signals: Record<string, SignalMarker>;
   /**
+   * Fires on each footfall, with the surface underfoot.
+   *
+   * The engine reports the event and names the ground; it does not know that
+   * anything makes a sound, and it never will. Audio lives entirely in the
+   * React layer, which is what keeps the world playable and testable in
+   * silence and stops a rendering class from growing an AudioContext.
+   *
+   * Twice per four-frame walk cycle, on the two contact frames, which at the
+   * current animation rate is about two steps a second.
+   */
+  onStep?: (surface: StepSurface) => void;
+  /**
+   * Fires when a prop comes into or goes out of reach.
+   *
+   * Props share the single interact button with people and doors, on the same
+   * rule: whichever is nearer wins. A second button would make a player
+   * standing between a neighbour and a bench decide which control they wanted
+   * before they could use either, which is a puzzle nobody asked for.
+   *
+   * A person always beats a prop. Somebody waiting to talk to you matters more
+   * than a planter, and the tie-break should never make a player walk away
+   * from a conversation to clear a bench out of the way.
+   */
+  onProp?: (prop: WorldProp | null) => void;
+  /**
    * Fires when the player crosses into a new tile.
    *
    * Tile granularity rather than per frame, on purpose: the minimap and the
@@ -259,6 +306,9 @@ interface Vec {
 }
 
 export type Facing = "up" | "down" | "left" | "right";
+
+/** What the player is walking on, coarse enough to be worth a distinct sound. */
+export type StepSurface = "path" | "grass" | "interior";
 
 export class WorldEngine {
   private readonly canvas: HTMLCanvasElement;
@@ -285,11 +335,33 @@ export class WorldEngine {
   private facing: Facing = "down";
   private walkPhase = 0;
   private moving = false;
+  /** Last walk frame a footfall was emitted for, so each fires once. */
+  private lastStepFrame = -1;
   private input: Vec = { x: 0, y: 0 };
 
   /** Echo trails the player through a short history of positions. */
   private trail: Vec[] = [];
+  /**
+   * Where the camera is, as opposed to where the player is.
+   *
+   * The camera used to be welded to the player: every frame it was computed
+   * from the current position and clamped. That is perfectly responsive and it
+   * is the reason walking felt like scrolling a document rather than moving
+   * through a place, because the world had no weight at all.
+   *
+   * It now lags slightly and settles. Pichlmair and Johansen's game feel
+   * survey puts a camera that lags rather than being rigidly attached among
+   * the highest-return, lowest-risk polish for a top-down game, and unlike
+   * easing the avatar itself it costs nothing in input latency: the player's
+   * position is still updated the instant the input arrives, and it is only
+   * the view that catches up.
+   *
+   * Null until the first frame, so the world never opens mid-slide.
+   */
+  private cam: Vec | null = null;
   private near: Npc | null = null;
+  private prop: WorldProp | null = null;
+  private props: WorldProp[] = [];
   private door: Door | null = null;
   private lastTile = "";
   private lastResidentTiles = "";
@@ -314,6 +386,8 @@ export class WorldEngine {
 
     this.terrain = this.paintTerrain(this.map);
     this.spawnResidents();
+    this.spawnProps();
+    this.cam = null;
     this.resize();
   }
 
@@ -326,6 +400,11 @@ export class WorldEngine {
   setInput(x: number, y: number) {
     this.input.x = Math.max(-1, Math.min(1, x));
     this.input.y = Math.max(-1, Math.min(1, y));
+  }
+
+  /** The prop currently in range, if any. Never set while a person is. */
+  get lookAt(): WorldProp | null {
+    return this.prop;
   }
 
   /** The NPC currently in range, if any. */
@@ -401,15 +480,29 @@ export class WorldEngine {
       [1, 0],
       [0, -1],
     ] as const;
+    const spot = this.spotFor(npc);
     for (const [dx, dy] of around) {
-      const tx = npc.x + dx;
-      const ty = npc.y + dy;
+      const tx = spot.x + dx;
+      const ty = spot.y + dy;
       if (this.canStand(tx * TILE + TILE / 2, ty * TILE + TILE / 2)) {
         this.placeAt(tx, ty);
         return;
       }
     }
-    this.placeAt(npc.x, npc.y + 1);
+    this.placeAt(spot.x, spot.y + 1);
+  }
+
+  /**
+   * Where somebody actually is, accounting for having moved on.
+   *
+   * Public because the Quest List walks the player to people, and walking
+   * somebody to where a neighbour used to be standing is the sort of bug that
+   * only appears after the story it belongs to has been finished, which is
+   * exactly when nobody is looking any more.
+   */
+  spotFor(npc: Npc): { x: number; y: number } {
+    const entry = this.options.npcs.find((item) => item.npc.id === npc.id);
+    return entry ? npcSpot(entry) : { x: npc.x, y: npc.y };
   }
 
   /** Drops the player somewhere on whichever map they are already on. */
@@ -435,6 +528,8 @@ export class WorldEngine {
     this.map = next;
     this.terrain = this.paintTerrain(next);
     this.spawnResidents();
+    this.spawnProps();
+    this.cam = null;
     // A room is framed closer than a street, so the camera reframes on entry.
     this.resize();
     this.options.onMap?.(next);
@@ -506,6 +601,12 @@ export class WorldEngine {
   /* ----------------------------------------------------------- Residents */
 
   /** Puts every resident of this map at the start of their loop. */
+  /** Props for the current map, refreshed whenever the map changes. */
+  private spawnProps() {
+    this.props = propsOn(this.map.id, DISTRICT_ID);
+    this.prop = null;
+  }
+
   private spawnResidents() {
     this.residents = RESIDENTS.filter(
       (resident) => (resident.mapId ?? DISTRICT_ID) === this.map.id,
@@ -585,7 +686,11 @@ export class WorldEngine {
 
   /* ---------------------------------------------------------- Simulation */
 
+  /** Last frame's delta, so the camera can settle frame-rate independently. */
+  private dt = 1 / 60;
+
   private step(dt: number) {
+    this.dt = dt;
     const { x, y } = this.input;
     const len = Math.hypot(x, y) || 1;
     const dx = (x / len) * SPEED * dt;
@@ -607,12 +712,41 @@ export class WorldEngine {
 
       this.walkPhase += dt * 8;
 
+      /*
+       * A footfall on the two contact frames of the four frame cycle. Firing
+       * every frame would be a rattle rather than a walk, and firing once per
+       * cycle reads as a limp.
+       */
+      const frame = Math.floor(this.walkPhase) % 4;
+      if (frame !== this.lastStepFrame) {
+        this.lastStepFrame = frame;
+        if (frame === 1 || frame === 3) this.options.onStep?.(this.surface());
+      }
+
       this.trail.push({ x: this.player.x, y: this.player.y });
       if (this.trail.length > 26) this.trail.shift();
+    } else {
+      this.lastStepFrame = -1;
     }
 
     this.stepResidents(dt);
     this.checkProximity();
+  }
+
+  /**
+   * What is underfoot, as one of three coarse surfaces.
+   *
+   * Coarse on purpose. A distinct sound per terrain code would be eleven
+   * sounds nobody could tell apart, and the only distinction a player actually
+   * hears is hard ground, soft ground, and being indoors.
+   */
+  private surface(): StepSurface {
+    if (this.map.indoor) return "interior";
+    const code = this.at(
+      Math.floor(this.player.x / TILE),
+      Math.floor(this.player.y / TILE),
+    );
+    return code === "," ? "grass" : "path";
   }
 
   /** Player collision box, deliberately narrower than the sprite. */
@@ -664,8 +798,9 @@ export class WorldEngine {
     let best: Npc | null = null;
     let bestDist = INTERACT_RANGE;
     for (const entry of this.here) {
-      const nx = entry.npc.x * TILE + TILE / 2;
-      const ny = entry.npc.y * TILE + TILE / 2;
+      const spot = npcSpot(entry);
+      const nx = spot.x * TILE + TILE / 2;
+      const ny = spot.y * TILE + TILE / 2;
       const d = Math.hypot(nx - this.player.x, ny - this.player.y);
       if (d < bestDist) {
         bestDist = d;
@@ -686,6 +821,32 @@ export class WorldEngine {
     if (best?.id !== this.near?.id) {
       this.near = best;
       this.options.onNear(best);
+    }
+
+    /*
+     * Props are checked last and lose every tie.
+     *
+     * A person or a door in reach hides whatever object is also in reach, so
+     * the button never offers a bench to somebody standing in a doorway. The
+     * radius is tighter than a conversation too: you look at a thing by being
+     * next to it, not by being in the same corner of the street as it.
+     */
+    let prop: WorldProp | null = null;
+    if (!this.near && !this.door) {
+      let propDist = PROP_RANGE;
+      for (const entry of this.props) {
+        const px = entry.x * TILE + TILE / 2;
+        const py = entry.y * TILE + TILE / 2;
+        const d = Math.hypot(px - this.player.x, py - this.player.y);
+        if (d < propDist) {
+          propDist = d;
+          prop = entry;
+        }
+      }
+    }
+    if (prop?.id !== this.prop?.id) {
+      this.prop = prop;
+      this.options.onProp?.(prop);
     }
   }
 
@@ -1214,11 +1375,38 @@ export class WorldEngine {
     g.fillStyle = this.map.surround;
     g.fillRect(0, 0, this.viewW, this.viewH);
 
-    // Camera follows the player and clamps at the map edges.
+    /*
+     * The camera follows, clamps at the map edges, and lags a little.
+     *
+     * Two guards on the lag. Under reduced motion it is switched off entirely
+     * and the camera is welded again, because a view that drifts after the
+     * thing it is following is exactly the class of motion that rule exists
+     * for. And the follow is frame-rate independent, so a phone dropping to
+     * 30fps gets the same settling time rather than twice the lag.
+     */
     const worldW = this.map.w * TILE;
     const worldH = this.map.h * TILE;
-    const camX = frame(this.player.x - this.viewW / 2, this.viewW, worldW);
-    const camY = frame(this.player.y - this.viewH / 2, this.viewH, worldH);
+    const targetX = frame(this.player.x - this.viewW / 2, this.viewW, worldW);
+    const targetY = frame(this.player.y - this.viewH / 2, this.viewH, worldH);
+
+    if (!this.cam || this.options.reducedMotion) {
+      this.cam = { x: targetX, y: targetY };
+    } else {
+      /*
+       * An exponential approach with a short time constant. Small enough that
+       * nobody would name it, large enough that stopping has a settle rather
+       * than a stop, which is where the sense of weight comes from.
+       */
+      const k = 1 - Math.pow(0.0001, this.dt);
+      this.cam.x += (targetX - this.cam.x) * k;
+      this.cam.y += (targetY - this.cam.y) * k;
+      /* Snap out the last fraction of a pixel so the terrain blit stays crisp. */
+      if (Math.abs(targetX - this.cam.x) < 0.05) this.cam.x = targetX;
+      if (Math.abs(targetY - this.cam.y) < 0.05) this.cam.y = targetY;
+    }
+
+    const camX = Math.round(this.cam.x);
+    const camY = Math.round(this.cam.y);
 
     if (this.terrain) {
       g.drawImage(
@@ -1234,6 +1422,20 @@ export class WorldEngine {
       );
     }
 
+    /*
+     * Props, before anything that walks.
+     *
+     * Drawn at all times rather than only when in reach, because a thing with
+     * no perceivable signifier is not a secret, it is an absence: a player who
+     * never learns that objects can be looked at will never look at one. The
+     * mark is deliberately at the very bottom of the visual hierarchy, a
+     * couple of pixels of contrast, so the district reads as a place with
+     * detail in it rather than as a board covered in pickups.
+     */
+    for (const entry of this.props) {
+      this.drawPropMark(g, entry, camX, camY, entry.id === this.prop?.id);
+    }
+
     // Entities are drawn back to front so nearer things overlap further ones.
     const drawables = [
       ...this.residents.map((entry) => ({
@@ -1241,7 +1443,7 @@ export class WorldEngine {
         paint: () => this.drawResident(g, entry, camX, camY),
       })),
       ...this.here.map((entry) => ({
-        y: entry.npc.y * TILE + TILE,
+        y: npcSpot(entry).y * TILE + TILE,
         paint: () => this.drawNpc(g, entry, camX, camY),
       })),
       { y: this.player.y, paint: () => this.drawEcho(g, camX, camY) },
@@ -1268,8 +1470,9 @@ export class WorldEngine {
   }
 
   private drawNpc(g: CanvasRenderingContext2D, entry: NpcRuntime, camX: number, camY: number) {
-    const x = Math.round(entry.npc.x * TILE + TILE / 2 - camX);
-    const y = Math.round(entry.npc.y * TILE + TILE / 2 - camY);
+    const spot = npcSpot(entry);
+    const x = Math.round(spot.x * TILE + TILE / 2 - camX);
+    const y = Math.round(spot.y * TILE + TILE / 2 - camY);
     if (x < -20 || y < -24 || x > this.viewW + 20 || y > this.viewH + 24) return;
 
     const figure = entry.npc.figure ?? "person";
@@ -1437,6 +1640,40 @@ export class WorldEngine {
     g.fillRect(x + 1, y - 7.5, 5, 4);
     g.fillStyle = tint;
     g.fillRect(x + 1, y - 2.5, 5, 2);
+  }
+
+  /**
+   * The mark on something worth stopping at.
+   *
+   * Two states and they differ by more than brightness: at rest it is a small
+   * static glint, and in reach it gains a ring and a step up in contrast. The
+   * touch pad simultaneously changes to say "Look" with the object's name, so
+   * nothing here is the only channel and the world is fully navigable with the
+   * canvas unseen.
+   */
+  private drawPropMark(
+    g: CanvasRenderingContext2D,
+    prop: WorldProp,
+    camX: number,
+    camY: number,
+    active: boolean,
+  ) {
+    const x = Math.round(prop.x * TILE + TILE / 2 - camX);
+    const y = Math.round(prop.y * TILE + TILE / 2 - camY);
+    if (x < -12 || y < -12 || x > this.viewW + 12 || y > this.viewH + 12) return;
+
+    if (active) {
+      g.strokeStyle = "rgba(246,242,230,0.55)";
+      g.lineWidth = 1;
+      g.beginPath();
+      g.arc(x, y - 4, 5.5, 0, Math.PI * 2);
+      g.stroke();
+    }
+
+    g.fillStyle = active ? "rgba(246,242,230,0.92)" : "rgba(246,242,230,0.34)";
+    g.beginPath();
+    g.arc(x, y - 4, active ? 2 : 1.4, 0, Math.PI * 2);
+    g.fill();
   }
 
   private drawEcho(g: CanvasRenderingContext2D, camX: number, camY: number) {

@@ -96,6 +96,15 @@ interface AppState {
   }) => AwardResult;
   /** Saves a youth-authored scenario as a draft. Never publishes it. */
   addQuestDraft: (draft: Omit<QuestDraft, "id" | "createdAt">) => QuestDraft;
+  /**
+   * Keeps a district moment. Idempotent, and pays nothing.
+   *
+   * No XP by design. Paying for looking at a bench would turn the
+   * neighbourhood into a field to be harvested and would scale the reward
+   * economy with the number of props, which is the inflation the reward rules
+   * exist to prevent.
+   */
+  keepMoment: (id: string) => void;
   /** Cosmetic only. Stored locally, never a photograph. */
   setStreetsAvatar: (look: AvatarLook) => void;
   isMissionComplete: (missionId: string) => boolean;
@@ -304,6 +313,13 @@ export const useAppStore = create<AppState>()(
         }));
         return entry;
       },
+
+      keepMoment: (id) =>
+        set((state) => {
+          const found = state.profile.districtMoments ?? [];
+          if (found.includes(id)) return state;
+          return { profile: { ...state.profile, districtMoments: [...found, id] } };
+        }),
 
       setStreetsAvatar: (look) =>
         set((state) => ({ profile: { ...state.profile, streetsAvatar: look } })),

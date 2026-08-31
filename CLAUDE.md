@@ -114,6 +114,43 @@ Evidence, and the overclaims it does not support, live in
 not usable: it traces to a consumer report citing an unverifiable source, and
 attention researchers reject it.
 
+## Sound
+
+**Every sound is synthesised at runtime. There are no audio files, anywhere.**
+Not one. `tests/unit/integrity.test.ts` fails the build if an audio file appears
+under `src` or `public`, if any component constructs an `Audio` element or an
+`AudioContext`, or if the audio engine is imported statically outside
+`src/lib/audio/`. That is what makes the provenance answer trivial: a
+synthesised wave cannot contain somebody else's recording, so there is nothing
+to license and no way a sample arrives by accident.
+
+No Nintendo, no Pokemon, no ripped game audio, no fan recreations, no packs. The
+binding test is in `docs/AUDIO_ART_DIRECTION.md`: if a knowledgeable player could
+reasonably say "that is basically the Pokemon sound", it does not ship.
+
+**Sound never carries information.** Every cue accompanies something already on
+screen, so the product is complete with audio off and the settings screen says
+so. Nothing is announced by sound alone, and nobody is expected to learn a
+vocabulary of motifs: abstract earcons rank last of every alert type in the
+evidence, and these are acknowledgement rather than signal.
+
+**Nothing plays without a genuine user gesture**, and nothing plays into a
+hidden tab. No autoplay, no silent-buffer unlock trick. The product asks once,
+plainly, and takes the answer either way, permanently.
+
+**Music never plays audibly under anything being read.** It ducks to inaudible
+whenever a sheet is open, because background sound carries a measured cost to
+reading comprehension and this product's core interaction is reading a situation
+and deciding about it. No vocals, ever, anywhere.
+
+**Safe is silent by an enforced route rule**, not as a side effect of
+unmounting. Three separate switches plus a master, in Streets and in Settings,
+persisted under their own storage key because sound is a fact about the room
+somebody is in, not about who they are.
+
+Do not claim sound improves learning. It does not, and
+`docs/LIVING_WORLD_RESEARCH.md` records why.
+
 ## Reveals
 
 - All four signature mechanics end in the same grammar: a labelled before

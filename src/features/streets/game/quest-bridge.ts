@@ -19,6 +19,7 @@ import { crewRole, type CrewRole } from "@/lib/crew-roles";
 import { withOrigin } from "@/lib/experience-origin";
 import type { SignalMarker } from "@/features/streets/game/world-engine";
 import type { AwardResult } from "@/lib/xp";
+import type { UserProfile } from "@/types/profile";
 import type { EchoStyleId } from "@/data/echo-styles";
 
 /**
@@ -96,6 +97,46 @@ export interface ThreadState {
   available: ThreadStep[];
 }
 
+/**
+ * Whether this person's situation is resolved, from a profile alone.
+ *
+ * Pure, and outside the hook, because two surfaces need the same answer and
+ * were giving different ones. Home counted only hero missions, so a player
+ * with five live thread steps and three unplayed checks was told nobody wanted
+ * a word. The world and the front door now disagree about nothing.
+ */
+export function npcDone(profile: UserProfile, npc: Npc): boolean {
+  const action = npc.action;
+  if (action.kind === "mission") return profile.completedMissionIds.includes(action.missionId);
+  if (action.kind === "check") return (profile.streetChecksDone ?? []).includes(action.checkId);
+  if (action.kind === "thread") {
+    const thread = getThread(action.threadId);
+    if (!thread) return false;
+    const banked = profile.threadSteps ?? [];
+    return requiredSteps(thread).every((step) => banked.includes(stepKey(thread.id, step.id)));
+  }
+  if (action.kind === "campaign") {
+    return Object.values(profile.campaigns ?? {}).some(
+      (entry) => (entry?.completedChapterIds?.length ?? 0) > 0,
+    );
+  }
+  /*
+   * Safe is a service, never a completion, and it has no done state ever.
+   * Neither does a noticeboard or the rewards counter: reading something twice
+   * is not a thing to tick off.
+   */
+  return false;
+}
+
+/** Anything that can be finished, so a count of what is waiting means something. */
+export const COUNTABLE_ACTIONS = new Set(["mission", "campaign", "check", "thread"]);
+
+export function waitingCount(profile: UserProfile): number {
+  return NPCS.filter(
+    (npc) => COUNTABLE_ACTIONS.has(npc.action.kind) && !npcDone(profile, npc),
+  ).length;
+}
+
 export function useStreetsBridge(): StreetsBridge {
   const router = useRouter();
   const { profile, ready } = useProfile();
@@ -117,33 +158,13 @@ export function useStreetsBridge(): StreetsBridge {
     [ready, profile.streetChecksDone],
   );
 
+  /*
+   * One rule, shared with Home. Before hydration nothing is done, which keeps
+   * the first paint identical on the server and the client.
+   */
   const isNpcDone = useCallback(
-    (npc: Npc) => {
-      const action = npc.action;
-      if (action.kind === "mission") return completedMissionIds.includes(action.missionId);
-      if (action.kind === "check") return checksDone.includes(action.checkId);
-      if (action.kind === "thread") {
-        const thread = getThread(action.threadId);
-        if (!thread) return false;
-        const banked = profile.threadSteps ?? [];
-        return requiredSteps(thread).every((step) =>
-          banked.includes(stepKey(thread.id, step.id)),
-        );
-      }
-      if (action.kind === "campaign") {
-        const campaigns = profile.campaigns ?? {};
-        return Object.values(campaigns).some(
-          (entry) => (entry?.completedChapterIds?.length ?? 0) > 0,
-        );
-      }
-      /*
-       * Safe is a service, never a completion, and it has no done state ever.
-       * Neither does a noticeboard or the rewards counter: reading something
-       * twice is not a thing to tick off.
-       */
-      return false;
-    },
-    [completedMissionIds, checksDone, profile.campaigns, profile.threadSteps],
+    (npc: Npc) => (ready ? npcDone(profile, npc) : false),
+    [ready, profile],
   );
 
   const open = useCallback(

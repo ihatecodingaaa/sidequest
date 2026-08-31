@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
 
 import "./globals.css";
 import { ServiceWorker } from "@/components/layout/service-worker";
+import { AudioProvider } from "@/hooks/use-audio";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -71,7 +72,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to content
         </a>
-        {children}
+        {/*
+          The audio provider wraps everything, and costs almost nothing to do
+          so: the engine itself is behind a dynamic import that only resolves
+          when somebody turns sound on, so Home, Updates and Safe never
+          download it. What is mounted here is the preference store and a
+          route watcher that keeps Safe silent.
+        */}
+        <AudioProvider>{children}</AudioProvider>
         <ServiceWorker />
       </body>
     </html>

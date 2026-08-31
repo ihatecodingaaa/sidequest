@@ -17,6 +17,7 @@ import { useProfile } from "@/hooks/use-profile";
 import { LevelRing } from "./level-ring";
 import { CampaignContributions } from "@/features/campaigns/campaign-contributions";
 import { EchoCollection } from "@/features/profile/echo-collection";
+import { DistrictMoments } from "@/features/profile/district-moments";
 
 export function ProfileScreen() {
   const { profile, ready } = useProfile();
@@ -110,6 +111,17 @@ export function ProfileScreen() {
         before you know there is anything to earn.
       */}
       <EchoCollection />
+
+      {/*
+        What the block looks like to somebody who has walked around it.
+
+        Placed above the passport for the same reason Echo is: this is the part
+        of You that is about the world rather than about the player's record,
+        and a screen that opens with a capability audit is a report card. The
+        passport is still here and still the substantive thing; it is just no
+        longer the first thing somebody sees about themselves.
+      */}
+      <DistrictMoments />
 
       {/*
         Safety Passport.

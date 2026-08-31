@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { DoorOpen, MessageSquare } from "lucide-react";
+import { DoorOpen, Eye, MessageSquare } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import type { Door, Npc } from "@/features/streets/streets-data";
+import type { WorldProp } from "@/features/streets/streets-props";
 
 /**
  * Movement and the interact control.
@@ -40,6 +41,7 @@ import type { Door, Npc } from "@/features/streets/streets-data";
  */
 export function TouchPad({
   near,
+  prop,
   door,
   layout,
   compact = false,
@@ -47,6 +49,8 @@ export function TouchPad({
   onInteract,
 }: {
   near: Npc | null;
+  /** Something to look at. The engine already suppresses it behind a person. */
+  prop: WorldProp | null;
   door: Door | null;
   layout: "stacked" | "edges";
   /**
@@ -98,9 +102,10 @@ export function TouchPad({
   }, [onMove]);
 
   const edges = layout === "edges";
-  /* A person beats a doorway: the engine already hands over whichever is
-     nearer, and a person in range means the player walked up to them. */
-  const target = near ? "npc" : door ? "door" : "none";
+  /* A person beats a doorway, and both beat an object: the engine already
+     hands over whichever is nearer, and a person in range means the player
+     walked up to them. */
+  const target = near ? "npc" : door ? "door" : prop ? "prop" : "none";
   const idle = target === "none";
 
   return (
@@ -175,12 +180,25 @@ export function TouchPad({
             "bg-volt-500 text-ink-900 shadow-[0_10px_30px_-8px_rgba(182,242,74,0.8)]",
           target === "door" &&
             "bg-gold-500 text-ink-900 shadow-[0_10px_30px_-8px_rgba(245,185,63,0.75)]",
+          /*
+           * A prop is quieter than a person or a door on purpose. It is worth
+           * stopping at, not worth crossing the street for, and a third bright
+           * accent competing with the two that lead somewhere would flatten
+           * the difference between looking at a bench and opening a mission.
+           */
+          target === "prop" && "border border-white/25 bg-black/55 text-chalk backdrop-blur",
         )}
       >
         {target === "npc" ? (
           <span className="leading-tight">
             Talk
             <span className="block text-[0.65rem] font-bold">{near?.name}</span>
+          </span>
+        ) : target === "prop" ? (
+          <span className="leading-tight">
+            <Eye aria-hidden className="mx-auto mb-0.5 size-4" />
+            Look
+            <span className="block text-[0.65rem] font-bold">{prop?.name}</span>
           </span>
         ) : target === "door" ? (
           <span className="leading-tight">
@@ -191,7 +209,9 @@ export function TouchPad({
         ) : (
           <>
             <MessageSquare aria-hidden className="size-5" />
-            <span className="sr-only">Nothing in reach. Walk up to somebody or a door.</span>
+            <span className="sr-only">
+              Nothing in reach. Walk up to somebody, a door, or something worth a look.
+            </span>
           </>
         )}
       </button>

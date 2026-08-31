@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, Check, Monitor, StickyNote, X } from "lucide-react";
 
 import { cn } from "@/lib/cn";
+import { useAudio } from "@/hooks/use-audio";
 import { CharacterPortrait } from "@/components/story/character-portrait";
 import { EchoMascot } from "@/components/echo/echo-mascot";
 import { ChoiceCards, Consequence } from "@/components/interaction";
@@ -47,6 +48,7 @@ export function DialogueOverlay({
   /** Sideways, the sheet becomes a side panel and the world stays visible. */
   landscape: boolean;
 }) {
+  const audio = useAudio();
   const [beat, setBeat] = useState(0);
 
   const check = npc.action.kind === "check" ? STREET_CHECKS[npc.action.checkId] : undefined;
@@ -86,6 +88,11 @@ export function DialogueOverlay({
     setChosen(optionId);
     setAward(bridge.completeCheck(check.id));
   };
+
+  /* The XP chip, once, when a Street Check actually pays. */
+  useEffect(() => {
+    if (award?.awarded) audio.play("xp-small");
+  }, [award, audio]);
 
   return (
     <WorldSheet
@@ -139,7 +146,10 @@ export function DialogueOverlay({
         {!linesDone ? (
           <button
             type="button"
-            onClick={() => setBeat((n) => n + 1)}
+            onClick={() => {
+              audio.play("ui-nav");
+              setBeat((n) => n + 1);
+            }}
             className="sq-pressable mt-5 flex min-h-12 w-full items-center justify-center rounded-2xl border border-white/10 bg-white/4 text-sm font-semibold text-mist"
           >
             Continue

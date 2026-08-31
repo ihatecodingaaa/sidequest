@@ -13,9 +13,13 @@ import { PREVENTION_THREADS, THREAD_XP, getThread } from "@/data/prevention-thre
 import { CREW_SHIFT_ROUNDS } from "@/data/campaigns/crew-shift";
 import { CREW_ROLES } from "@/lib/crew-roles";
 import { MISSIONS } from "@/data/missions";
+import { readdirSync as readDir } from "node:fs";
+import { CUES } from "@/lib/audio/cues";
+import { WORLD_PROPS } from "@/features/streets/streets-props";
 import {
   DISTRICT_01,
   DISTRICT_ID,
+  MAPS,
   NPCS,
   SOLID,
   SPAWN,
@@ -977,5 +981,154 @@ describe("every riskier option names the move that would have worked", () => {
     const saferAt = file!.text.indexOf("{safer}");
     expect(outcomeAt).toBeGreaterThan(-1);
     expect(saferAt).toBeGreaterThan(outcomeAt);
+  });
+});
+
+/* ------------------------------------------- Every sound is ours, and is a number */
+
+describe("every sound is synthesised, so there is nothing to license", () => {
+  /*
+   * The provenance gate for the audio pass, enforced rather than promised.
+   *
+   * SIDEQUEST ships no audio files. Every cue, every ambience layer and every
+   * note of the music is generated from oscillators and a noise buffer at
+   * runtime. That is what makes the copyright question trivially answerable:
+   * a synthesised triangle wave cannot contain somebody else's recording, so
+   * there is nothing to attribute, nothing to have downloaded, and no way for
+   * a sample from another game to arrive by accident.
+   *
+   * It is also what keeps the download weight at zero, which matters for a
+   * PWA that has to open on a roadshow phone over bad wifi.
+   *
+   * These tests are the thing standing between that claim and a future commit
+   * that quietly adds an mp3 because it was quicker.
+   */
+
+  const AUDIO_EXT = /\.(mp3|ogg|wav|m4a|aac|flac|opus|webm)$/i;
+
+  function walkAll(dir: string, out: string[] = []): string[] {
+    for (const entry of readDir(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) walkAll(full, out);
+      else out.push(full);
+    }
+    return out;
+  }
+
+  it("ships no audio files at all", () => {
+    const roots = [join(process.cwd(), "public"), SRC];
+    const found = roots
+      .flatMap((root) => walkAll(root))
+      .filter((file) => AUDIO_EXT.test(file))
+      .map((file) => relative(process.cwd(), file).replace(/\\/g, "/"));
+    expect(found).toEqual([]);
+  });
+
+  it("never constructs an audio element or a context outside the engine", () => {
+    /*
+     * One audio system, one place. A `new Audio(...)` scattered into a
+     * component would bypass the buses, the mute, the Safe rule and the
+     * visibility handling all at once, and would be inaudible in review.
+     */
+    const ALLOWED = new Set(["src/lib/audio/engine.ts"]);
+    for (const file of CODE) {
+      if (ALLOWED.has(file.path)) continue;
+      expect(/new Audio\s*\(/.test(file.text), `${file.path} builds an Audio element`).toBe(
+        false,
+      );
+      expect(
+        /new (webkit)?AudioContext\s*\(/.test(file.text),
+        `${file.path} builds an AudioContext`,
+      ).toBe(false);
+    }
+  });
+
+  it("keeps the audio engine out of everything except the world and the controls", () => {
+    /*
+     * The engine is behind a dynamic import so Home, Updates and Safe never
+     * download it. A static import anywhere would pull it into the main
+     * bundle and quietly undo that, which is the kind of regression nobody
+     * notices until a transfer-size budget is checked months later.
+     */
+    for (const file of CODE) {
+      if (file.path.startsWith("src/lib/audio/")) continue;
+      expect(
+        /import\s+\{[^}]*AudioEngine[^}]*\}\s+from/.test(file.text),
+        `${file.path} statically imports the audio engine`,
+      ).toBe(false);
+    }
+  });
+
+  it("gives every cue at least one voice and a sane shape", () => {
+    /* Cheap structural cover so an empty cue cannot ship as silence. */
+    const ids = Object.keys(CUES);
+    expect(ids.length).toBeGreaterThan(20);
+    for (const id of ids) {
+      const cue = CUES[id as keyof typeof CUES];
+      expect(cue.voices.length, id).toBeGreaterThan(0);
+    }
+  });
+});
+
+/* ---------------------------------------- The world reacts, spatially */
+
+describe("finishing something changes where people are", () => {
+  /*
+   * A resolved situation used to change an NPC's lines and drop their marker,
+   * which is real and invisible from three tiles away: the district looked
+   * identical whether you had done anything or not. Moving somebody is the
+   * cheapest change a player can read without opening anything.
+   *
+   * These check that the new position is somewhere they could actually be.
+   */
+  const movers = NPCS.filter((npc) => npc.after);
+
+  it("has people who move", () => {
+    expect(movers.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("moves them somewhere on the map, and somewhere standable", () => {
+    for (const npc of movers) {
+      const map = MAPS[npc.mapId ?? DISTRICT_ID];
+      const after = npc.after!;
+      expect(after.x, `${npc.id} x`).toBeGreaterThanOrEqual(0);
+      expect(after.y, `${npc.id} y`).toBeGreaterThanOrEqual(0);
+      expect(after.x, `${npc.id} x`).toBeLessThan(map.w);
+      expect(after.y, `${npc.id} y`).toBeLessThan(map.h);
+
+      const code = map.rows[after.y]?.[after.x] as never;
+      expect(SOLID.has(code), `${npc.id} moved into something solid`).toBe(false);
+    }
+  });
+
+  it("moves them far enough that it is visible", () => {
+    /*
+     * A person who shuffles one tile has not visibly reacted to anything. Two
+     * tiles is the smallest move that reads as somewhere else at this scale.
+     */
+    for (const npc of movers) {
+      const d = Math.hypot(npc.after!.x - npc.x, npc.after!.y - npc.y);
+      expect(d, `${npc.id} barely moved`).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  it("never moves somebody on top of a prop or another person", () => {
+    for (const npc of movers) {
+      const after = npc.after!;
+      const mapId = npc.mapId ?? DISTRICT_ID;
+
+      for (const other of NPCS) {
+        if (other.id === npc.id) continue;
+        if ((other.mapId ?? DISTRICT_ID) !== mapId) continue;
+        const d = Math.hypot(other.x - after.x, other.y - after.y);
+        expect(d, `${npc.id} moves onto ${other.id}`).toBeGreaterThan(1.5);
+      }
+
+      for (const prop of WORLD_PROPS) {
+        if ((prop.mapId ?? DISTRICT_ID) !== mapId) continue;
+        const d = Math.hypot(prop.x - after.x, prop.y - after.y) * TILE;
+        expect(d, `${npc.id} moves onto ${prop.id}`).toBeGreaterThan(20);
+      }
+    }
   });
 });

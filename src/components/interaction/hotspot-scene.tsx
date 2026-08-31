@@ -4,6 +4,7 @@ import { Check, Plus } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
+import { useAudio } from "@/hooks/use-audio";
 import { ACCENT_TEXT, type Accent } from "@/lib/accent";
 import type { HotspotIntent, HotspotSpot } from "@/types/interaction";
 
@@ -62,6 +63,8 @@ export function HotspotScene({
   label: string;
   className?: string;
 }) {
+  const audio = useAudio();
+
   return (
     <div
       role="group"
@@ -81,7 +84,10 @@ export function HotspotScene({
           <button
             key={spot.id}
             type="button"
-            onClick={() => onInspect(spot)}
+            onClick={() => {
+              audio.play("prop-look");
+              onInspect(spot);
+            }}
             /*
              * The accessible name says what the thing is and what tapping it
              * does, because "Bagging area" alone tells a screen reader user

@@ -3,6 +3,7 @@
 import { RotateCcw } from "lucide-react";
 
 import { cn } from "@/lib/cn";
+import { useAudio } from "@/hooks/use-audio";
 import type { OrderCard } from "@/types/interaction";
 
 /**
@@ -54,6 +55,7 @@ export function OrderCards({
   locked?: boolean;
   className?: string;
 }) {
+  const audio = useAudio();
   const remaining = cards.filter((card) => !placed.includes(card.id));
 
   return (
@@ -92,7 +94,10 @@ export function OrderCards({
             <button
               key={card.id}
               type="button"
-              onClick={() => onPlace(card.id)}
+              onClick={() => {
+                audio.play("ui-select");
+                onPlace(card.id);
+              }}
               aria-label={`${card.label}. Place as step ${placed.length + 1}.`}
               className="sq-pressable flex min-h-14 w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/4 px-4 py-3 text-left text-[0.95rem] leading-snug font-medium text-chalk hover:bg-white/7"
             >
@@ -119,7 +124,10 @@ export function OrderCards({
       {!locked && placed.length > 0 ? (
         <button
           type="button"
-          onClick={onReset}
+          onClick={() => {
+            audio.play("ui-back");
+            onReset();
+          }}
           className="sq-pressable inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-muted hover:text-chalk"
         >
           <RotateCcw aria-hidden className="size-3.5" />

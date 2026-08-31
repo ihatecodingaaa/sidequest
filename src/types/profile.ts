@@ -148,4 +148,16 @@ export interface UserProfile {
   threadChoices?: Record<string, string>;
   /** Youth-authored scenario drafts. Local, and never published from here. */
   questDrafts?: QuestDraft[];
+  /**
+   * District moments found by looking at things in Streets.
+   *
+   * Cosmetic, free, deterministic, and worth no XP at all. Its own ledger for
+   * the same reason Street Checks have one, and optional so older persisted
+   * profiles rehydrate without a migration.
+   *
+   * Deliberately not a currency and deliberately not scarce: there is a fixed
+   * list, everything on it is findable by walking, and nothing is ever removed
+   * or expires. See `streets-props.ts`.
+   */
+  districtMoments?: string[];
 }

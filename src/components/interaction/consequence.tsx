@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 
 import { cn } from "@/lib/cn";
+import { useAudio } from "@/hooks/use-audio";
 
 /**
  * What happened, then why it matters, then a way out.
@@ -74,6 +75,21 @@ export function Consequence({
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const audio = useAudio();
+
+  /*
+   * The world reacting, once, on arrival.
+   *
+   * Deliberately not tied to whether the option was the safer one. A rising
+   * cue for a good outcome and a falling one for a bad outcome would be a
+   * score read out loud, and the whole grammar of this component is that there
+   * is no score. It marks that something happened, and the words say what.
+   */
+  useEffect(() => {
+    audio.play("consequence");
+    // Once per consequence. The component is keyed by the choice that made it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className={cn("animate-rise", className)}>

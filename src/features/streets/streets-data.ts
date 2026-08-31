@@ -319,6 +319,21 @@ export interface Npc {
    * attributes, and hands off to the people who own the information.
    */
   official?: string;
+  /**
+   * Where this person stands once their situation is resolved.
+   *
+   * The world reacting, spatially, rather than only in a sentence. A thread
+   * that finishes used to change an NPC's lines and remove their marker, which
+   * is real but invisible from three tiles away: the district looked identical
+   * whether you had done anything or not.
+   *
+   * Moving somebody is the cheapest change that is legible without reading.
+   * The player walks back past where the situation was and the person is
+   * somewhere else, doing something else, and the line they say when you reach
+   * them explains it. Same map only, on purpose: a person who vanishes into a
+   * building the player has not entered reads as a bug, not as a consequence.
+   */
+  after?: { x: number; y: number };
   action: NpcAction;
   landmarkId: string;
 }
@@ -463,6 +478,8 @@ export const NPCS: Npc[] = [
     tint: "#f06fd0",
     lines: ["Can I ask you something weird.", "Haziq wants to borrow my bank login."],
     doneLines: ["He asked me again. I had the words ready that time."],
+    /* Back under the block, out of the middle of the walkway. */
+    after: { x: 17, y: 13 },
     signal: "connect",
     situation: "Somebody has been asked for their bank login by a friend",
     cta: "Hear her out",
@@ -507,6 +524,8 @@ export const NPCS: Npc[] = [
     tint: "#c9a2ff",
     lines: ["It started as nothing.", "I do not want to be the one who makes it worse."],
     doneLines: ["I am alright. Thanks for not leaving me standing there."],
+    /* Off the court and back along the walkway, which is the whole lesson. */
+    after: { x: 14, y: 21 },
     signal: "protect",
     situation: "Raised voices at the court and one person has stopped talking",
     cta: "Help",
@@ -544,6 +563,8 @@ export const NPCS: Npc[] = [
     tint: "#7fd4a8",
     lines: ["Kai does it at Sunrise. Every time.", "He says nobody notices."],
     doneLines: ["The stack by the counter moved. That was you, was it."],
+    /* Sat down. Nothing to be worried about from here. */
+    after: { x: 11, y: 10 },
     signal: "connect",
     situation: "Somebody has noticed a friend doing the same thing every week",
     cta: "Hear her out",
@@ -559,6 +580,8 @@ export const NPCS: Npc[] = [
     tint: "#e8a33c",
     lines: ["You talked to Lek. About me, is it.", "It is two things."],
     doneLines: ["I have not been back in there. Not like that anyway."],
+    /* On the court itself, which is what his thread's world change promises. */
+    after: { x: 22, y: 17 },
     cta: "Say something",
     action: { kind: "thread", threadId: "thread-last-two" },
     landmarkId: "court",

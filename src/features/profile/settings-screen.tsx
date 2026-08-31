@@ -9,6 +9,7 @@ import { INTEREST_OPTIONS, NEIGHBOURHOOD_NAMES, nearestNeighbourhood } from "@/d
 import { PageHeader } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/primitives";
+import { AudioControls } from "@/components/ui/audio-controls";
 import { clearInstallDismissal } from "@/hooks/use-install";
 import { forgetPlace } from "@/features/streets/game/streets-return";
 import { useAppStore } from "@/store/app-store";
@@ -200,6 +201,15 @@ export function SettingsScreen() {
             );
           })}
         </div>
+      </section>
+
+      {/* Sound */}
+      <section>
+        <SectionHeader
+          title="Sound"
+          subtitle="Off until you ask for it. Nothing is only a sound."
+        />
+        <AudioControls />
       </section>
 
       {/* Demo controls */}
