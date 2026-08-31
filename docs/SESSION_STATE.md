@@ -3,37 +3,126 @@
 Kept current so another session can pick this up cold. Update after every major
 stage.
 
-**Last updated:** 27 August 2026
-**Status:** Living prevention world complete and verified. Signals, threads,
-moving residents, the Community Safety Crew, Solo Preview and the rubric
-evidence set.
+**Last updated:** 31 August 2026
+**Status:** Interaction-first pass complete and verified. SIDEQUEST is
+choice-first: required keyboard typing in normal gameplay is zero, youth
+co-creation is four taps, and the interaction kit is four primitives instead of
+seven copies of one choice list.
 
-**Two rounds of real iPhone testing, and four defects it found.** All fixed,
-all written up in `docs/LANDSCAPE_RECOVERY.md`.
+---
 
-Round one: rotating destroyed the canvas. The two orientations rendered
-different JSX trees, React reconciles children by position, so a rotation
-unmounted the subtree and mounted a fresh canvas while the engine went on
-drawing into the old detached one. The world was not thin, it was dead. Also:
-an iPad held sideways got the one-handed portrait layout, because the
-orientation rule was a media query about device class rather than a
-measurement.
+## The pass that just landed
 
-Round two: finishing a mission opened from Streets landed on the missions
-directory, breaking the world loop at its last step. And rotating out and back
-left portrait compressed until a refresh, because the root's height was read
-from `visualViewport` inside `orientationchange`, which on iOS fires before the
-viewport settles.
+Real testers said three things: "there is too much typing", "make the tasks MCQ
+based instead", and "typing answers feels tedious". The first and third are a
+report of an experience. The second is a proposed solution, and taking it
+literally would have turned a prevention product into a quiz.
 
-**The pattern in all four:** something read once and remembered outlived the
-thing it described. The fixes all move in the same direction, from remembering
-to observing.
+So the rule adopted is the complaint, not the prescription: **choice first,
+action first, keyboard last.**
 
-**The next action is real Safari testing again.** Everything here was measured
-in Chromium, which has now missed four defects in a row. A WebKit project
-exists behind `SQ_WEBKIT=1` and cannot run on this machine: the WebKit binary
-reports `libxslt.dll` missing, and `npx playwright install-deps webkit` is a
-no-op on Windows.
+**What was actually wrong.** Six required text fields on the player journey, all
+of them in the two places a young person is asked to *create*: four textareas on
+the Crew board's "Build a quest", and a title plus a 600-character textarea in the
+Partner Challenge. Everything else in the product was already tap-driven, which
+is why the complaint was smaller than it sounded and sharper than it looked.
+
+**What was actually missing.** Variety. Every Streets encounter was read lines,
+tap Continue, tap one of four. That is the shape testers were describing.
+
+**Both are fixed.** `npm run audit:input --against 571ab1e` prints the
+difference: required gameplay typing 6 to 0, textareas 3 to 1, and the one that
+remains is in the partner studio, which nothing links to and a test asserts
+nothing will.
+
+**Two research findings changed the plan mid-pass**, and both are in
+`docs/INTERACTION_FIRST_RESEARCH.md`:
+
+- Interaction variety has **no** meta-analytic learning support (Clark,
+  Tanner-Smith & Killingsworth 2016 found no significant differences by variety of
+  player actions). Variety here is justified by the user complaint, which is a
+  sufficient product argument on its own, and the docs say so rather than
+  borrowing credibility.
+- If-then planning is the highest-evidence cheap mechanic available (d+ = 0.65
+  over merely forming an intention) and the product did not have it. It does now,
+  as `PlanReveal`, at the end of a Prevention Thread. The trap named in the same
+  research is that a choice card is not an implementation intention, because it
+  supplies a response without a real cue, so the player picks the cue.
+
+**Teenagers are the fastest mobile typists of any age band** (39.6 WPM, Palin et
+al. 2019, N = 37,370). Any argument that young people find typing hard is deleted
+from this repository. The real justification is differential access by language
+and education, measured breakoff cost, thin returns on a phone, and the fact that
+a text box implies somebody will read it when this product has no backend.
+
+## What is new in the code
+
+| Thing | Where |
+| ----- | ----- |
+| Interaction kit, five components | `src/components/interaction/` |
+| Quick Quest Builder, four taps | `src/features/streets/components/quest-builder.tsx`, `src/data/quest-builder.ts` |
+| Partner Challenge, three taps | `src/features/missions/partner/build-player.tsx` |
+| Hotspot scene art | `src/features/streets/components/scene-art.tsx` |
+| Third Prevention Thread, Track B | `thread-last-two` in `src/data/prevention-threads.ts` |
+| Outcome card, one takeaway visible | `src/components/reveal/outcome-card.tsx` |
+| Keyboard-demand audit | `scripts/input-audit.mjs`, `npm run audit:input` |
+| No-keyboard regression suite | `tests/e2e/no-keyboard.spec.ts` |
+
+The choice list existed in **seven** places and had begun to drift. It is now
+`ChoiceCards`, used in eight. One deliberate exception is documented in place:
+Crew Shift's private vote defers commitment behind a confirm step, which is a
+different interaction and keeps its radio affordance.
+
+Removed along the way: `TONE_RING` in the scenario player, which tinted the hover
+border green for safe and coral for risky. That was a tell about the approved
+option, before the choice, in a mission whose whole premise is finding out what
+somebody would actually do, and it only ever appeared on desktop.
+
+## Two defects this pass found
+
+**A new NPC was placed one tile from spawn**, inside the 30-unit conversation
+range, so the district greeted the player before they had walked anywhere and the
+"nothing in reach" state became unreachable. The e2e caught it intermittently,
+which is the worst way to catch anything. There is now a unit tripwire asserting
+no district NPC sits within `INTERACT_RANGE` of `SPAWN`, and a second asserting
+every NPC stands on a walkable tile.
+
+**`npm run verify` was already red at HEAD.** Commit `571ab1e` added CommonJS
+submission scripts under `docs/`, and `@typescript-eslint/no-require-imports`
+failed the whole repository. Fixed with a scoped exemption for `docs/**/*.js`.
+
+## Where the keyboard still is, and why
+
+Three exceptions, each with a tap path beside it. Every `<input>` and
+`<textarea>` in `src` declares `data-input-role`; there is no permitted value
+meaning "the player must type this", and the build fails on an undeclared field.
+
+- `code-entry`: station, crew and mission codes. QR exists for two of them, and
+  the seeded crew list is now tappable rather than a code printed next to a box
+  you had to type it into.
+- `settings`: settings and onboarding. Optional and skippable.
+- `optional-creator`: two single-line fields in the Quest Builder and two in the
+  Partner Challenge, all behind a deliberate secondary control, all after the
+  flow is already complete.
+
+## The next action
+
+**Real Safari testing, still.** Everything here was measured in Chromium, which
+has now missed four defects in a row. A WebKit project exists behind
+`SQ_WEBKIT=1` and cannot run on this machine: the WebKit binary reports
+`libxslt.dll` missing, and `npx playwright install-deps webkit` is a no-op on
+Windows.
+
+**Then the real-user test named in the report**: hand an unbriefed 13-to-16 year
+old a phone and ask them to build a quest. The pass will have worked if the
+keyboard never appears and they do not ask what to do next.
+
+**One known flake.** `game-feel.spec.ts` "puts the reward before the passport
+detail" walks two full REWIND runs and takes about 20 seconds alone against a
+45-second timeout. It failed once under eight parallel workers and passed on
+every rerun. It predates this pass and is a timeout headroom problem, not a
+correctness one.
+
 **Repository:** https://github.com/ihatecodingaaa/sidequest
 **Deployment:** not yet deployed to Vercel. CLI installed, not authenticated.
 

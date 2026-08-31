@@ -83,7 +83,7 @@ const SPEED = 74;
  * next to somebody and being told nobody is nearby is the exact frustration a
  * forgiving range exists to prevent.
  */
-const INTERACT_RANGE = 30;
+export const INTERACT_RANGE = 30;
 
 /**
  * How close the player must be to a doorway, in world units.

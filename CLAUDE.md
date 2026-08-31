@@ -68,6 +68,52 @@ work fully with location denied.
   not rescue an unclear one.
 - Exactly one element on Safe is red. If everything is urgent, nothing is.
 
+## Player input
+
+**Choice first. Action first. Keyboard last.** For standard gameplay, required
+keyboard typing is zero. That is a product law, not a target: Streets Signals,
+Street Checks, Prevention Threads, NPC conversations, linked missions, Crew
+activities, roadshow chapters and quick missions all complete by tapping.
+
+Three exceptions, and no others: a station or crew or mission code, settings and
+onboarding, and optional creator expression. Every one of them has a tap path
+beside it, and none is on the path a player has to walk. Every `<input>` and
+`<textarea>` in `src` must declare `data-input-role` naming which exception it
+is; there is deliberately no permitted value meaning "the player must type this",
+and `tests/unit/integrity.test.ts` fails the build on an undeclared field.
+`npm run audit:input` prints the current count, and `--against <ref>` diffs it.
+
+A `<textarea>` promises an essay whether or not the label does. Optional creator
+fields are single-line inputs, and the only textarea left in the product is in
+the partner studio, which nothing links to.
+
+This is not permission to make everything multiple choice. A prevention product
+whose every activity is four lettered options is a quiz, and a quiz is the thing
+the thesis refuses to build. The interaction kit in `src/components/interaction/`
+is four primitives and the narrative picks which one a step uses:
+
+- `ChoiceCards` for a decision. Options are actions, never A/B/C/D, capped at
+  four, and nothing marks the approved one before it is chosen.
+- `Consequence` after every selection, always. Option-specific feedback is what
+  makes a choice a learning event rather than a guess, and Butler and Roediger
+  (2008) is why it is not optional. No verdict, no score, no red cross. A
+  riskier option still gets told what it costs.
+- `HotspotScene` for a step about a place. Tap what is making the wrong thing
+  easy. Every spot is a real button with a real name, the artwork is decorative,
+  and no spot is ever a person.
+- `OrderCards` where the sequence is the lesson. Tap to place, never drag.
+
+Prediction is Norm Mirror's slider, which opens no keyboard. Matching is a
+choice list with a different prompt. Neither needs a component of its own.
+
+A generated draft is a template and says so on screen. No runtime model, no
+network call, and nothing that lets a player believe otherwise.
+
+Evidence, and the overclaims it does not support, live in
+`docs/INTERACTION_FIRST_RESEARCH.md`. The "eight second attention span" claim is
+not usable: it traces to a consumer report citing an unverifiable source, and
+attention researchers reject it.
+
 ## Reveals
 
 - All four signature mechanics end in the same grammar: a labelled before

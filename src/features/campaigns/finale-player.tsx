@@ -6,6 +6,7 @@ import { ArrowRight, Check, Lock, Sparkles, Zap } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { ChoiceCards } from "@/components/interaction";
 import { MissionShell } from "@/features/missions/engine/mission-shell";
 import { StoryView, useSegment } from "./story-view";
 import { storyBeatLabel } from "@/components/story/story-beat";
@@ -129,19 +130,12 @@ export function FinalePlayer({ campaign }: { campaign: Campaign }) {
             There is more than one decent answer here. Pick the one you would actually say.
           </p>
 
-          <div className="mt-6 space-y-2.5">
-            {finale.options.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => decide(option.id)}
-                className="sq-pressable flex min-h-14 w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/4 px-4 py-3 text-left text-[0.95rem] leading-snug font-medium text-chalk hover:border-coral-500/40 hover:bg-white/7"
-              >
-                <span className="flex-1">{option.label}</span>
-                <ArrowRight aria-hidden className="size-4 shrink-0 text-faint" />
-              </button>
-            ))}
-          </div>
+          <ChoiceCards
+            className="mt-6"
+            options={finale.options.map((option) => ({ id: option.id, label: option.label }))}
+            legend={finale.question}
+            onChoose={decide}
+          />
         </div>
       </MissionShell>
     );

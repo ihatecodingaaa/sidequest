@@ -287,20 +287,22 @@ test.describe("Partner Challenge", () => {
     await expect(page.getByText("Prototype Partner Challenge")).toBeVisible();
     await expect(page.getByText(/No organisation has commissioned this challenge/)).toBeVisible();
 
-    await page.getByRole("button", { name: "Write your answer" }).click();
-
-    // Validation should stop an empty submission.
-    await page.getByRole("button", { name: "Submit" }).click();
-    await expect(page.getByText(/at least six characters/)).toBeVisible();
-
-    await page.getByRole("textbox").first().fill("Show the basket like a receipt");
-    await page
-      .locator("textarea")
-      .fill(
-        "Keep the full running list on screen the whole time, so a shopper can always check what the machine recorded without asking anyone.",
-      );
+    /*
+     * Three choices, not a blank box.
+     *
+     * The mission used to open on a title field and a forty character minimum
+     * textarea, which was the longest piece of required typing in the product.
+     * It is now: what is wrong, what would you change, which idea is that. The
+     * combination is still the player's, and the entry records both halves.
+     */
+    await page.getByRole("button", { name: "Design your answer" }).click();
+    await page.getByRole("button", { name: /You cannot tell if it scanned/ }).click();
+    await page.getByRole("button", { name: /Show the basket like a receipt/ }).click();
     await page.getByRole("button", { name: /Make the state visible/ }).click();
-    await page.getByRole("button", { name: "Submit" }).click();
+
+    // The entry is assembled before it is submitted, and says how.
+    await expect(page.getByText(/No AI wrote this/)).toBeVisible();
+    await page.getByRole("button", { name: "Submit your entry" }).click();
 
     await expect(page.getByRole("heading", { name: "Mission complete" })).toBeVisible();
     await expect(page.getByText("Submitted.")).toBeVisible();

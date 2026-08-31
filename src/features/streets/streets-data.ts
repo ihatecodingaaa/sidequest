@@ -514,7 +514,73 @@ export const NPCS: Npc[] = [
     landmarkId: "court",
   },
 
+  /* ------------------------------------ The last two, across the district */
+
+  /*
+   * Three people, three places, three different things to do.
+   *
+   * Mira tells you something, Lek asks you to look at her shop, and Kai is the
+   * conversation the whole thread is walking towards. The middle one is the
+   * step that could not exist before the interaction kit: it asks about the
+   * building, not about the boy, which is the only question in this district a
+   * player can answer without guessing anything about a person.
+   */
+  {
+    id: "npc-mira",
+    name: "Mira",
+    characterId: "rina",
+    /*
+     * West of the void deck, not on top of the spawn tile.
+     *
+     * She was first placed one tile diagonally from `SPAWN`, which is 22 world
+     * units, inside the 30 unit conversation range. That made the district
+     * greet the player before they had walked anywhere, which is the opposite
+     * of the rule the map is built on: the player should reach something worth
+     * stopping for within a few seconds of walking in any direction, having
+     * walked. A unit test now fails the build if anybody lands there again.
+     */
+    x: 13,
+    y: 8,
+    tint: "#7fd4a8",
+    lines: ["Kai does it at Sunrise. Every time.", "He says nobody notices."],
+    doneLines: ["The stack by the counter moved. That was you, was it."],
+    signal: "connect",
+    situation: "Somebody has noticed a friend doing the same thing every week",
+    cta: "Hear her out",
+    action: { kind: "thread", threadId: "thread-last-two" },
+    landmarkId: "voiddeck",
+  },
+  {
+    id: "npc-kai",
+    name: "Kai",
+    characterId: "ken",
+    x: 20,
+    y: 16,
+    tint: "#e8a33c",
+    lines: ["You talked to Lek. About me, is it.", "It is two things."],
+    doneLines: ["I have not been back in there. Not like that anyway."],
+    cta: "Say something",
+    action: { kind: "thread", threadId: "thread-last-two" },
+    landmarkId: "court",
+  },
+
   /* ------------------------------------------------- Inside the minimart */
+
+  {
+    id: "npc-lek",
+    name: "Lek",
+    characterId: "ilyas",
+    mapId: "minimart-in",
+    x: 6,
+    y: 3,
+    tint: "#4ea3c9",
+    lines: ["You are on the Crew. Help me with the shop, not with him.", "Something in here is doing half the work."],
+    doneLines: ["Stack is gone. I can see the whole aisle from here now."],
+    situation: "A shop that is making the wrong thing easy",
+    cta: "Take a look",
+    action: { kind: "thread", threadId: "thread-last-two" },
+    landmarkId: "minimart",
+  },
 
   {
     id: "npc-bea",
@@ -686,6 +752,15 @@ export interface StreetCheckOption {
   label: string;
   /** Deterministic consequence text. Never "wrong". */
   outcome: string;
+  /**
+   * The move that would have worked better. Required unless `isSafest`.
+   *
+   * Same rule and same reason as `ThreadChoice.safer`: a consequence for a
+   * risky option must never end on the harm, because fear without an efficacy
+   * component is the shape of the prevention approach with the worst evidence
+   * behind it. A unit test enforces the presence of this field.
+   */
+  safer?: string;
   isSafest?: boolean;
 }
 
@@ -743,12 +818,14 @@ export const STREET_CHECKS: Record<string, StreetCheck> = {
         label: "Tell her out loud to put them back",
         outcome:
           "It works, and it is harder than it sounds with people around. Doing the thing is usually easier than announcing it.",
+        safer: "Scan them yourself. No speech, no audience, and it is over in two beeps.",
       },
       {
         id: "quiet",
         label: "Say nothing. It is not your basket",
         outcome:
           "You walk out together, and that is the part people get wrong. Police advice to this age group is blunt about it: being part of a group that is shoplifting makes you equally liable, whether or not you were the one holding anything.",
+        safer: "Scan the last two yourself. It takes a hand rather than a speech.",
       },
     ],
     takeaway: "The move that costs least is usually a hand, not a speech.",
@@ -772,6 +849,7 @@ export const STREET_CHECKS: Record<string, StreetCheck> = {
         label: "Try it once and see if the money is real",
         outcome:
           "The first payment is often real. That is what makes the second request easier to say yes to, and the account is hers either way.",
+        safer: "Tell her a real job never needs her account. Look for a company she can actually check.",
       },
       {
         id: "ask",
@@ -785,6 +863,7 @@ export const STREET_CHECKS: Record<string, StreetCheck> = {
         label: "Just ignore it and move on",
         outcome:
           "Safe enough for her. She forwards it to two friends first, and one of them asks what the catch is.",
+        safer: "Say why out loud before she passes it on, so the next person gets the reason too.",
       },
     ],
     takeaway: "A real job pays you. It does not ask to use your account.",
@@ -808,6 +887,7 @@ export const STREET_CHECKS: Record<string, StreetCheck> = {
         label: "Look closely at the video for something off",
         outcome:
           "He watches it four more times and is no more certain than before. Fabricated video can be convincing enough that studying it does not settle anything.",
+        safer: "Hang up and call his cousin on the number he already has.",
       },
       {
         id: "callback",
@@ -821,6 +901,7 @@ export const STREET_CHECKS: Record<string, StreetCheck> = {
         label: "Ask a question only the real cousin would know",
         outcome:
           "Better than nothing, and it can be researched or guessed. Verifying through a channel you already trust is the stronger move.",
+        safer: "Call back on a number he already had, rather than testing the person on the screen.",
       },
     ],
     takeaway: "Verify the request, not the face. Use a number you already had.",

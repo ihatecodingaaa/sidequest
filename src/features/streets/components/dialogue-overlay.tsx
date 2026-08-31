@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Check, ChevronDown, Monitor, StickyNote, X } from "lucide-react";
+import { ArrowRight, Check, Monitor, StickyNote, X } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import { CharacterPortrait } from "@/components/story/character-portrait";
 import { EchoMascot } from "@/components/echo/echo-mascot";
+import { ChoiceCards, Consequence } from "@/components/interaction";
 import { ExternalLink, ProvenanceTag } from "@/components/ui/primitives";
 import { getOfficialResource } from "@/lib/official-links";
 import { ThreadPanel } from "@/features/streets/components/thread-panel";
@@ -77,7 +78,6 @@ export function DialogueOverlay({
   /* Street Check state, kept local: the ledger lives in the store. */
   const [chosen, setChosen] = useState<string | null>(null);
   const [award, setAward] = useState<AwardResult | null>(null);
-  const [why, setWhy] = useState(false);
 
   const option = check && chosen ? check.options.find((entry) => entry.id === chosen) : undefined;
 
@@ -162,34 +162,55 @@ export function DialogueOverlay({
                 <p className="mt-5 text-xs font-semibold uppercase tracking-[0.12em] text-faint">
                   {check.question}
                 </p>
-                <div className="mt-2.5 space-y-2.5">
-                  {check.options.map((entry) => (
-                    <button
-                      key={entry.id}
-                      type="button"
-                      onClick={() => choose(entry.id)}
-                      className="sq-pressable flex min-h-14 w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/4 px-4 py-3 text-left text-[0.95rem] leading-snug font-medium text-chalk hover:bg-white/7"
-                    >
-                      <span className="flex-1">{entry.label}</span>
-                      <ArrowRight aria-hidden className="size-4 shrink-0 text-faint" />
-                    </button>
-                  ))}
-                </div>
+                {/*
+                  The one choice list.
+
+                  This markup used to be written out here, and in the thread
+                  panel, and in five other places. A choice is the most
+                  repeated interaction in the product and it is worth exactly
+                  one implementation, so that a rule about how a choice behaves
+                  can be enforced rather than remembered.
+                */}
+                <ChoiceCards
+                  className="mt-2.5"
+                  options={check.options.map((entry) => ({ id: entry.id, label: entry.label }))}
+                  legend={check.question}
+                  onChoose={choose}
+                />
               </>
             ) : (
-              <div className="animate-rise">
-                {/*
-                  Consequence, never a verdict. Nothing here says "wrong", no XP
-                  is taken away and every option gets an honest outcome, because
-                  this is a rehearsal environment and punishing a fictional
-                  choice teaches people to stop making them out loud.
-                */}
-                <p className="text-[1.05rem] leading-relaxed text-chalk">{option?.outcome}</p>
+              /*
+                Consequence, never a verdict. Nothing here says "wrong", no XP
+                is taken away and every option gets an honest outcome, because
+                this is a rehearsal environment and punishing a fictional
+                choice teaches people to stop making them out loud.
 
-                <p className="mt-4 rounded-2xl border border-volt-500/25 bg-volt-500/8 px-4 py-3 text-sm leading-relaxed font-semibold text-volt-300">
-                  {check.takeaway}
-                </p>
-
+                Detail on request: the source sits behind one tap rather than
+                four lines down. Real screenshots showed this screen running to
+                a character line, a paragraph, a callout, an XP chip, a source
+                paragraph, a button and a mascot line, which is a lot of
+                reading for something that took ten seconds.
+              */
+              <Consequence
+                outcome={option?.outcome ?? ""}
+                safer={option?.safer}
+                takeaway={check.takeaway}
+                why={
+                  <>
+                    <span className="font-bold text-mist">{check.source.label}.</span>{" "}
+                    {check.source.body}
+                  </>
+                }
+                footer={
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="sq-pressable mt-5 flex min-h-12 w-full items-center justify-center rounded-2xl bg-volt-500 text-sm font-bold text-ink-900"
+                  >
+                    Back to the block
+                  </button>
+                }
+              >
                 {award?.awarded ? (
                   <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-volt-500/12 px-3.5 py-1.5 text-sm font-bold text-volt-300">
                     <Check aria-hidden className="size-4" strokeWidth={3} />+{award.xpGained} XP
@@ -197,45 +218,7 @@ export function DialogueOverlay({
                 ) : (
                   <p className="mt-3 text-xs text-muted">Already counted. Replays add nothing.</p>
                 )}
-
-                {/*
-                  Detail on request.
-
-                  The contract for a quick street encounter is: play first, one
-                  takeaway, detail on request. Real screenshots showed this
-                  screen running to a character line, a paragraph, a callout,
-                  an XP chip, a source paragraph, a button and a mascot line,
-                  which is a lot of reading for something that took ten
-                  seconds. The source is one tap away rather than four lines
-                  down, and it is still always reachable.
-                */}
-                <button
-                  type="button"
-                  onClick={() => setWhy((open) => !open)}
-                  aria-expanded={why}
-                  className="sq-pressable mt-3 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-mist hover:text-chalk"
-                >
-                  Why this
-                  <ChevronDown
-                    aria-hidden
-                    className={cn("size-4 transition-transform", why && "rotate-180")}
-                  />
-                </button>
-                {why ? (
-                  <p className="mt-1 text-xs leading-relaxed text-faint">
-                    <span className="font-bold text-mist">{check.source.label}.</span>{" "}
-                    {check.source.body}
-                  </p>
-                ) : null}
-
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="sq-pressable mt-5 flex min-h-12 w-full items-center justify-center rounded-2xl bg-volt-500 text-sm font-bold text-ink-900"
-                >
-                  Back to the block
-                </button>
-              </div>
+              </Consequence>
             )}
           </div>
         ) : null}

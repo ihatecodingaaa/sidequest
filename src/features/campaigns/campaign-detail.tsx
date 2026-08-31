@@ -270,6 +270,7 @@ function StationCodeEntry({ campaign }: { campaign: Campaign }) {
           Cannot scan? Enter the station code
         </span>
         <input
+          data-input-role="code-entry"
           value={code}
           onChange={(event) => {
             setCode(event.target.value.toUpperCase().slice(0, 6));

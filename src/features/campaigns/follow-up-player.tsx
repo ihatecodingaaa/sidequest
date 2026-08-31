@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowRight, ArrowLeft, Check, Lock, Zap } from "lucide-react";
 
 import { Button, ButtonLink } from "@/components/ui/button";
+import { ChoiceCards } from "@/components/interaction";
 import { MissionShell } from "@/features/missions/engine/mission-shell";
 import { StoryView, useSegment } from "./story-view";
 import { storyBeatLabel } from "@/components/story/story-beat";
@@ -116,22 +117,15 @@ export function FollowUpPlayer({
           <h1 className="text-balance-tight font-display text-2xl leading-tight font-extrabold text-chalk">
             {beat.question}
           </h1>
-          <div className="mt-6 space-y-2.5">
-            {beat.options.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => {
-                  setChosen(option.id);
-                  setStep("response");
-                }}
-                className="sq-pressable flex min-h-14 w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/4 px-4 py-3 text-left text-[0.95rem] leading-snug font-medium text-chalk hover:border-quest-500/40 hover:bg-white/7"
-              >
-                <span className="flex-1">{option.label}</span>
-                <ArrowRight aria-hidden className="size-4 shrink-0 text-faint" />
-              </button>
-            ))}
-          </div>
+          <ChoiceCards
+            className="mt-6"
+            options={beat.options.map((option) => ({ id: option.id, label: option.label }))}
+            legend={beat.question}
+            onChoose={(id) => {
+              setChosen(id);
+              setStep("response");
+            }}
+          />
         </div>
       </MissionShell>
     );

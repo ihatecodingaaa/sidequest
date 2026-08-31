@@ -7,6 +7,7 @@ import { cn } from "@/lib/cn";
 import { MissionWorld } from "@/components/mission/mission-world";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/primitives";
+import { OutcomeCard } from "@/components/reveal/outcome-card";
 import { MissionShell } from "@/features/missions/engine/mission-shell";
 import { ShiftReveal } from "@/components/reveal/shift-reveal";
 import { toStoryLines } from "@/types/story";
@@ -221,12 +222,6 @@ export function RewindPlayer({
   if ((phase === "outcome-one" || phase === "outcome-two") && beat?.outcome) {
     const outcome = beat.outcome;
     const isFirst = phase === "outcome-one";
-    const toneColour =
-      outcome.kind === "good"
-        ? "text-volt-300"
-        : outcome.kind === "mixed"
-          ? "text-gold-400"
-          : "text-coral-300";
 
     return (
       <MissionShell
@@ -262,20 +257,15 @@ export function RewindPlayer({
             ),
           )}
 
-          <div className="sq-card mt-6 p-5">
-            <p className={cn("font-display text-xl leading-tight font-extrabold", toneColour)}>
-              {outcome.headline}
-            </p>
-            <p className="mt-3 text-sm leading-relaxed text-mist">{outcome.body}</p>
-            <ul className="mt-5 space-y-2.5">
-              {outcome.takeaways.map((takeaway) => (
-                <li key={takeaway} className="flex gap-2.5 text-sm leading-relaxed text-chalk">
-                  <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-current opacity-40" />
-                  {takeaway}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/*
+            One card, one takeaway visible, the rest one tap away.
+
+            This markup existed here and in the other outcome screen, and it
+            was the largest single block of text in the product: the audit
+            measured 102 to 140 words arriving at once at the end of a branch.
+            `OutcomeCard` carries the reasoning.
+          */}
+          <OutcomeCard outcome={outcome} className="mt-6" />
 
           {isFirst ? (
             <p className="mt-6 text-center text-sm text-muted">

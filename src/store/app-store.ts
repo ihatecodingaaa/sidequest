@@ -272,9 +272,27 @@ export const useAppStore = create<AppState>()(
         return result;
       },
 
+      /*
+       * Youth-authored drafts.
+       *
+       * Everything a person can put here is sanitised on the way in, including
+       * the generated prose. The generated fields cannot currently contain
+       * anything a template did not put there, but sanitising them anyway
+       * costs nothing and means a future template that interpolates a typed
+       * value does not quietly become the one unsanitised path into storage.
+       *
+       * Still a draft, still local, still never published.
+       */
       addQuestDraft: (draft) => {
         const entry: QuestDraft = {
           ...draft,
+          title: sanitiseText(draft.title, 60),
+          hook: sanitiseText(draft.hook, 240),
+          moment: sanitiseText(draft.moment, 240),
+          response: sanitiseText(draft.response, 240),
+          ...(draft.customDetail
+            ? { customDetail: sanitiseText(draft.customDetail, 120) }
+            : {}),
           id: makeId("draft"),
           createdAt: new Date().toISOString(),
         };

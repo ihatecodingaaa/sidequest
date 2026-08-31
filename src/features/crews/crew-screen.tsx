@@ -26,7 +26,7 @@ export function CrewScreen() {
   const join = () => {
     const found = findCrewByJoinCode(code);
     if (!found) {
-      setError("No crew with that code. Try one of the codes listed below.");
+      setError("No crew with that code. The crews above can be joined by tapping.");
       return;
     }
     joinCrew(found.id);
@@ -193,12 +193,57 @@ export function CrewScreen() {
       <section>
         <SectionHeader title="Join another crew" subtitle="Codes are seeded for the prototype." />
         <div className="sq-card p-4">
-          <label className="block">
+          {/*
+            Tap to join, first.
+
+            The crews and their codes were already listed on this screen, as
+            text, next to a box you had to type the code into. That is a
+            keyboard requirement with the answer printed underneath it, which
+            is the clearest possible example of the friction testers were
+            describing. The list is now the primary path and the code field is
+            the fallback for a code that is not on it.
+          */}
+          <ul className="space-y-2">
+            {CREWS.map((entry) => {
+              const current = entry.id === profile.crewId;
+              return (
+                <li key={entry.id}>
+                  <button
+                    type="button"
+                    disabled={current}
+                    onClick={() => {
+                      joinCrew(entry.id);
+                      setError(null);
+                    }}
+                    className={cn(
+                      "sq-pressable flex min-h-14 w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left",
+                      current
+                        ? "cursor-not-allowed border-white/8 bg-white/2"
+                        : "border-white/10 bg-white/4 hover:bg-white/7",
+                    )}
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold text-chalk">{entry.name}</span>
+                      <span className="block font-mono text-xs text-faint">{entry.joinCode}</span>
+                    </span>
+                    {current ? (
+                      <span className="shrink-0 text-xs font-semibold text-faint">You are here</span>
+                    ) : (
+                      <ArrowRight aria-hidden className="size-4 shrink-0 text-faint" />
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+
+          <label className="mt-4 block">
             <span className="flex items-center gap-2 text-sm font-semibold text-chalk">
               <KeyRound aria-hidden className="size-4 text-faint" />
-              Crew code
+              Or type a code
             </span>
             <input
+              data-input-role="code-entry"
               value={code}
               onChange={(event) => {
                 setCode(event.target.value.toUpperCase());
@@ -220,15 +265,6 @@ export function CrewScreen() {
           <Button className="mt-3" full disabled={code.trim().length === 0} onClick={join}>
             Join crew
           </Button>
-
-          <ul className="mt-4 space-y-1.5">
-            {CREWS.map((entry) => (
-              <li key={entry.id} className="flex items-center justify-between text-xs">
-                <span className="text-muted">{entry.name}</span>
-                <span className="font-mono font-semibold text-faint">{entry.joinCode}</span>
-              </li>
-            ))}
-          </ul>
         </div>
       </section>
 

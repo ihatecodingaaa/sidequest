@@ -3,9 +3,10 @@
 import { useMemo, useState } from "react";
 import { ArrowRight, Lightbulb, MessageSquare } from "lucide-react";
 
-import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
+import { ChoiceCards } from "@/components/interaction";
 import { Chip } from "@/components/ui/primitives";
+import { OutcomeCard } from "@/components/reveal/outcome-card";
 import { MissionShell } from "./mission-shell";
 import { StoryBeat, useStoryBeat } from "@/components/story/story-beat";
 import { WhyThisWorks } from "@/components/reveal/why-this-works";
@@ -17,11 +18,17 @@ import type { Scenario, ScenarioBeat, ScenarioChoice } from "@/types/scenario";
 
 type Phase = "intro" | "playing" | "outcome" | "debrief" | "complete";
 
-const TONE_RING: Record<NonNullable<ScenarioChoice["tone"]>, string> = {
-  safe: "hover:border-volt-500/40",
-  risky: "hover:border-coral-500/40",
-  neutral: "hover:border-white/20",
-};
+/*
+ * `tone` used to tint the hover border: green for safe, coral for risky.
+ *
+ * It has been removed rather than ported to `ChoiceCards`, because it was a
+ * tell. An option that glows a different colour when you point at it has told
+ * you which one the product approves of, before you have chosen, in a mission
+ * whose entire premise is finding out what somebody would actually do. It only
+ * ever appeared on desktop, since a phone has no hover, so it was also a tell
+ * that half the audience never got. The field stays on the data for the
+ * debrief; nothing renders it before a choice is made.
+ */
 
 /**
  * The shared branching player.
@@ -125,12 +132,6 @@ export function ScenarioPlayer({
 
   if (phase === "outcome" && beat?.outcome) {
     const outcome = beat.outcome;
-    const toneColour =
-      outcome.kind === "good"
-        ? "text-volt-300"
-        : outcome.kind === "mixed"
-          ? "text-gold-400"
-          : "text-coral-300";
 
     return (
       <MissionShell
@@ -164,21 +165,15 @@ export function ScenarioPlayer({
             ),
           )}
 
-          <div className="sq-card mt-6 p-5">
-            <p className={cn("font-display text-xl leading-tight font-extrabold", toneColour)}>
-              {outcome.headline}
-            </p>
-            <p className="mt-3 text-sm leading-relaxed text-mist">{outcome.body}</p>
+          {/*
+            One card, one takeaway visible, the rest one tap away.
 
-            <ul className="mt-5 space-y-2.5">
-              {outcome.takeaways.map((takeaway) => (
-                <li key={takeaway} className="flex gap-2.5 text-sm leading-relaxed text-chalk">
-                  <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-current opacity-40" />
-                  {takeaway}
-                </li>
-              ))}
-            </ul>
-          </div>
+            This markup existed here and in the other outcome screen, and it
+            was the largest single block of text in the product: the audit
+            measured 102 to 140 words arriving at once at the end of a branch.
+            `OutcomeCard` carries the reasoning.
+          */}
+          <OutcomeCard outcome={outcome} className="mt-6" />
         </div>
       </MissionShell>
     );
@@ -308,34 +303,25 @@ export function BeatView({
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-faint">
               {choiceHint ?? "What do you do?"}
             </p>
-            <div className="space-y-2.5">
-            {beat.choices.map((choice) => {
-              const disabled = disabledChoiceIds.includes(choice.id);
-              return (
-                <button
-                  key={choice.id}
-                  type="button"
-                  disabled={disabled}
-                  onClick={() => onChoose(choice)}
-                  className={cn(
-                    "sq-pressable flex min-h-14 w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/4 px-4 py-3 text-left text-[0.95rem] leading-snug font-medium text-chalk",
-                    disabled
-                      ? "cursor-not-allowed opacity-35"
-                      : cn("hover:bg-white/7", TONE_RING[choice.tone ?? "neutral"]),
-                  )}
-                >
-                  <span className="flex-1">{choice.label}</span>
-                  {disabled ? (
-                    <span className="shrink-0 text-[0.65rem] font-semibold uppercase tracking-wide text-faint">
-                      Taken
-                    </span>
-                  ) : (
-                    <ArrowRight aria-hidden className="size-4 shrink-0 text-faint" />
-                  )}
-                </button>
-              );
-            })}
-            </div>
+            {/*
+              A branch already taken stays visible and disabled rather than
+              disappearing, because REWIND is about seeing that the path was
+              there. `hint` carries that, so the state is in text rather than
+              only in opacity.
+            */}
+            <ChoiceCards
+              options={beat.choices.map((choice) => ({
+                id: choice.id,
+                label: choice.label,
+                disabled: disabledChoiceIds.includes(choice.id),
+                hint: disabledChoiceIds.includes(choice.id) ? "Taken" : undefined,
+              }))}
+              legend={choiceHint ?? "What do you do?"}
+              onChoose={(id) => {
+                const choice = beat.choices?.find((entry) => entry.id === id);
+                if (choice) onChoose(choice);
+              }}
+            />
           </div>
         ) : null}
       </BeatScene>

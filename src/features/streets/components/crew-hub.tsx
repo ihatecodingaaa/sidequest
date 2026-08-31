@@ -9,9 +9,9 @@ import { SIGNAL_MODES } from "@/data/signals";
 import { PREVENTION_THREADS } from "@/data/prevention-threads";
 import { crewStanding } from "@/lib/crew-roles";
 import { ProvenanceTag } from "@/components/ui/primitives";
-import { useAppStore } from "@/store/app-store";
 import { useProfile } from "@/hooks/use-profile";
 import { WorldSheet } from "@/features/streets/components/world-sheet";
+import { QuestBuilder } from "@/features/streets/components/quest-builder";
 import type { StreetsBridge } from "@/features/streets/game/quest-bridge";
 
 /**
@@ -207,33 +207,19 @@ function RoleBoard({ bridge }: { bridge: StreetsBridge }) {
 
 /* ------------------------------------------------------------ Build a quest */
 
-const EMPTY = { title: "", hook: "", moment: "", response: "" };
-
+/**
+ * The youth co-creation surface.
+ *
+ * It used to be four `<textarea>` fields, and it was the clearest single
+ * source of the tester complaint that there is too much typing. It is now four
+ * tapped choices and a preview, in `QuestBuilder`, with the keyboard offered
+ * behind a secondary control for anybody who wants it.
+ *
+ * The framing above the builder is unchanged, deliberately. Fewer keystrokes
+ * does not mean fewer safeguards: a draft is still a draft, it still stays on
+ * the device, and it still goes to a person before it goes anywhere else.
+ */
 function BuildBoard() {
-  const { profile } = useProfile();
-  const addQuestDraft = useAppStore((state) => state.addQuestDraft);
-  const [form, setForm] = useState(EMPTY);
-  const [saved, setSaved] = useState(false);
-
-  const drafts = profile.questDrafts ?? [];
-  const ready = form.title.trim().length > 2 && form.moment.trim().length > 4;
-
-  const field = (key: keyof typeof EMPTY, label: string, placeholder: string, rows = 2) => (
-    <label className="block">
-      <span className="text-xs font-semibold tracking-[0.1em] text-faint uppercase">{label}</span>
-      <textarea
-        value={form[key]}
-        rows={rows}
-        placeholder={placeholder}
-        onChange={(event) => {
-          setForm({ ...form, [key]: event.target.value });
-          setSaved(false);
-        }}
-        className="mt-1.5 w-full rounded-xl border border-white/12 bg-white/4 px-3.5 py-2.5 text-sm text-chalk placeholder:text-faint focus:border-volt-500/60 focus:outline-none"
-      />
-    </label>
-  );
-
   return (
     <div className="mt-4">
       <div className="rounded-2xl border border-quest-500/25 bg-quest-500/8 p-3.5">
@@ -242,56 +228,13 @@ function BuildBoard() {
           Draft, review required
         </p>
         <p className="mt-1.5 text-xs leading-relaxed text-mist">
-          Write the situation you have actually seen. Drafts stay on this device and go to a
-          facilitator or a teacher before anything is ever published. Nothing written here becomes
+          Build the situation you have actually seen. Drafts stay on this device and go to a
+          facilitator or a teacher before anything is ever published. Nothing built here becomes
           live content in the app.
         </p>
       </div>
 
-      <div className="mt-4 space-y-3">
-        {field("title", "Call it something", "Two people, one bus stop")}
-        {field("hook", "What is happening", "Somebody is being talked into something small")}
-        {field("moment", "The moment somebody has to choose", "What is the decision, and who makes it")}
-        {field("response", "What would actually work", "The move that costs the person the least")}
-      </div>
-
-      <button
-        type="button"
-        disabled={!ready}
-        onClick={() => {
-          addQuestDraft(form);
-          setForm(EMPTY);
-          setSaved(true);
-        }}
-        className={cn(
-          "sq-pressable mt-4 flex min-h-12 w-full items-center justify-center rounded-2xl text-sm font-bold",
-          ready ? "bg-volt-500 text-ink-900" : "cursor-not-allowed bg-white/6 text-faint",
-        )}
-      >
-        Save as draft
-      </button>
-
-      {saved ? (
-        <p role="status" className="mt-2 text-sm font-semibold text-volt-300">
-          Saved. It is a draft, and it stays one until somebody reviews it.
-        </p>
-      ) : null}
-
-      {drafts.length > 0 ? (
-        <ul className="mt-4 space-y-2">
-          {drafts.map((draft) => (
-            <li key={draft.id} className="rounded-xl border border-white/8 bg-white/2 px-3.5 py-2.5">
-              <p className="flex items-center gap-2 text-sm font-bold text-chalk">
-                {draft.title}
-                <span className="rounded-full bg-white/8 px-2 py-0.5 text-[0.6rem] font-bold tracking-[0.08em] text-faint uppercase">
-                  Draft
-                </span>
-              </p>
-              <p className="mt-0.5 text-xs leading-relaxed text-muted">{draft.moment}</p>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      <QuestBuilder />
     </div>
   );
 }

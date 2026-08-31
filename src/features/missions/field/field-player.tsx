@@ -401,6 +401,7 @@ function CheckIn({
             Or enter the mission code
           </span>
           <input
+            data-input-role="code-entry"
             value={code}
             onChange={(event) => {
               setCode(sanitiseText(event.target.value, 20));

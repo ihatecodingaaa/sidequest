@@ -13,6 +13,27 @@ import { PREVENTION_THREADS, THREAD_XP, getThread } from "@/data/prevention-thre
 import { CREW_SHIFT_ROUNDS } from "@/data/campaigns/crew-shift";
 import { CREW_ROLES } from "@/lib/crew-roles";
 import { MISSIONS } from "@/data/missions";
+import {
+  DISTRICT_01,
+  DISTRICT_ID,
+  NPCS,
+  SOLID,
+  SPAWN,
+  STREET_CHECKS,
+  TILE,
+} from "@/features/streets/streets-data";
+import { INTERACT_RANGE } from "@/features/streets/game/world-engine";
+import { PROTECTIVE_FACTORS } from "@/data/protective-factors";
+import {
+  QUEST_DECISIONS,
+  QUEST_FACTOR_MOVES,
+  QUEST_PRIMARY_FACTORS,
+  QUEST_SECONDARY_FACTORS,
+  QUEST_SETTINGS,
+  QUEST_TRIGGERS,
+  generateQuestDraft,
+} from "@/data/quest-builder";
+import type { ProtectiveFactorId } from "@/types/protective";
 
 /**
  * Content integrity.
@@ -42,6 +63,27 @@ const SOURCE_FILES = walk(SRC).map((path) => ({
   path: relative(process.cwd(), path).replace(/\\/g, "/"),
   text: readFileSync(path, "utf8"),
 }));
+
+/**
+ * Source with comments removed.
+ *
+ * Two tripwires in this file scan for a construct that their own subject
+ * documents in prose: a component explaining that it used to be a `<textarea>`
+ * and no longer is, and one explaining that it promises no notification. A
+ * tripwire that fires on the documentation of the rule it enforces is a
+ * tripwire nobody will keep, so it reads code and not comments.
+ *
+ * Block comments cover JSDoc and JSX comments alike. Line comments are
+ * stripped only where the slashes are not preceded by a colon, so a URL inside
+ * a string survives.
+ */
+function stripComments(text: string): string {
+  return text
+    .replace(/\/\*[\s\S]*?\*\//g, (match) => match.replace(/[^\n]/g, " "))
+    .replace(/(^|[^:])\/\/[^\n]*/g, (_match, before: string) => before);
+}
+
+const CODE = SOURCE_FILES.map((file) => ({ ...file, text: stripComments(file.text) }));
 
 /* ------------------------------------------------- Exhaustive labelling */
 
@@ -456,5 +498,478 @@ describe("the Community Safety Crew holds no powers", () => {
         /\byou are (a |an )?(police|officer)\b|police powers|make an arrest/i,
       );
     }
+  });
+});
+
+/* ------------------------------------------------- Keyboard-last gameplay */
+
+describe("normal gameplay never requires the keyboard", () => {
+  /*
+   * The tripwire for the interaction-first pass.
+   *
+   * Real testers said three things: "there is too much typing", "make the
+   * tasks MCQ based instead", "typing answers feels tedious". Taking the
+   * second one literally would turn a prevention product into a quiz, so what
+   * was adopted is the first: choice first, action first, keyboard last.
+   *
+   * The rule is not "no text fields". Settings need one, a station code needs
+   * one, and a young person who wants to write their own idea should be able
+   * to. The rule is that **no text field is on the path a player has to walk**,
+   * and that every one which exists has said out loud which of the permitted
+   * reasons it exists for.
+   *
+   * That is what `data-input-role` is. Adding a field without one fails here,
+   * which makes putting required typing back into gameplay a deliberate act
+   * rather than a quiet one. There is no permitted value that means "the
+   * player must type this to continue", which is the entire point: the check
+   * cannot be satisfied by declaring the thing it forbids.
+   */
+  const ALLOWED_ROLES = new Set([
+    /* Behind a deliberate secondary control. The flow completes without it. */
+    "optional-creator",
+    /* A station, crew or mission code, where a QR or tap path also exists. */
+    "code-entry",
+    /* Settings and onboarding. Not gameplay, and skippable. */
+    "settings",
+    /* The partner-facing studio at /partner, which nothing links to. */
+    "partner-tool",
+  ]);
+
+  /*
+   * Input types that open no keyboard.
+   *
+   * A range slider is how Norm Mirror takes a prediction, and it is a text
+   * field only in the sense that the DOM calls it `<input>`. The rule is about
+   * keyboards, so it is scoped to the controls that summon one.
+   */
+  const NO_KEYBOARD_TYPES = /type=\{?["']?(range|checkbox|radio|file|color)["']?\}?/;
+
+  /** Every JSX opening tag of the given name, with its attribute text. */
+  function openingTags(text: string, tag: string): { attrs: string; line: number }[] {
+    const found: { attrs: string; line: number }[] = [];
+    const marker = `<${tag}`;
+    let from = 0;
+    for (;;) {
+      const start = text.indexOf(marker, from);
+      if (start === -1) break;
+      /* `<inputs` or `<textareaFoo` is a different element. */
+      const after = text[start + marker.length];
+      if (after && /[A-Za-z0-9_]/.test(after)) {
+        from = start + marker.length;
+        continue;
+      }
+      /*
+       * Walk to the tag's own closing angle bracket, ignoring any inside a
+       * JSX expression. Scanning a fixed number of characters instead would
+       * read attributes off whatever element happened to come next.
+       */
+      let depth = 0;
+      let i = start + marker.length;
+      while (i < text.length) {
+        const char = text[i];
+        if (char === "{") depth += 1;
+        else if (char === "}") depth -= 1;
+        else if (char === ">" && depth === 0) break;
+        i += 1;
+      }
+      found.push({
+        attrs: text.slice(start, i),
+        line: text.slice(0, start).split("\n").length,
+      });
+      from = i + 1;
+    }
+    return found;
+  }
+
+  it("declares a role on every control that opens a keyboard", () => {
+    const offenders: string[] = [];
+
+    for (const file of CODE) {
+      for (const tag of ["input", "textarea"]) {
+        for (const { attrs, line } of openingTags(file.text, tag)) {
+          if (tag === "input" && NO_KEYBOARD_TYPES.test(attrs)) continue;
+
+          const role = /data-input-role="([a-z-]+)"/.exec(attrs)?.[1];
+          if (!role) {
+            offenders.push(`${file.path}:${line} <${tag}> has no data-input-role`);
+          } else if (!ALLOWED_ROLES.has(role)) {
+            offenders.push(`${file.path}:${line} <${tag}> declares role "${role}"`);
+          }
+        }
+      }
+    }
+
+    expect(offenders).toEqual([]);
+  });
+
+  it("keeps every textarea out of the player experience", () => {
+    /*
+     * A textarea is a promise about how much is expected. Even where typing is
+     * genuinely optional, the six-row box asks for an essay whether or not the
+     * label does, so the optional creator fields are single-line `<input>`
+     * elements and the only remaining textarea in the product is in the
+     * partner-facing studio, which nothing in the app links to.
+     */
+    const files = CODE.filter((file) => /<textarea[\s>]/.test(file.text)).map(
+      (file) => file.path,
+    );
+    expect(files).toEqual(["src/features/partner/partner-studio.tsx"]);
+  });
+
+  it("leaves the partner studio unlinked from the player app", () => {
+    /*
+     * The previous assertion is only meaningful while /partner stays a tool
+     * rather than a destination. The moment something links to it, its
+     * textarea is on a player route and the exemption above is wrong.
+     */
+    for (const file of CODE) {
+      if (file.path === "src/app/(app)/partner/page.tsx") continue;
+      expect(/href=["'`]\/partner["'`]/.test(file.text), `${file.path} links to /partner`).toBe(
+        false,
+      );
+    }
+  });
+});
+
+/* ------------------------------------------- Interaction variety in Streets */
+
+describe("a Prevention Thread is not four choice lists in a row", () => {
+  /*
+   * The complaint behind this pass was that the tasks felt like a quiz. Every
+   * thread step used to end in the same interaction, so a thread was: read,
+   * continue, pick one of four. Four times.
+   *
+   * The fix is not a rota. It is that a step about a *place* is allowed to be
+   * about a place, and this checks that at least one thread actually uses that
+   * freedom, so the mechanics do not quietly rot back into a single shape.
+   */
+  it("uses more than one interaction across the district", () => {
+    const kinds = new Set(
+      PREVENTION_THREADS.flatMap((thread) => thread.steps.map((step) => step.kind)),
+    );
+    expect(kinds.has("decision")).toBe(true);
+    expect(kinds.has("hotspot")).toBe(true);
+    expect(kinds.has("order")).toBe(true);
+  });
+
+  it("gives every hotspot step decoys, and every spot an explanation", () => {
+    for (const thread of PREVENTION_THREADS) {
+      for (const step of thread.steps) {
+        if (!step.hotspot) continue;
+        const { spots, required } = step.hotspot;
+        const counting = spots.filter((spot) => spot.counts);
+        expect(counting.length, `${step.id} required vs counting`).toBeGreaterThanOrEqual(required);
+        /*
+         * At least one decoy. BREAKSAFE established that an option refused
+         * after reading its trade-offs teaches more than one never offered,
+         * and the two decoys people reach for first (a camera, a warning sign)
+         * are exactly the ones worth being able to reject.
+         */
+        expect(spots.length, `${step.id} has no decoy`).toBeGreaterThan(counting.length);
+        for (const spot of spots) {
+          expect(spot.explanation.length, `${step.id}:${spot.id}`).toBeGreaterThan(40);
+          expect(spot.label.length, `${step.id}:${spot.id}`).toBeGreaterThan(3);
+        }
+      }
+    }
+  });
+
+  it("never asks a player to tap a person", () => {
+    /*
+     * The most important line in this file, transplanted to the new mechanic.
+     *
+     * A hotspot invites tapping whatever is in the picture. A prompt that says
+     * "tap what is making the wrong thing easy" over a scene containing a
+     * figure has taught, in one gesture, that people are the thing to spot.
+     * Situational prevention is the opposite claim, so the spots name objects
+     * and the artwork contains nobody.
+     */
+    const PERSON = /\b(shopper|person|customer|kid|boy|girl|man|woman|teen|youth|suspect)\b/i;
+    for (const thread of PREVENTION_THREADS) {
+      for (const step of thread.steps) {
+        for (const spot of step.hotspot?.spots ?? []) {
+          expect(PERSON.test(spot.label), `${step.id}:${spot.id} names a person`).toBe(false);
+        }
+      }
+    }
+  });
+
+  it("gives an ordering step a sequence drawn from its own cards", () => {
+    for (const thread of PREVENTION_THREADS) {
+      for (const step of thread.steps) {
+        if (!step.order) continue;
+        const ids = step.order.cards.map((card) => card.id);
+        expect(ids.length, `${step.id} card count`).toBeGreaterThanOrEqual(2);
+        expect(ids.length, `${step.id} card count`).toBeLessThanOrEqual(4);
+        expect([...step.order.recommended].sort()).toEqual([...ids].sort());
+        /* Both outcomes are written. Neither is a verdict. */
+        expect(step.order.matched.length).toBeGreaterThan(30);
+        expect(step.order.differed.length).toBeGreaterThan(30);
+        expect(step.order.differed).not.toMatch(/\bwrong\b|\bincorrect\b|\bfailed\b/i);
+      }
+    }
+  });
+});
+
+/* ---------------------------------------------- The Quick Quest Builder */
+
+describe("youth co-creation survives the removal of typing", () => {
+  /*
+   * Removing required typing must not remove the Youth-Led criterion. These
+   * check that the builder can still express a scenario, and that its
+   * vocabulary stays wired to the one the rest of the product uses.
+   */
+  it("gives every protective factor a move the builder can write", () => {
+    for (const id of Object.keys(PROTECTIVE_FACTORS) as ProtectiveFactorId[]) {
+      expect(QUEST_FACTOR_MOVES[id], `${id} has no builder phrasing`).toBeTruthy();
+    }
+    /* And nothing invented that the factor table does not know about. */
+    for (const id of Object.keys(QUEST_FACTOR_MOVES)) {
+      expect(PROTECTIVE_FACTORS[id as ProtectiveFactorId], `${id} is not a factor`).toBeTruthy();
+    }
+  });
+
+  it("offers every factor across the two pages, and never twice", () => {
+    const offered = [...QUEST_PRIMARY_FACTORS, ...QUEST_SECONDARY_FACTORS];
+    expect(new Set(offered).size).toBe(offered.length);
+    expect([...offered].sort()).toEqual(Object.keys(PROTECTIVE_FACTORS).sort());
+  });
+
+  it("gives every trigger decisions that exist", () => {
+    for (const trigger of QUEST_TRIGGERS) {
+      expect(trigger.decisionIds.length, trigger.id).toBeGreaterThanOrEqual(3);
+      for (const id of trigger.decisionIds) {
+        expect(QUEST_DECISIONS[id], `${trigger.id} wants ${id}`).toBeTruthy();
+      }
+    }
+  });
+
+  it("generates a readable draft for every combination", () => {
+    /*
+     * Exhaustive rather than sampled. It is a few thousand string
+     * concatenations and it is the only thing standing between a table edit
+     * and a young person being shown a sentence with a hole in it.
+     */
+    for (const setting of QUEST_SETTINGS) {
+      for (const trigger of QUEST_TRIGGERS) {
+        for (const decisionId of trigger.decisionIds) {
+          for (const factorId of Object.keys(PROTECTIVE_FACTORS) as ProtectiveFactorId[]) {
+            const draft = generateQuestDraft({
+              settingId: setting.id,
+              triggerId: trigger.id,
+              decisionId,
+              factorId,
+            });
+            const where = `${setting.id}/${trigger.id}/${decisionId}/${factorId}`;
+            expect(draft.title.length, where).toBeGreaterThan(8);
+            expect(draft.hook, where).not.toContain("{where}");
+            expect(draft.hook, where).not.toContain("undefined");
+            expect(draft.moment, where).toMatch(/^Do you .+\?$/);
+            expect(draft.response, where).toMatch(/\.$/);
+            for (const field of [draft.title, draft.hook, draft.moment, draft.response]) {
+              expect(field, where).not.toMatch(/\s{2,}|,\s*,|\bundefined\b/);
+            }
+          }
+        }
+      }
+    }
+  });
+
+  it("never implies a template wrote something for the player", () => {
+    /*
+     * The draft is string concatenation over four ids. A screen that lets
+     * somebody believe otherwise is lying about the one part of the product a
+     * young person might repeat to a friend, so the honesty line is checked
+     * rather than trusted.
+     */
+    for (const path of [
+      "src/features/streets/components/quest-builder.tsx",
+      "src/features/missions/partner/build-player.tsx",
+    ]) {
+      const file = SOURCE_FILES.find((entry) => entry.path === path);
+      expect(file, path).toBeDefined();
+      expect(file!.text, path).toMatch(/No AI wrote this/);
+    }
+  });
+});
+
+/* ------------------------------------------------- The district at spawn */
+
+describe("the world does not greet you before you have walked", () => {
+  /*
+   * The district's design rule is that the player reaches something worth
+   * stopping for within a few seconds of walking in any direction. Having
+   * walked. Somebody standing inside conversation range of the spawn tile
+   * hands the player a conversation they did not go and find, and it makes the
+   * "nothing in reach" state of the interact control unreachable, which is a
+   * real state with its own copy and its own e2e assertion.
+   *
+   * This exists because a new thread NPC was placed one tile diagonally from
+   * spawn, which is 22 of the 30 world units the range allows. The e2e caught
+   * it, intermittently, which is the worst way to catch anything.
+   */
+  it("puts nobody within conversation range of the spawn tile", () => {
+    const offenders = NPCS.filter((npc) => {
+      if ((npc.mapId ?? DISTRICT_ID) !== DISTRICT_ID) return false;
+      const dx = (npc.x - SPAWN.x) * TILE;
+      const dy = (npc.y - SPAWN.y) * TILE;
+      return Math.hypot(dx, dy) < INTERACT_RANGE;
+    });
+    expect(offenders.map((npc) => npc.id)).toEqual([]);
+  });
+
+  it("keeps every district NPC on a walkable tile", () => {
+    /*
+     * A person standing inside a wall can be talked to from the Quest List and
+     * never reached on foot, which makes "Go there" walk somebody into a
+     * building and stop.
+     */
+    const rows = DISTRICT_01;
+    for (const npc of NPCS) {
+      if ((npc.mapId ?? DISTRICT_ID) !== DISTRICT_ID) continue;
+      const code = rows[npc.y]?.[npc.x];
+      expect(code, `${npc.id} at ${npc.x},${npc.y}`).toBeDefined();
+      expect(SOLID.has(code as never), `${npc.id} stands in ${code}`).toBe(false);
+    }
+  });
+});
+
+/* --------------------------------------------- The plan at the end of a thread */
+
+describe("a finished thread ends in a plan, not a pat on the back", () => {
+  /*
+   * Choosing in a scenario produces an intention, and intentions convert to
+   * behaviour at about d+ = .36. The best-validated repair is an if-then plan
+   * (d+ = 0.65), and the specific trap named in that literature is treating a
+   * choice card as one: a branch supplies a response inside a fictional
+   * situation, and the cue is the half that carries the effect.
+   *
+   * So the cues have to be about the player's life rather than the story's,
+   * and they have to be short enough to read as a moment rather than a scene.
+   */
+  it("offers cues on every thread that has a decision to plan with", () => {
+    for (const thread of PREVENTION_THREADS) {
+      const hasDecision = thread.steps.some((step) => (step.choices?.length ?? 0) > 0);
+      if (!hasDecision) continue;
+      expect(thread.completion.plan, `${thread.id} has choices but no plan`).toBeTruthy();
+      expect(thread.completion.plan!.cues.length).toBeGreaterThanOrEqual(2);
+      expect(thread.completion.plan!.cues.length).toBeLessThanOrEqual(4);
+    }
+  });
+
+  it("writes cues as a moment in the player's life, never as a character", () => {
+    const CAST = /(Devi|Haziq|Joy|Elle|Hana|Kai|Mira|Lek|Bea|Nadia|Arif|Wei|Ken|Rina|Jas)/;
+    for (const thread of PREVENTION_THREADS) {
+      for (const cue of thread.completion.plan?.cues ?? []) {
+        expect(CAST.test(cue.label), `${thread.id}:${cue.id} names the cast`).toBe(false);
+        expect(cue.label.split(/\s+/).length, `${thread.id}:${cue.id} is too long`).toBeLessThanOrEqual(12);
+      }
+    }
+  });
+
+  it("never promises a reminder it cannot send", () => {
+    /*
+     * There is no push infrastructure and there is not going to be one, so
+     * copy implying the phone will do something is a lie with a nice tone of
+     * voice.
+     */
+    const file = CODE.find(
+      (entry) => entry.path === "src/components/interaction/plan-reveal.tsx",
+    );
+    expect(file).toBeDefined();
+    expect(file!.text).not.toMatch(/we will remind|notify you|we'll remind|notification/i);
+  });
+});
+
+/* ------------------------------------ A riskier option never ends on the harm */
+
+describe("every riskier option names the move that would have worked", () => {
+  /*
+   * The brief's rule is that refusing to score a choice is not the same as
+   * pretending every choice is equally safe. The feedback literature turns
+   * that into a specific, checkable shape.
+   *
+   * Kluger and DeNisi found that supplying the correct solution is what
+   * separates a feedback intervention that works from one that barely does.
+   * Shute's synthesis puts elaborated feedback above knowledge of the correct
+   * response, and both above knowing only the result. Fong's moderator
+   * analysis found that an instructional detail naming what to do instead is
+   * the single feature that flips negative feedback from demotivating to
+   * motivating.
+   *
+   * And the ordering matters most: a consequence that ends on the harm is fear
+   * without an efficacy component, which is the shape of Scared Straight, the
+   * one prevention approach with evidence of making outcomes worse. So the
+   * last thing a player reads after a risky choice is what to do instead.
+   */
+  const riskyThreadChoices = PREVENTION_THREADS.flatMap((thread) =>
+    thread.steps.flatMap((step) =>
+      (step.choices ?? [])
+        .filter((choice) => !choice.isSafest)
+        .map((choice) => ({ where: `${thread.id}:${step.id}:${choice.id}`, choice })),
+    ),
+  );
+
+  const riskyCheckOptions = Object.values(STREET_CHECKS).flatMap((check) =>
+    check.options
+      .filter((option) => !option.isSafest)
+      .map((option) => ({ where: `${check.id}:${option.id}`, option })),
+  );
+
+  it("has riskier options to check in the first place", () => {
+    expect(riskyThreadChoices.length).toBeGreaterThan(4);
+    expect(riskyCheckOptions.length).toBeGreaterThan(3);
+  });
+
+  it("gives every riskier thread choice a safer move", () => {
+    for (const { where, choice } of riskyThreadChoices) {
+      expect(choice.safer, `${where} ends on the harm`).toBeTruthy();
+      expect(choice.safer!.length, where).toBeGreaterThan(20);
+    }
+  });
+
+  it("gives every riskier street check option a safer move", () => {
+    for (const { where, option } of riskyCheckOptions) {
+      expect(option.safer, `${where} ends on the harm`).toBeTruthy();
+      expect(option.safer!.length, where).toBeGreaterThan(20);
+    }
+  });
+
+  it("writes the safer move as an action, never as a verdict on the player", () => {
+    /*
+     * Hattie and Timperley put feedback about the self at the bottom of their
+     * four levels, and the adolescent-specific work is stronger still: praise
+     * can read to an older teenager as evidence that less was expected of
+     * them. So the sentence points at the situation, and never at the person.
+     */
+    const VERDICT =
+      /\byou (were|are) (wrong|stupid|careless|reckless|silly|naive)\b|\bshould have known\b|\bwhat were you thinking\b|\bobviously\b/i;
+    const PRAISE = /\b(well done|good job|nice one|great choice|smart move)\b/i;
+
+    const all = [
+      ...riskyThreadChoices.map((entry) => ({ where: entry.where, text: entry.choice.safer ?? "" })),
+      ...riskyCheckOptions.map((entry) => ({ where: entry.where, text: entry.option.safer ?? "" })),
+    ];
+
+    for (const { where, text } of all) {
+      expect(VERDICT.test(text), `${where} passes judgement`).toBe(false);
+      expect(PRAISE.test(text), `${where} praises`).toBe(false);
+    }
+  });
+
+  it("renders the safer move after the outcome, never before it", () => {
+    /*
+     * The order is the finding. `Consequence` is the only component that
+     * renders both, so the check is that the outcome paragraph precedes the
+     * safer paragraph in its source.
+     */
+    const file = CODE.find(
+      (entry) => entry.path === "src/components/interaction/consequence.tsx",
+    );
+    expect(file).toBeDefined();
+    const outcomeAt = file!.text.indexOf("{outcome}");
+    const saferAt = file!.text.indexOf("{safer}");
+    expect(outcomeAt).toBeGreaterThan(-1);
+    expect(saferAt).toBeGreaterThan(outcomeAt);
   });
 });

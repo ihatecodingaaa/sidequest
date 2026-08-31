@@ -272,19 +272,39 @@ test.describe("the Crew is a youth crew, not a police force", () => {
     await expect(page.getByText(/Roles are what you are like, not what you outrank/)).toBeVisible();
   });
 
-  test("saves a youth-written scenario as a draft and nothing more", async ({ page }) => {
+  test("builds a youth scenario by tapping, and saves it as a draft", async ({ page }) => {
+    /*
+     * This used to be four textareas, and testers named it as the clearest
+     * source of "there is too much typing". The safeguards it carried are the
+     * part that had to survive: a draft is still local, still labelled, and
+     * still goes to a person before it goes anywhere. Fewer keystrokes is not
+     * fewer safeguards.
+     */
     await seedPlayer(page);
     await openHub(page);
     await page.getByRole("tab", { name: "Build a quest" }).click();
 
     await expect(page.getByText("Draft, review required")).toBeVisible();
-    await page.getByLabel("Call it something").fill("Two people, one bus stop");
-    await page.getByLabel("The moment somebody has to choose").fill("Whether to say anything");
-    await page.getByRole("button", { name: "Save as draft" }).click();
 
-    await expect(page.getByText(/it stays one until somebody reviews it/)).toBeVisible();
+    await page.getByRole("button", { name: "Void deck" }).click();
+    await page.getByRole("button", { name: "Someone is being pressured" }).click();
+    await page.getByRole("button", { name: "Give them a way out" }).click();
+    await page.getByRole("button", { name: /There was a way out that cost nothing/ }).click();
+
+    await expect(page.getByRole("heading", { name: "The squeeze at the void deck" })).toBeVisible();
+    await page.getByRole("button", { name: "Save draft" }).click();
+
+    await expect(page.getByText(/goes to a facilitator or a teacher/)).toBeVisible();
     const profile = await readProfile(page);
-    expect((profile.questDrafts as unknown[]).length).toBe(1);
+    const drafts = profile.questDrafts as Record<string, unknown>[];
+    expect(drafts.length).toBe(1);
+    /* The structured choices are stored, not only the generated prose. */
+    expect(drafts[0]).toMatchObject({
+      settingId: "voiddeck",
+      triggerId: "pressured",
+      decisionId: "give-exit",
+      factorId: "face-saving-exit",
+    });
   });
 
   test("has no axe violations", async ({ page }) => {

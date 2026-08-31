@@ -1,4 +1,5 @@
 import type { DataProvenance, SkillId } from "@/types/core";
+import type { HotspotSpot, OrderCard } from "@/types/interaction";
 import type { SignalMode } from "./signals";
 
 /**
@@ -53,11 +54,41 @@ export type PlayMode = "solo" | "crew" | "either";
  *
  * `hero-mission` is the bridge to the existing catalogue. Everything else runs
  * in the world's own dialogue sheet.
+ *
+ * ---
+ *
+ * ## Why there is more than one interaction here now
+ *
+ * Every step used to end the same way: read two lines, tap Continue, tap one
+ * of four choice cards. That is a good interaction, and four of them in a row
+ * is the shape testers were describing when they said the tasks felt like a
+ * quiz. The problem was never that choosing is bad; it was that choosing was
+ * the only thing on offer.
+ *
+ * So a step now declares which interaction the narrative wants:
+ *
+ *   world-talk      somebody tells you something. Continue.
+ *   trusted-adult   somebody who knows what happens next tells you. Continue.
+ *   decision        choice cards, with a consequence for whichever is taken.
+ *   hotspot         tap the part of a place that is making the wrong thing
+ *                   easy. This is situational prevention, and it is the only
+ *                   mechanic that puts the environment rather than a person in
+ *                   the player's hands.
+ *   order           put two to four moves in sequence, where the sequence is
+ *                   the lesson. Tap to place, never drag.
+ *   hero-mission    hand off to the existing catalogue player.
+ *   reflection      what happened afterwards. Continue.
+ *
+ * The rule is that the story picks the mechanic. A mechanic used because the
+ * previous step used a different one is variety for its own sake, and it reads
+ * as exactly that.
  */
 export type ThreadStepKind =
   | "world-talk"
   | "trusted-adult"
   | "decision"
+  | "hotspot"
+  | "order"
   | "hero-mission"
   | "reflection";
 
@@ -66,6 +97,33 @@ export interface ThreadChoice {
   label: string;
   /** Deterministic consequence. Honest, never a verdict, never "wrong". */
   outcome: string;
+  /**
+   * The move that would have worked better, for an option that is riskier.
+   *
+   * Required on every option not marked `isSafest`, and a unit test enforces
+   * it. Two separate reasons, and they point the same way.
+   *
+   * The brief's own rule is that refusing to score a choice is not the same as
+   * pretending every choice is equally safe. The feedback literature is
+   * sharper than that: Kluger and DeNisi's moderator analysis found that
+   * supplying the correct solution is what separates a feedback intervention
+   * that works from one that barely does, Shute's synthesis puts elaborated
+   * feedback well above knowledge of the correct response and both well above
+   * knowing only the result, and Fong's moderator analysis found that an
+   * instructional detail naming the thing to do instead is the single feature
+   * that flips negative feedback from demotivating to motivating.
+   *
+   * The ordering rule that follows is the important one: a consequence for a
+   * risky option must never END on the harm. Fear without an efficacy
+   * component is the Scared Straight shape, which is the one prevention
+   * approach with evidence of making outcomes worse. So `outcome` carries what
+   * happened and this carries what to do instead, and the interface always
+   * renders them in that order.
+   *
+   * Phrased as an action somebody could actually perform in a real room, never
+   * as a verdict on the person who chose.
+   */
+  safer?: string;
   /**
    * Marks the response the evidence supports.
    *
@@ -93,6 +151,39 @@ export interface ThreadStep {
   /** Younger-audience wording. Same step, same mechanism, different register. */
   linesSecondary?: string[];
   choices?: ThreadChoice[];
+  /**
+   * For `hotspot` steps. The scene, and what is worth finding in it.
+   *
+   * `sceneId` names an original SVG drawn in `scene-art.tsx`. The artwork is
+   * decorative and `aria-hidden`; the spots are real buttons with real
+   * accessible names, so nothing here depends on being able to see it.
+   */
+  hotspot?: {
+    sceneId: "minimart-floor";
+    prompt: string;
+    spots: HotspotSpot[];
+    /** How many of the counting spots are needed before the step can close. */
+    required: number;
+    /** Shown once the requirement is met. One line. */
+    resolution: string;
+  };
+  /** For `order` steps. Two to four cards, and what the sequence teaches. */
+  order?: {
+    prompt: string;
+    cards: OrderCard[];
+    /**
+     * The sequence the evidence supports, as card ids.
+     *
+     * Not a right answer to be marked. The debrief names what this order
+     * produces and what a different one produces, in the same voice a choice
+     * consequence uses, and no order costs anything.
+     */
+    recommended: string[];
+    /** Shown when the player's sequence matches. */
+    matched: string;
+    /** Shown when it does not. Honest about the difference, never a verdict. */
+    differed: string;
+  };
   /** Line shown after any choice, before the step closes. */
   followUp?: string;
   /** For `hero-mission` steps only: which existing mission to hand off to. */
@@ -131,6 +222,22 @@ export interface PreventionThread {
     takeaway: string;
     /** What visibly changes in the district afterwards. */
     worldChange: string;
+    /**
+     * The if-then plan offered at the end.
+     *
+     * A choice card is not an implementation intention: it supplies a response
+     * inside a fictional situation the player will never stand in, and the
+     * evidence is specific that the cue is the half that does the work. So the
+     * thread supplies candidate cues drawn from the player's actual life, the
+     * response is whichever option they took at the decision step, and the two
+     * are shown joined. See `PlanReveal` for the sources.
+     *
+     * Optional: a thread with no decision step has no response to plan with.
+     */
+    plan?: {
+      prompt: string;
+      cues: { id: string; label: string }[];
+    };
   };
   /** Where the factual content comes from. Rendered after the interaction. */
   source: { label: string; body: string };
@@ -259,18 +366,24 @@ const THE_FAVOUR: PreventionThread = {
           label: "Just tell him no",
           outcome:
             "It lands. He shrugs it off and asks somebody else two days later. Saying no protected Devi and did nothing about the reason he is asking.",
+          safer:
+            "Say no and hand him somewhere to go with it, so the next person he asks is not the one carrying it.",
         },
         {
           id: "warn-quietly",
           label: "Say nothing to him, warn Devi privately",
           outcome:
             "Devi is safe. Haziq keeps going, and the next person he asks does not have anybody warning them.",
+          safer:
+            "Warn Devi, then say the same thing to him directly. One conversation covers everybody after her.",
         },
         {
           id: "help-once",
           label: "Offer to use your own account instead, just once",
           outcome:
             "Now it is your name on it. The first transfer is often real, which is exactly what makes the second request easier to agree to.",
+          safer:
+            "Keep your account out of it entirely, and point him at the youth service Ms Sumi runs.",
         },
       ],
       followUp:
@@ -296,6 +409,14 @@ const THE_FAVOUR: PreventionThread = {
     title: "The favour",
     takeaway: "Refusing works better when the other person is left somewhere to go.",
     worldChange: "Devi is back at the void deck, and she has the words ready now.",
+    plan: {
+      prompt: "When would this actually come up for you?",
+      cues: [
+        { id: "asked-me", label: "Someone asks to use my account" },
+        { id: "asked-friend", label: "A friend tells me they were asked" },
+        { id: "easy-money", label: "Someone offers easy money for something small" },
+      ],
+    },
   },
 };
 
@@ -368,12 +489,16 @@ const THE_SHOUT: PreventionThread = {
           label: "Step between them and tell them to stop",
           outcome:
             "It might work. It also puts a third person inside an argument that already has too many. Nobody trains for this, and the people who do it get hurt at a rate that is not worth it.",
+          safer:
+            "Get Elle away from it first, then call it in from inside the shop.",
         },
         {
           id: "film",
           label: "Get closer and film it",
           outcome:
             "You now have a video and Elle is still standing there. Filming is not helping, and holding up a phone is one of the things that escalates a scene fastest.",
+          safer:
+            "Put the phone down and walk with her to the shop. If somebody is in danger, 999 from in there.",
         },
       ],
       followUp:
@@ -381,16 +506,42 @@ const THE_SHOUT: PreventionThread = {
       skillId: "peer-intervention",
       xp: THREAD_XP.step,
     },
+    /*
+     * The order step, and the reason the mechanic exists at all.
+     *
+     * This thread's takeaway is a *sequence*: distance, then support, then the
+     * people whose job it is. It used to be delivered as a sentence at the end
+     * of a paragraph, which is the weakest possible way to teach an order. It
+     * is now the thing the player does, at the moment they have just lived it,
+     * which is retrieval practice on the one piece of content in this thread
+     * that has to survive contact with a real street.
+     *
+     * There is no wrong sequence. A different order gets an honest account of
+     * what it produces, in exactly the voice a choice consequence uses.
+     */
     {
       id: "step-route",
-      kind: "trusted-adult",
+      kind: "order",
       mode: "connect",
       npcId: "npc-hana",
       title: "Learn the route before you need it",
       lines: [
         "I called it in. You did the part that mattered, which was getting her in here.",
-        "999 if someone is in danger. If it is not safe to talk, the Police publish an SMS number.",
+        "If it happens again, what comes first?",
       ],
+      order: {
+        prompt: "Put them in the order you would actually do them.",
+        cards: [
+          { id: "distance", label: "Get distance, and take them with you" },
+          { id: "check", label: "Check they are okay" },
+          { id: "help", label: "Tell someone whose job it is" },
+        ],
+        recommended: ["distance", "check", "help"],
+        matched:
+          "That is the order. Distance first, because everything else is easier from somewhere safe, and because nothing after it requires you to be brave.",
+        differed:
+          "It can work. Doing anything else first leaves both of you standing in it while you do, and the call is easier to make from inside the shop than from the edge of an argument.",
+      },
       skillId: "communication",
       xp: THREAD_XP.step,
       official: "police-sms",
@@ -400,10 +551,254 @@ const THE_SHOUT: PreventionThread = {
     title: "The shout",
     takeaway: "Distance, then support, then the people whose job it is. In that order.",
     worldChange: "Elle is sitting inside the shop with Hana. The court is quiet again.",
+    plan: {
+      prompt: "When would this actually come up for you?",
+      cues: [
+        { id: "argument", label: "An argument near me stops being an argument" },
+        { id: "friend-stuck", label: "Somebody I know is stuck in the middle of it" },
+        { id: "late-alone", label: "It is late and the person with me wants to stay" },
+      ],
+    },
   },
 };
 
-export const PREVENTION_THREADS: PreventionThread[] = [THE_FAVOUR, THE_SHOUT];
+/* --------------------------------------------------------- The last two */
+
+/**
+ * The Track B thread.
+ *
+ * Peer pressure and shop theft, which is the everyday version of what this
+ * product is actually about: an ordinary young person, a few seconds, and
+ * somebody watching to see what they do. Every risk factor the Delta Track B
+ * brief names operates here, and none of them is a scam.
+ *
+ * ---
+ *
+ * ## It is also the interaction variety proof
+ *
+ * Three steps, three mechanics, three places, three people:
+ *
+ *   Mira, at the void deck   somebody tells you something.
+ *   Lek, inside the shop     you tap the place that is making it easy.
+ *   Kai, at the court        you decide what to say.
+ *
+ * The middle step is the one that could not have existed before this pass. It
+ * is the only place in Streets where the player changes their model of a
+ * situation rather than of a person, which is the whole of situational crime
+ * prevention and the thing BREAKSAFE teaches at mission length. Here it takes
+ * about twenty seconds.
+ *
+ * ## Written for the younger band
+ *
+ * The other two threads in the district are post-secondary. This one is
+ * secondary, and the lines are in that register throughout rather than
+ * carrying a second copy of themselves, because a thread whose whole audience
+ * is thirteen to fifteen should simply be written for them.
+ */
+const THE_LAST_TWO: PreventionThread = {
+  id: "thread-last-two",
+  title: "The last two",
+  hook: "Kai keeps walking out of Sunrise with more than he paid for.",
+  mode: "redirect",
+  playMode: "solo",
+  audienceBand: "secondary",
+  estimatedMinutes: 5,
+  provenance: "seeded",
+  capabilityIds: ["peer-intervention", "safety-design", "decision-making"],
+  source: {
+    label: "Singapore Police Force youth advisory, ages 13 to 19",
+    body: "SPF tells this age group directly that being part of a group that is shoplifting makes a person equally liable, whether or not they were the one holding anything. Self checkout areas are recorded, and what happens next is decided from that footage rather than at the machine.",
+  },
+  steps: [
+    {
+      id: "step-notice",
+      kind: "world-talk",
+      mode: "connect",
+      npcId: "npc-mira",
+      title: "Hear what Mira noticed",
+      lines: [
+        "Kai does it at Sunrise. Every time, the last two things.",
+        "He says nobody notices. I think he is right, and that is the bit that worries me.",
+      ],
+      skillId: "decision-making",
+      xp: THREAD_XP.step,
+    },
+    /*
+     * The hotspot step.
+     *
+     * Lek asks for help with the shop, not with Kai. That framing is the whole
+     * point: the question a prevention product should be able to ask is what
+     * about this place is making the wrong thing easy, and it is a question
+     * that can be answered without guessing anything about anybody.
+     *
+     * Two of the five spots are decoys, and both are the things people reach
+     * for first. They are tappable on purpose. BREAKSAFE established that
+     * refusing an option after reading its trade-offs teaches more than never
+     * being offered it.
+     */
+    {
+      id: "step-shopfloor",
+      kind: "hotspot",
+      mode: "prevent",
+      npcId: "npc-lek",
+      title: "Find what makes it easy",
+      lines: [
+        "You are on the Crew, right? Then help me with the shop, not with him.",
+        "Something in here is doing half the work. Show me.",
+      ],
+      hotspot: {
+        sceneId: "minimart-floor",
+        prompt: "Tap what is making the wrong thing easy.",
+        required: 3,
+        resolution:
+          "Three things, and none of them is a person. That is what a prevention crew is actually for.",
+        spots: [
+          {
+            id: "blocked-view",
+            label: "The stack in front of the counter",
+            x: 38,
+            y: 46,
+            counts: true,
+            finding: "Nobody at the counter can see the last aisle",
+            explanation:
+              "A promotional stack went up and took the sightline with it. Nothing was decided about it. It is just where the boxes fitted.",
+          },
+          {
+            id: "unattended",
+            label: "The self checkout bank",
+            x: 73,
+            y: 62,
+            counts: true,
+            finding: "Two machines, and nobody standing near them",
+            explanation:
+              "One person covers the counter and the machines at once. At the busy hour that means the machines are alone, and everybody can tell.",
+          },
+          {
+            id: "no-feedback",
+            label: "The checkout screen",
+            x: 73,
+            y: 40,
+            counts: true,
+            finding: "The screen never says what it has",
+            explanation:
+              "Two grey words for a scan and no running basket. Somebody who is unsure has no cheap way to check, so an honest mistake and a deliberate one look identical.",
+          },
+          {
+            id: "camera",
+            label: "The camera",
+            x: 52,
+            y: 11,
+            counts: false,
+            finding: "A camera does not make anything harder",
+            explanation:
+              "It records what already happened. It changes nothing about the moment somebody is standing there deciding, and it treats everybody in the shop as a subject.",
+          },
+          {
+            id: "warning-sign",
+            label: "The warning poster",
+            x: 17,
+            y: 20,
+            counts: false,
+            finding: "A poster is not a design change",
+            explanation:
+              "Signs threatening consequences are cheap, which is why they are everywhere and why they stop being read. Making the honest path easy beats telling people off in advance.",
+          },
+        ],
+      },
+      skillId: "safety-design",
+      xp: THREAD_XP.step,
+    },
+    {
+      id: "step-say",
+      kind: "decision",
+      mode: "redirect",
+      npcId: "npc-kai",
+      title: "Say something to Kai",
+      lines: [
+        "You went in and talked to Lek. About me, is it.",
+        "It is two things. Nobody is hurt.",
+      ],
+      choices: [
+        {
+          id: "private-and-out",
+          label: "Say it privately, and leave him a way to stop",
+          outcome:
+            "He is annoyed, then quiet, and on Thursday he does not do it. Nothing was announced in front of anybody, so there was nothing for him to defend.",
+          isSafest: true,
+        },
+        {
+          id: "liability",
+          label: "Tell him what it means for you too",
+          outcome:
+            "He had not thought about that part. Being in the group is enough to be liable, and hearing it from a friend lands differently than reading it on a poster.",
+          isSafest: true,
+        },
+        {
+          id: "stop-going",
+          label: "Stop going to the shop with him",
+          outcome:
+            "It keeps you out of it. He keeps going, with somebody who has not thought about any of this, and nothing about the shop has changed.",
+          safer:
+            "Say it to him once, privately, before you stop going. It costs one conversation.",
+        },
+        {
+          id: "laugh",
+          label: "Leave it. It is two things",
+          outcome:
+            "It stays two things until it is not. The shop decides what happens next from the footage, later, and nobody at the machine gets a say in that.",
+          safer:
+            "Tell him what being in the group means for you, quietly, the next time you are on your own.",
+        },
+      ],
+      followUp:
+        "Nobody in this is a criminal. One of them is fifteen and has found something that works.",
+      skillId: "peer-intervention",
+      xp: THREAD_XP.step,
+    },
+  ],
+  completion: {
+    title: "The last two",
+    takeaway: "Change the shop and talk to the friend. Doing one without the other is half a fix.",
+    worldChange: "The stack by the counter has moved, and Kai is at the court instead.",
+    plan: {
+      prompt: "When would this actually come up for you?",
+      cues: [
+        { id: "watching", label: "A friend does it while I am standing there" },
+        { id: "told-after", label: "Someone tells me about it afterwards" },
+        { id: "asked-along", label: "I get asked to come along" },
+      ],
+    },
+  },
+};
+
+export const PREVENTION_THREADS: PreventionThread[] = [
+  THE_FAVOUR,
+  THE_SHOUT,
+  THE_LAST_TWO,
+];
+
+/**
+ * The option the player took at this thread's decision step.
+ *
+ * Reads the choice ledger rather than the content, because the whole point of
+ * an if-then plan is that the response half is theirs. Returns the last
+ * decision they made, so a thread with more than one branch plans with the
+ * most recent. Null when no decision has been recorded, which is why
+ * `PlanReveal` is only rendered when there is something to plan with.
+ */
+export function chosenResponse(
+  thread: PreventionThread,
+  choices: Record<string, string>,
+): string | null {
+  for (let i = thread.steps.length - 1; i >= 0; i -= 1) {
+    const step = thread.steps[i];
+    const taken = choices[stepKey(thread.id, step.id)];
+    if (!taken) continue;
+    const choice = step.choices?.find((entry) => entry.id === taken);
+    if (choice) return choice.label;
+  }
+  return null;
+}
 
 export function getThread(id: string): PreventionThread | undefined {
   return PREVENTION_THREADS.find((thread) => thread.id === id);

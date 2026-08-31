@@ -77,6 +77,7 @@ export function Onboarding() {
             <label className="mt-7 block">
               <span className="text-sm font-semibold text-chalk">What should we call you?</span>
               <input
+                data-input-role="settings"
                 value={displayName}
                 onChange={(event) => setDisplayName(event.target.value)}
                 placeholder="Optional"

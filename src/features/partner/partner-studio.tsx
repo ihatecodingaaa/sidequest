@@ -241,6 +241,7 @@ export function PartnerStudio() {
             <label className="block">
               <span className="text-sm font-semibold text-chalk">Mission title</span>
               <input
+                data-input-role="partner-tool"
                 value={title}
                 onChange={(event) => setTitle(sanitiseText(event.target.value, 70))}
                 placeholder="Make self-checkout safer"
@@ -254,6 +255,7 @@ export function PartnerStudio() {
                 The question or situation
               </span>
               <textarea
+                data-input-role="partner-tool"
                 value={question}
                 onChange={(event) => setQuestion(sanitiseText(event.target.value, 280))}
                 rows={3}

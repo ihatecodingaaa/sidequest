@@ -17,7 +17,8 @@
     "e2e:ui": "playwright test --ui",
     "shots:audit": "node scripts/audit-shots.mjs",
     "audit:text": "node scripts/text-audit.mjs",
-    "audit:taps": "node scripts/tap-audit.mjs"
+    "audit:taps": "node scripts/tap-audit.mjs",
+    "audit:input": "node scripts/input-audit.mjs"
   },
   "dependencies": {
     "clsx": "2.1.1",

@@ -5,6 +5,7 @@ import { ArrowRight, Check, EyeOff, MessagesSquare, Minus, Plus, Timer, Users } 
 
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
+import { ChoiceCards } from "@/components/interaction";
 import { MissionShell } from "@/features/missions/engine/mission-shell";
 import { StoryView, useSegment } from "@/features/campaigns/story-view";
 import { storyBeatLabel } from "@/components/story/story-beat";
@@ -417,6 +418,17 @@ export function CrewShiftPlayer({
           </p>
         ) : null}
 
+        {/*
+          Not `ChoiceCards`, on purpose.
+
+          Every other choice list in the product commits the moment it is
+          tapped. This one does not: a private vote is selected, and then
+          confirmed, so somebody can change their mind before anybody else sees
+          anything. That is a different interaction, and it needs the radio
+          affordance to say so. Reusing the shared component here would have
+          made a deferred choice look exactly like an immediate one, which is
+          the sort of tidiness that costs a user a mistake.
+        */}
         <div className="mt-6 space-y-2.5">
           {round.options.map((option) => {
             const selected = pending === option.id;
@@ -545,19 +557,12 @@ export function CrewShiftPlayer({
           You came out level. Settle it between you, then tap it once.
         </p>
 
-        <div className="mt-6 space-y-2.5">
-          {tiedOptions.map((option) => (
-            <button
-              key={option.id}
-              type="button"
-              onClick={() => finish(option.id, secondAnswers)}
-              className="sq-pressable flex min-h-14 w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/4 px-4 py-3 text-left text-[0.95rem] leading-snug font-medium text-chalk hover:border-volt-500/40 hover:bg-white/7"
-            >
-              <span className="flex-1">{option.label}</span>
-              <ArrowRight aria-hidden className="size-4 shrink-0 text-faint" />
-            </button>
-          ))}
-        </div>
+        <ChoiceCards
+          className="mt-6"
+          options={tiedOptions.map((option) => ({ id: option.id, label: option.label }))}
+          legend={round.finalPrompt}
+          onChoose={(id) => finish(id, secondAnswers)}
+        />
       </div>,
       { progress: 0.9 },
     );

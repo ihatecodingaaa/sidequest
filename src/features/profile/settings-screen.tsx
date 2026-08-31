@@ -85,6 +85,7 @@ export function SettingsScreen() {
             Used only for the greeting on Home.
           </span>
           <input
+            data-input-role="settings"
             value={ready ? profile.displayName : ""}
             onChange={(event) => setDisplayName(event.target.value)}
             placeholder="Optional"

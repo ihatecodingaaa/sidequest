@@ -1,32 +1,56 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Check, Info, Send } from "lucide-react";
-import { z } from "zod";
+import { ArrowLeft, ArrowRight, Info, PenLine, Send, Sparkles } from "lucide-react";
 
-import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Chip, ProvenanceTag } from "@/components/ui/primitives";
+import { ChoiceCards } from "@/components/interaction";
 import { MissionShell } from "@/features/missions/engine/mission-shell";
 import { MissionComplete } from "@/features/missions/engine/mission-complete";
 import { formatDeadline, sanitiseText } from "@/lib/format";
-import { getChallengeForMission } from "@/data/partner-challenges";
+import { composeEntry, getChallengeForMission } from "@/data/partner-challenges";
 import { useAppStore } from "@/store/app-store";
 import type { AwardResult } from "@/lib/xp";
 import type { Mission } from "@/types/mission";
 
-type Step = "brief" | "form" | "complete";
+/**
+ * The Partner Challenge builder.
+ *
+ * ---
+ *
+ * ## Why the blank box went
+ *
+ * This mission used to open on a title field and a six row, forty character
+ * minimum textarea. Testers named typing as the thing that made SIDEQUEST feel
+ * tedious, and this was the longest single piece of required typing anywhere in
+ * the product. It also asked more of the player than the brief actually wanted:
+ * a blank box asks somebody to invent the problem *and* the answer with nothing
+ * to push against, which is a harder creative task than a design one.
+ *
+ * The mission is now three choices: what is wrong, what you would change, and
+ * which idea that leans on. Those are the three questions a design submission
+ * consists of, and a young person answering them has authored the same thing
+ * the form was asking them to write out longhand.
+ *
+ * ## What had to survive
+ *
+ * The mission's `behaviouralHook` is self-efficacy: producing a solution rather
+ * than receiving one changes how capable somebody believes they are. That only
+ * holds if the player is genuinely producing something, so the combination is
+ * theirs. Four frictions against six changes is twenty-four pairings, the entry
+ * names both halves, and "Add my own words" sits one tap away on the preview
+ * for anybody who wants to say something the options could not hold.
+ *
+ * ## No option here works by watching people
+ *
+ * The brief forbids identifying shoppers, and BREAKSAFE spends a whole mission
+ * on why. Offering facial recognition as a selectable design move here would
+ * have quietly contradicted both, so there is no such option. The constraints
+ * on the brief screen still say it out loud.
+ */
 
-/** Validation runs on the client because there is no server to trust either. */
-const SubmissionSchema = z.object({
-  title: z.string().trim().min(6, "Give it a title of at least six characters.").max(90),
-  solution: z
-    .string()
-    .trim()
-    .min(40, "Say a bit more. Forty characters minimum, and it helps to be specific.")
-    .max(600),
-  principleId: z.string().min(1, "Pick the principle your idea leans on."),
-});
+type Step = "brief" | "problem" | "move" | "principle" | "preview" | "complete";
 
 export function BuildPlayer({ mission }: { mission: Mission }) {
   const challenge = getChallengeForMission(mission.id);
@@ -34,10 +58,12 @@ export function BuildPlayer({ mission }: { mission: Mission }) {
   const completeMission = useAppStore((state) => state.completeMission);
 
   const [step, setStep] = useState<Step>("brief");
-  const [title, setTitle] = useState("");
-  const [solution, setSolution] = useState("");
-  const [principleId, setPrincipleId] = useState("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [problemId, setProblemId] = useState<string | null>(null);
+  const [moveId, setMoveId] = useState<string | null>(null);
+  const [principleId, setPrincipleId] = useState<string | null>(null);
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customTitle, setCustomTitle] = useState("");
+  const [customNote, setCustomNote] = useState("");
   const [result, setResult] = useState<AwardResult | null>(null);
 
   const exitHref = `/missions/${mission.id}`;
@@ -50,29 +76,6 @@ export function BuildPlayer({ mission }: { mission: Mission }) {
     );
   }
 
-  const submit = () => {
-    const parsed = SubmissionSchema.safeParse({ title, solution, principleId });
-
-    if (!parsed.success) {
-      const next: Record<string, string> = {};
-      for (const issue of parsed.error.issues) {
-        const key = String(issue.path[0] ?? "form");
-        if (!next[key]) next[key] = issue.message;
-      }
-      setErrors(next);
-      return;
-    }
-
-    addSubmission({
-      challengeId: challenge.id,
-      title: parsed.data.title,
-      solution: parsed.data.solution,
-      principleId: parsed.data.principleId,
-    });
-    setResult(completeMission(mission.id));
-    setStep("complete");
-  };
-
   /* ------------------------------------------------------------- Brief */
 
   if (step === "brief") {
@@ -83,8 +86,8 @@ export function BuildPlayer({ mission }: { mission: Mission }) {
         progress={0.2}
         exitHref={exitHref}
         footer={
-          <Button variant="volt" size="lg" full onClick={() => setStep("form")}>
-            Write your answer
+          <Button variant="volt" size="lg" full onClick={() => setStep("problem")}>
+            Design your answer
             <ArrowRight aria-hidden className="size-4" />
           </Button>
         }
@@ -166,122 +169,208 @@ export function BuildPlayer({ mission }: { mission: Mission }) {
     );
   }
 
-  /* -------------------------------------------------------------- Form */
+  /* ------------------------------------------------------- Three choices */
 
-  if (step === "form") {
+  const problem = challenge.problems.find((entry) => entry.id === problemId) ?? null;
+  const composed = problemId && moveId ? composeEntry(challenge, problemId, moveId) : null;
+  const principle = challenge.principles.find((entry) => entry.id === principleId) ?? null;
+
+  if (step === "problem") {
+    return (
+      <BuildStep
+        mission={mission}
+        exitHref={exitHref}
+        index={0}
+        title="What is going wrong?"
+        lede="Pick the friction you want to design against."
+      >
+        <ChoiceCards
+          options={challenge.problems.map((entry) => ({ id: entry.id, label: entry.label }))}
+          legend="What is going wrong?"
+          onChoose={(id) => {
+            setProblemId(id);
+            /* A different friction has a different set of plausible answers. */
+            setMoveId(null);
+            setStep("move");
+          }}
+        />
+      </BuildStep>
+    );
+  }
+
+  if (step === "move" && problem) {
+    /*
+     * Situation-sensitive first, everything else underneath.
+     *
+     * The changes that answer this particular friction lead, because that is
+     * the design judgement the step is asking for. The rest stay visible
+     * rather than hidden, because an unexpected pairing is sometimes the
+     * interesting entry and a build mission should not rule it out.
+     */
+    const preferred = problem.moveIds
+      .map((id) => challenge.moves.find((entry) => entry.id === id))
+      .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
+    const others = challenge.moves.filter((entry) => !problem.moveIds.includes(entry.id));
+
+    return (
+      <BuildStep
+        mission={mission}
+        exitHref={exitHref}
+        index={1}
+        title="What would you change?"
+        lede="Change the situation, not the person."
+        onBack={() => setStep("problem")}
+      >
+        <ChoiceCards
+          options={preferred.map((entry) => ({ id: entry.id, label: entry.label }))}
+          legend="What would you change?"
+          onChoose={(id) => {
+            setMoveId(id);
+            setStep("principle");
+          }}
+        />
+        {others.length > 0 ? (
+          <>
+            <p className="mt-5 text-xs font-semibold tracking-[0.12em] text-faint uppercase">
+              Other changes
+            </p>
+            <ChoiceCards
+              className="mt-2.5"
+              options={others.map((entry) => ({ id: entry.id, label: entry.label }))}
+              legend="Other changes"
+              onChoose={(id) => {
+                setMoveId(id);
+                setStep("principle");
+              }}
+            />
+          </>
+        ) : null}
+      </BuildStep>
+    );
+  }
+
+  if (step === "principle") {
+    return (
+      <BuildStep
+        mission={mission}
+        exitHref={exitHref}
+        index={2}
+        title="Which idea is it leaning on?"
+        lede="There is more than one defensible answer here."
+        onBack={() => setStep("move")}
+      >
+        <ChoiceCards
+          options={challenge.principles.map((entry) => ({
+            id: entry.id,
+            label: entry.label,
+            hint: entry.description,
+          }))}
+          legend="Which idea is it leaning on?"
+          onChoose={(id) => {
+            setPrincipleId(id);
+            setStep("preview");
+          }}
+        />
+      </BuildStep>
+    );
+  }
+
+  /* ------------------------------------------------------------- Preview */
+
+  if (step === "preview" && composed && principle && problemId && moveId) {
+    const title = sanitiseText(customTitle, 90) || composed.title;
+    const note = sanitiseText(customNote, 200);
+    const solution = note ? `${composed.solution} ${note}` : composed.solution;
+
+    const submit = () => {
+      addSubmission({
+        challengeId: challenge.id,
+        title,
+        solution,
+        principleId: principle.id,
+        problemId,
+        moveId,
+      });
+      setResult(completeMission(mission.id));
+      setStep("complete");
+    };
+
     return (
       <MissionShell
         title={mission.title}
         accent="gold"
-        progress={0.7}
+        progress={0.9}
         exitHref={exitHref}
         footer={
           <Button variant="volt" size="lg" full onClick={submit}>
             <Send aria-hidden className="size-4" />
-            Submit
+            Submit your entry
           </Button>
         }
       >
         <div className="animate-rise py-2">
-          <h1 className="font-display text-2xl leading-tight font-extrabold text-chalk">
-            Your answer
-          </h1>
-          <p className="mt-2 text-sm text-muted">
-            Short is fine. Specific beats clever. This is saved on your device and added to your
-            Safety Passport.
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setStep("principle")}
+              aria-label="Back a step"
+              className="sq-pressable -ml-2 grid size-11 shrink-0 place-items-center rounded-full text-faint hover:text-chalk"
+            >
+              <ArrowLeft aria-hidden className="size-4" />
+            </button>
+            <p className="text-xs font-bold tracking-[0.12em] text-faint uppercase">Your entry</p>
+          </div>
+
+          <div className="sq-card mt-3 p-4">
+            <h1 className="font-display text-xl leading-tight font-extrabold tracking-tight text-chalk">
+              {title}
+            </h1>
+            <p className="mt-2.5 text-sm leading-relaxed text-mist">{solution}</p>
+            <p className="mt-3 text-xs font-semibold text-gold-400">{principle.label}</p>
+          </div>
+
+          {/*
+            Honesty about what just happened. A template is not a writer, and a
+            screen that lets somebody believe three taps were turned into prose
+            by something clever is lying about the part of the product a young
+            person might repeat to a friend.
+          */}
+          <p className="mt-2.5 flex items-start gap-2 text-xs leading-relaxed text-faint">
+            <Sparkles aria-hidden className="mt-0.5 size-3.5 shrink-0" />
+            Written from your three choices using a fixed template. No AI wrote this, and it is
+            saved on your device.
           </p>
 
-          <label className="mt-6 block">
-            <span className="text-sm font-semibold text-chalk">Idea title</span>
-            <input
-              value={title}
-              onChange={(event) => {
-                setTitle(sanitiseText(event.target.value, 90));
-                setErrors((current) => ({ ...current, title: "" }));
-              }}
-              placeholder="Show the basket like a receipt"
-              maxLength={90}
-              className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-white/5 px-4 text-base text-chalk placeholder:text-faint focus:border-gold-500 focus:outline-none"
-            />
-            {errors.title ? (
-              <span role="alert" className="mt-1.5 block text-sm text-coral-300">
-                {errors.title}
-              </span>
-            ) : null}
-          </label>
-
-          <label className="mt-5 block">
-            <span className="text-sm font-semibold text-chalk">How it works</span>
-            <textarea
-              value={solution}
-              onChange={(event) => {
-                setSolution(sanitiseText(event.target.value, 600));
-                setErrors((current) => ({ ...current, solution: "" }));
-              }}
-              rows={6}
-              maxLength={600}
-              placeholder="What changes, who it helps, and why it does not need to identify anybody."
-              className="mt-2 w-full resize-none rounded-2xl border border-white/10 bg-white/5 p-4 text-base leading-relaxed text-chalk placeholder:text-faint focus:border-gold-500 focus:outline-none"
-            />
-            <span className="mt-1 block text-right text-xs text-faint tabular-nums">
-              {solution.length}/600
-            </span>
-            {errors.solution ? (
-              <span role="alert" className="mt-1 block text-sm text-coral-300">
-                {errors.solution}
-              </span>
-            ) : null}
-          </label>
-
-          <fieldset className="mt-5">
-            <legend className="text-sm font-semibold text-chalk">
-              Which principle is it leaning on?
-            </legend>
-            <div className="mt-3 space-y-2">
-              {challenge.principles.map((principle) => {
-                const selected = principleId === principle.id;
-                return (
-                  <button
-                    key={principle.id}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => {
-                      setPrincipleId(principle.id);
-                      setErrors((current) => ({ ...current, principleId: "" }));
-                    }}
-                    className={cn(
-                      "sq-pressable flex w-full items-start gap-3 rounded-2xl border p-3.5 text-left",
-                      selected
-                        ? "border-gold-500/50 bg-gold-500/10"
-                        : "border-white/10 bg-white/4 hover:bg-white/7",
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border",
-                        selected ? "border-gold-500 bg-gold-500 text-ink-900" : "border-white/20",
-                      )}
-                    >
-                      {selected ? <Check aria-hidden className="size-3" strokeWidth={3} /> : null}
-                    </span>
-                    <span>
-                      <span className="block text-sm font-semibold text-chalk">
-                        {principle.label}
-                      </span>
-                      <span className="mt-0.5 block text-xs text-muted">
-                        {principle.description}
-                      </span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            {errors.principleId ? (
-              <p role="alert" className="mt-1.5 text-sm text-coral-300">
-                {errors.principleId}
+          {!customOpen ? (
+            <button
+              type="button"
+              onClick={() => setCustomOpen(true)}
+              className="sq-pressable mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-white/12 text-sm font-semibold text-mist hover:text-chalk"
+            >
+              <PenLine aria-hidden className="size-4" />
+              Add my own words
+            </button>
+          ) : (
+            <div className="mt-4 space-y-3 rounded-2xl border border-white/12 bg-white/3 p-3.5">
+              <p className="text-xs leading-relaxed text-muted">
+                Both optional. The entry above is already complete.
               </p>
-            ) : null}
-          </fieldset>
+              <ShortField
+                label="Call it something else"
+                value={customTitle}
+                placeholder={composed.title}
+                max={90}
+                onChange={setCustomTitle}
+              />
+              <ShortField
+                label="Add a line of your own"
+                value={customNote}
+                placeholder="The bit the options did not cover"
+                max={200}
+                onChange={setCustomNote}
+              />
+            </div>
+          )}
         </div>
       </MissionShell>
     );
@@ -302,6 +391,112 @@ export function BuildPlayer({ mission }: { mission: Mission }) {
   }
 
   return null;
+}
+
+/* ------------------------------------------------------------- Internals */
+
+const BUILD_STEPS = ["What is wrong", "What changes", "Which idea"];
+
+function BuildStep({
+  mission,
+  exitHref,
+  index,
+  title,
+  lede,
+  onBack,
+  children,
+}: {
+  mission: Mission;
+  exitHref: string;
+  index: number;
+  title: string;
+  lede: string;
+  onBack?: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <MissionShell
+      title={mission.title}
+      accent="gold"
+      progress={0.35 + index * 0.18}
+      exitHref={exitHref}
+    >
+      <div className="animate-rise py-2">
+        <div className="flex items-center gap-2">
+          {onBack ? (
+            <button
+              type="button"
+              onClick={onBack}
+              aria-label="Back a step"
+              className="sq-pressable -ml-2 grid size-11 shrink-0 place-items-center rounded-full text-faint hover:text-chalk"
+            >
+              <ArrowLeft aria-hidden className="size-4" />
+            </button>
+          ) : null}
+          <p className="text-xs font-bold tracking-[0.12em] text-faint uppercase">
+            Step {index + 1} of {BUILD_STEPS.length}
+          </p>
+        </div>
+
+        <h1 className="mt-1 font-display text-2xl leading-tight font-extrabold tracking-tight text-chalk">
+          {title}
+        </h1>
+        <p className="mt-1.5 text-sm text-muted">{lede}</p>
+
+        {/* Progress by shape and position. Colour is never the only channel. */}
+        <div aria-hidden className="mt-3 mb-5 flex gap-1.5">
+          {BUILD_STEPS.map((label, position) => (
+            <span
+              key={label}
+              className={
+                position <= index
+                  ? "h-1 flex-1 rounded-full bg-gold-500"
+                  : "h-1 flex-1 rounded-full bg-white/10"
+              }
+            />
+          ))}
+        </div>
+
+        {children}
+      </div>
+    </MissionShell>
+  );
+}
+
+/**
+ * One short line, offered rather than required.
+ *
+ * `data-input-role` is what `tests/unit/integrity.test.ts` reads to prove this
+ * is optional creator expression and not a gameplay requirement that has crept
+ * back in. An input without that attribute fails the build.
+ */
+function ShortField({
+  label,
+  value,
+  placeholder,
+  max,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  placeholder: string;
+  max: number;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="text-xs font-semibold tracking-[0.08em] text-faint uppercase">{label}</span>
+      <input
+        data-input-role="optional-creator"
+        value={value}
+        placeholder={placeholder}
+        maxLength={max}
+        autoComplete="off"
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-1.5 h-12 w-full rounded-xl border border-white/12 bg-white/4 px-3.5 text-base text-chalk placeholder:text-faint focus:border-gold-500/60 focus:outline-none"
+      />
+    </label>
+  );
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
