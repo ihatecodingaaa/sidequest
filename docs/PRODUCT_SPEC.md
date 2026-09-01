@@ -172,6 +172,30 @@ Scope is deliberately one district. Full reasoning in
 `docs/STREETS_ARCHITECTURE.md`, `docs/STREETS_ART_DIRECTION.md` and
 `docs/NEXT_WORLD_ART_DIRECTION.md`.
 
+### Updates, and the fictional practice link
+
+Real information and fictional rehearsal, joined through a **theme** rather
+than through a story.
+
+The connection used to be made between a Pulse item and a mission, and rendered
+as "Play REWIND" underneath a summary of real Police guidance. Read quickly,
+that offers a playable version of the news. Nobody intended it; it followed
+from linking a specific piece of reporting to a specific scenario.
+
+A theme is the situation both things are about: somebody being recruited to
+move money, a place that makes the wrong thing easy, a request for a code. The
+report is evidence the theme exists. The mission is an invented situation in
+the same shape. Because the mapping belongs to the theme, no code path connects
+one report to one scenario, so "replay this incident" is not expressible.
+
+Every practice control on every surface reads **"Practise a fictional
+version"** and carries the line "Written by SIDEQUEST. Not a recreation of the
+report above, and not based on any real person or incident." No theme names a
+person, a place where something happened, or an outcome somebody suffered.
+
+Provenance is untouched. A real report does not become official because it
+links to a mission.
+
 ### Echo, and the collection
 
 Echo is SIDEQUEST's mascot: a shield-bodied character with a visor face, six
@@ -191,6 +215,27 @@ write, not a reward.
 
 Full system in `docs/VISUAL_ART_DIRECTION.md`, reasoning in
 `docs/VISUAL_DELIGHT_RESEARCH.md`.
+
+### Coming back
+
+A player with history opens Home to one control that carries on where they
+stopped: a half-read campaign chapter, then a half-finished Prevention Thread,
+then somebody standing in the district with something unresolved. Strict
+priority, never a list, because a screen offering four ways to resume is a menu.
+
+A first-time visitor sees none of it and gets the discovery order unchanged.
+
+**"Returning" means this profile has done things before.** Whether somebody was
+here yesterday is unknowable, and the product does not pretend otherwise.
+Nothing in the returning state can read a clock, which is what makes it
+structurally impossible to build a streak, a daily claim, a missed day or a
+countdown out of it.
+
+There is no "new since you left" badge, because knowing something is new needs
+a record of what has been seen, and inventing that state would be writing data
+purely to manufacture a sense of missing out. One gentle open loop takes its
+place, true whenever it is read: how many places still have nothing of yours in
+them, or how many stickers are still out there.
 
 ### The reveal grammar
 
@@ -371,6 +416,32 @@ The passport is a SIDEQUEST record. It is not a SkillsFuture credential and
 carries no formal recognition. The structure is designed so that a recognised
 credential could be issued by an appropriate body later.
 
+### District stickers
+
+Eight small drawings that commemorate having been somewhere: First Light,
+Sunrise Regular, Block 118, Court Side, Kopitiam Regular, Long Way Round, Sharp
+Eyes, Made Something. Finite, deterministic, cosmetic, free, drawn in code.
+
+Every one is a pure function of the profile, so the same history always earns
+the same set. There is no randomness anywhere in the system and a test asserts
+the module cannot reach a random number generator or a clock. No rarity tiers,
+no purchase, no expiry, no trade, and nothing they affect except which small
+drawing sits next to the player's name.
+
+Locked stickers are drawn, named, and carry the sentence that earns them. A
+collection with mystery slots trades on uncertainty rather than on anything the
+player did.
+
+**The props that pay nothing still pay nothing.** The curiosity stickers count
+breadth of history and the props that were always designed to leave something
+behind. The cat, the mural, the bicycle, the hoop, the drinks machine and the
+door chime earn nothing, individually or collectively, and that is enforced
+structurally rather than by convention.
+
+One sticker can be pinned to the player's corner on You. That is the whole of
+the locker, deliberately: the alternative was a placement grid and a room to
+decorate, which is a different product.
+
 ### You
 
 The You page opens with the person, not the score: their figure in the clothes
@@ -406,9 +477,35 @@ issue no code and carry no monetary value, and the confirmation says so.
 
 ## 8. Crews
 
-Crews provide the social pull. For the prototype they are asynchronous: a
-shared goal, a weekly board, and seeded members. There is no realtime layer, no
-account system and no invite flow, and the screens say so.
+Crews answer one question: **what are we doing together?** Not how are we
+doing, which is what the screen used to answer with a weekly XP total, a
+per-member points column and a cross-crew league table. All three are gone.
+
+Four challenges, in four different shapes rather than four quotas: split a
+Prevention Thread between you, write quests of your own, each patch a different
+part of the same setup, and play one round of Crew Shift in the same room.
+Exactly one of the four needs everybody present at the same moment, and that is
+the one where being together is the point.
+
+**Your own part of every challenge is derived from your profile and is exactly
+as true as your XP.** What the other four members have done is not knowable in
+this build, so no crew total is shown anywhere. The screen says that where the
+members appear rather than in a footnote. The old challenge progress bar was a
+hardcoded number that moved for nobody, which is worse than absent.
+
+A crew owns a banner: an emblem, a pattern and a colour, all original SVG. The
+emblem is a distinct shape and the pattern a distinct geometry, so a crew is
+identifiable without seeing the colour. Four patterns unlock from the four
+challenges, and a banner pattern is the only thing a crew challenge pays: no
+XP, no currency, no voucher eligibility, nothing that compounds. The banner is
+set on the device, and the editor says so, because four phones cannot agree
+without a server.
+
+There is no realtime layer, no account system and no invite flow. A test fails
+the build if any crew component acquires `fetch`, a WebSocket or a polling
+interval, so fake synchronisation cannot appear by accident. `yourPart` and
+`done()` are the entire contract the UI reads, which is what would let a real
+backend replace the prototype half without touching a component.
 
 This was a deliberate scope decision. Realtime multiplayer would have consumed
 the time that went into the three signature missions, and it would not have

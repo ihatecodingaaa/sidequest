@@ -617,3 +617,82 @@ how a vertical slice becomes a demo.
 **No XP was added anywhere.** Six props ship paying nothing at all, which is
 the least intuitive decision in the pass and the best supported one. See
 `docs/LIVING_DISTRICT_2_RESEARCH.md` section 2.
+
+---
+
+## Round four: one product, or six features?
+
+Added 1 September 2026, on the build at `a411e1e`. The previous rounds asked
+whether the product is legible, then whether it is somewhere worth being. This
+one asks whether it is **one thing**.
+
+The honest answer before this pass was no. Streets had become strong, and the
+screens around it were still the screens they were in August: a Crew page that
+ranked friends by points, an Updates feed that offered to let you play the
+news, a Home that greeted a returning player exactly as it greeted a stranger.
+
+### Crew answered the wrong question
+
+It opened with a weekly XP total, ranked four friends against the reader, and
+showed a challenge whose progress bar was **a hardcoded number in a data
+file**. `progress: 3` moved for nobody. A player could finish BREAKSAFE five
+times and watch it sit at three, which teaches somebody that nothing they do
+here counts, and which is a fabricated progress claim in a product whose first
+rule is data honesty.
+
+Underneath that were three more: a per-member points column ranking friends in
+a product about peer norms, a cross-crew league table built entirely from
+invented numbers, and a crew that owned nothing at all.
+
+Now: who we are, what we are doing together, what we have made, who is in it.
+Four challenges in four different shapes, three of which need nobody else
+online. Your own part is derived and true; the crew's total is not shown at
+all, because there is no honest way to know it.
+
+### Updates offered to let you play the news
+
+"Play REWIND", as a button, directly under a summary of real Singapore Police
+Force guidance. Nobody intended that reading and it is available to anybody
+scrolling quickly. It followed from linking a *story* to a *mission*, and a
+story is a specific piece of reporting.
+
+The mapping now belongs to a theme, so the offer is "this is about somebody
+being recruited to move money, and here is a made-up version of that". Three
+surfaces carry it and all three say fictional in the control itself.
+
+### Home greeted a returning player like a stranger
+
+Same greeting, same world card, same three signature missions, whether it was
+your first visit or your ninth. There is now one control above everything for
+anybody with history, naming the specific thing they stopped in the middle of.
+
+The screenshot pass caught a duplication the code review had not: the world
+card underneath was saying "Wei is still at the sunrise minimart" to exactly
+the player the continue card had just said it to. The world card now stays
+quiet when Home has already named somebody.
+
+It also caught Home showing the *old* hardcoded crew challenge while the Crew
+screen showed the new derived ones, so the two disagreed about what the crew
+was doing.
+
+### The avatar defect worth recording
+
+Two of the five customisation rows, Top and One extra, sat entirely below the
+fold of a 368px scroll area on a 390px phone, with no fade, no shadow and
+nothing to suggest the list continued. A third of the customisation in the
+product was effectively invisible on the most common phone size in the target
+market, and it had been that way since Streets shipped.
+
+Found by looking at a screenshot, not by a test, which is the fourth time this
+audit has recorded that outcome. The preview now takes less vertical space on a
+short viewport and the scroll region has an edge fade.
+
+**The reason to write that down again:** every automated check passed on that
+screen. It had no overflow, no contrast failure, no missing label, and full
+keyboard access to every control including the invisible ones. Nothing except
+looking at it would have found it.
+
+### What was deliberately left alone
+
+Safe, entirely, and a test now fails the build if a sticker, a banner, a
+mascot or a companion reaction ever reaches it or Settings.

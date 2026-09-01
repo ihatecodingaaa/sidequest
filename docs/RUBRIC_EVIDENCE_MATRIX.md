@@ -39,12 +39,12 @@ checked, would cost more than the criterion was worth.
 
 | | |
 | - | - |
-| **Product evidence** | The Signal system: four modes that name **the response a situation needs** rather than how serious it is, in a product category that reliably does the opposite. Crew Shift: two private rounds either side of a discussion, which makes peer influence visible in about ninety seconds without a backend. An explorable district where prevention is something you walk into rather than a menu item. District Memory: the block accumulates a record of what you did in it, filed by place, derived entirely from existing state and worth no points at all. Six things in the world that pay nothing on purpose. All art drawn in code. |
+| **Product evidence** | The Signal system: four modes that name **the response a situation needs** rather than how serious it is, in a product category that reliably does the opposite. Crew Shift: two private rounds either side of a discussion, which makes peer influence visible in about ninety seconds without a backend. An explorable district where prevention is something you walk into rather than a menu item. District Memory: the block accumulates a record of what you did in it, filed by place, derived entirely from existing state and worth no points at all. Eight stickers that commemorate having been somewhere rather than finishing quotas, with no randomness and no rarity anywhere in the system. Eight things in the world that pay nothing on purpose. All art drawn in code. |
 | **Demo evidence** | Point at an amber chevron: "the colour describes what this needs, not who that person is." Then Crew Shift's two distributions. Then walk to the court and open "you have history here". |
 | **Pilot metric** | Not a metric. Innovation is judged, not measured, and pretending otherwise would be worse than saying so. |
-| **Remaining gap** | The four-mode vocabulary is untested on real young people. It may turn out that three modes are learnable and four are not. Whether District Memory produces attachment is a hypothesis, not a finding: see `docs/LIVING_DISTRICT_2_RESEARCH.md` section 3, where it is labelled Directional and put in the verification queue. |
+| **Remaining gap** | The four-mode vocabulary is untested on real young people. It may turn out that three modes are learnable and four are not. Whether District Memory produces attachment is a hypothesis, not a finding: see `docs/LIVING_DISTRICT_2_RESEARCH.md` section 3, where it is labelled Directional and put in the verification queue. Five further hypotheses about continuity, collection, asynchronous crew, theme framing and companion reactions are stated as hypotheses in section 11 of that document and none has been tested. |
 | **May claim** | "The marker describes the response, and it is structurally impossible for it to describe a person: there is no risk field on a person anywhere, and a test fails the build if one appears." |
-| **Must not claim** | "The first product to do this." Unverified, and unnecessary. Also not: "research shows players get attached to places that remember them." The direction is supported, the transfer to a fictional district on a phone is not, and the research doc says so. |
+| **Must not claim** | "The first product to do this." Unverified, and unnecessary. Also not: "research shows players get attached to places that remember them." The direction is supported, the transfer to a fictional district on a phone is not, and the research doc says so. Also not: "collectibles increase retention", "Echo improves learning", "District Memory causes people to come back", or "the crew rebuild increases engagement". None of the four is measured and the first is explicitly rejected in the research doc. |
 
 ---
 
@@ -131,7 +131,7 @@ row because they are the ones easiest to assert and hardest to evidence.
 
 ---
 
-## The five sentences we are never allowed to say
+## The sentences we are never allowed to say
 
 1. "SIDEQUEST reduces crime."
 2. "In partnership with the Singapore Police Force." Or NCPC, or any retailer.
@@ -139,3 +139,14 @@ row because they are the ones easiest to assert and hardest to evidence.
 4. "Co-designed with youth." Not yet.
 5. "This person is high risk." The product cannot say it, because nothing in it
    can represent it.
+6. "Collectibles increase retention." Rejected in the research, and the sticker
+   system is justified by what it commemorates rather than by an effect.
+7. "Echo improves learning." Nothing measured, and the companion is justified
+   as delight and nothing more.
+8. "District Memory causes people to return." A hypothesis, written down as
+   one, and untested.
+9. "Our crew feature drives engagement." There is no social graph and no
+   measurement. What the rebuild did was make the screen honest.
+10. "This is what your crew has done this week." There is no backend. Anything
+    said about the other four members is prototype content and is labelled as
+    such on the screen itself.

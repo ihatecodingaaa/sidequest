@@ -1,7 +1,8 @@
 # Demo script
 
 Target: about seven and a half minutes with both the Campaign section and
-SIDEQUEST Streets (485 seconds across ten moments), four to five without them.
+SIDEQUEST Streets (530 seconds across eleven moments), four to five without
+them.
 Practise it twice before judging.
 
 If you only have three minutes, cut Moments 5 and 7 and keep Campaigns. It is
@@ -203,10 +204,18 @@ Under **Worth knowing**, the story is "The quiet cost of going along with it".
 > "Most young people who get into trouble did not plan anything. They were in a
 > group, said nothing, and the moment passed."
 
-Tap **Play REWIND**.
+Tap **Practise a fictional version**.
 
 > "That is the whole thesis. The story does not end when you close it. It
 > becomes the decision."
+
+**Say the next sentence deliberately**, because it is the one an evaluator with
+a safeguarding brief is listening for:
+
+> "The story is real reporting. What it opens is not a reconstruction of it.
+> The link is to the theme, going along with the group, and the scenario on the
+> other side is written by us and says so. There is no code path in this
+> product that connects one report to one scenario."
 
 Play REWIND far enough to reach the pivot and the rewind, then let it run to the
 comparison screen.
@@ -400,6 +409,29 @@ Do not tap any of them. Point out the line at the bottom.
 > opens the agency that owns the job."
 
 Then go straight back to the fun part. Twenty seconds, no longer.
+
+## Moment 7b: Crew, 45 seconds
+
+Open **Crew**. Do not explain the screen, read the top of it.
+
+> "What are we doing together. Not how are we doing."
+
+Point at your part of the lead challenge.
+
+> "Whether I have done my bit is read from my own progress, so it is exactly as
+> true as my XP. What the other four have done is not knowable in this build,
+> so the screen does not show a crew total it would have to invent. That
+> sentence is on the screen, not in a footnote."
+
+If a judge asks what changed: it used to open with a weekly XP total, rank
+these four friends against each other by points, and show a progress bar whose
+number was hardcoded in a data file. All three are gone.
+
+Then tap **Change the banner**:
+
+> "A crew owns one drawing. Four of the patterns come from the four challenges,
+> and a pattern is the only thing a crew challenge pays. No XP, no currency,
+> nothing that compounds."
 
 ## Moment 8: Safety Passport, Echo and rewards, 30 seconds
 

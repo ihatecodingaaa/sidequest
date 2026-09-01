@@ -4,13 +4,53 @@ Kept current so another session can pick this up cold. Update after every major
 stage.
 
 **Last updated:** 1 September 2026
-**Status:** The block remembers you. District Memory is live, the catalogue and
-the world admit they are the same product, and six things in the district are
-worth nothing at all on purpose.
+**Status:** One product rather than a strong world with older screens around
+it. Crew answers what we are doing, Updates says which half of itself is
+fiction, Echo reacts, a returning player is offered where they were, and eight
+free stickers commemorate places rather than quotas.
 
 ---
 
-## The pass that just landed: Living District 2.0
+## The pass that just landed: P1 cohesion
+
+The question was why somebody would come back tomorrow, answered without
+streaks, timers, loot or push pressure. Nothing added in this pass can read a
+clock, which is the strongest available guarantee that no daily mechanic can be
+built out of it.
+
+### What landed
+
+| Thing | Where |
+| ----- | ----- |
+| Crew rebuilt around what we are doing together | `src/features/crews/crew-screen.tsx` |
+| Four asynchronous crew challenges, your part derived | `src/data/crew-challenges.ts` |
+| Crew banner: emblem, pattern, colour | `src/components/crew/crew-banner.tsx` |
+| Practice themes, so a story is never replayable | `src/data/practice-themes.ts` |
+| Eight district stickers, free and deterministic | `src/data/district-stickers.ts` |
+| Sticker art, drawn in code | `src/components/district/sticker-mark.tsx` |
+| Echo reactions and per-variant idle character | `src/features/streets/game/world-engine.ts` |
+| Where you were, for anybody with history | `src/features/home/continue-state.ts` |
+| Show me where, into the live world | `src/features/streets/components/minimap.tsx` |
+| The spec | `docs/P1_COHESION_SPEC.md` |
+
+### Three things this pass deleted
+
+**A fabricated crew progress bar.** `progress: 3` was a number in a data file.
+A player could finish BREAKSAFE five times and watch it stay at three.
+
+**A per-member points column** ranking four friends against the reader, in a
+product about peer norms.
+
+**A cross-crew league table** built entirely from invented weekly totals.
+
+### Two new profile fields, both optional and both cosmetic
+
+`pinnedSticker` and `crewBanner`. Everything else added is derived. Old
+profiles open unchanged.
+
+---
+
+## The pass before that: Living District 2.0
 
 The question was whether SIDEQUEST is somewhere a young person would want to
 exist, rather than somewhere they complete things. The audit answer was that
