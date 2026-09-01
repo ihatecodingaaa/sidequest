@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Bookmark, BookmarkCheck, Eye, Sparkles } from "lucide-react";
 
-import { getMission } from "@/data/missions";
+import { practiceFor } from "@/data/practice-themes";
 import { ButtonLink } from "@/components/ui/button";
 import { Chip, ExternalLink, ProvenanceTag } from "@/components/ui/primitives";
 import { useAppStore } from "@/store/app-store";
@@ -14,7 +14,7 @@ import type { PulseItem } from "@/types/content";
 export function PulseDetail({ item }: { item: PulseItem }) {
   const { profile, ready } = useProfile();
   const toggleSaved = useAppStore((state) => state.toggleSavedPulse);
-  const mission = item.relatedMissionId ? getMission(item.relatedMissionId) : undefined;
+  const practice = practiceFor(item.id);
   const saved = ready && profile.savedPulseIds.includes(item.id);
 
   return (
@@ -123,24 +123,38 @@ export function PulseDetail({ item }: { item: PulseItem }) {
         </p>
       </section>
 
-      {/* Information to action */}
-      {mission ? (
+      {/*
+        Real information, then a fictional rehearsal of the same theme.
+
+        The heading names the theme rather than the story, and the label on the
+        control carries the word fictional, because a reader who taps without
+        reading the paragraph must still not be able to believe they are about
+        to replay the report they just read.
+      */}
+      {practice ? (
         <section className="mt-7">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-quest-300">
-            Information to action
+          <p className="mb-3 text-xs font-semibold tracking-[0.12em] text-quest-300 uppercase">
+            Practise the theme
           </p>
           <div className="sq-card p-4">
-            <h2 className="font-display text-lg leading-tight font-bold text-chalk">
-              {mission.title}
+            <p className="text-sm leading-relaxed text-mist">
+              This is about <span className="font-semibold text-chalk">{practice.theme.name}</span>.
+            </p>
+            <h2 className="mt-2.5 font-display text-lg leading-tight font-bold text-chalk">
+              {practice.mission.title}
             </h2>
-            <p className="mt-1.5 text-sm text-muted">{mission.subtitle}</p>
-            <ButtonLink href={`/missions/${mission.id}`} full size="lg" className="mt-4">
+            <p className="mt-1.5 text-sm text-muted">{practice.theme.fiction}</p>
+            <ButtonLink href={`/missions/${practice.mission.id}`} full size="lg" className="mt-4">
               <Sparkles aria-hidden className="size-4" />
-              Try the related quest
+              Practise a fictional version
               <ArrowRight aria-hidden className="size-4" />
             </ButtonLink>
             <p className="mt-2.5 text-center text-xs text-faint">
-              {mission.durationMinutes} min &middot; {mission.xp} XP
+              {practice.mission.durationMinutes} min &middot; {practice.mission.xp} XP
+            </p>
+            <p className="mt-3 text-xs leading-relaxed text-faint">
+              Written by SIDEQUEST. Not a recreation of the report above, and not based on any real
+              person or incident.
             </p>
           </div>
         </section>

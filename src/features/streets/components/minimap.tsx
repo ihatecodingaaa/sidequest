@@ -55,12 +55,22 @@ export function Minimap({
   tile,
   npcs,
   signals,
+  tracked,
   className,
 }: {
   tile: { x: number; y: number };
   npcs: { npc: Npc; done: boolean }[];
   /** Live Signals, keyed by whoever raises them. Same source as the world. */
   signals: Record<string, SignalMarker>;
+  /**
+   * Somebody the player asked to be pointed at, from the Quest Journal.
+   *
+   * Drawn as a ring and a crosshair rather than a brighter dot, because a
+   * colour difference on a four-pixel marker is not a difference. The name and
+   * the place are also printed in real text above the map by the caller, so
+   * nothing about tracking is map-only.
+   */
+  tracked?: Npc | null;
   className?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -148,6 +158,40 @@ export function Minimap({
       g.fill();
     }
 
+    /*
+     * The tracked person, if the player asked for one.
+     *
+     * Their live tile, not their starting tile: residents walk routes and the
+     * whole point of tracking is that it stays true while they move. The ring
+     * is a shape rather than a colour so it survives being four pixels across
+     * and reads for a player who cannot separate the accent from the signal
+     * dots underneath it.
+     */
+    if (tracked) {
+      const tx = tracked.x * SCALE + 1;
+      const ty = tracked.y * SCALE + 1;
+      g.strokeStyle = "rgba(10,14,22,0.85)";
+      g.lineWidth = 3.4;
+      g.beginPath();
+      g.arc(tx, ty, 5.4, 0, Math.PI * 2);
+      g.stroke();
+      g.strokeStyle = "#f7f9ff";
+      g.lineWidth = 1.6;
+      g.beginPath();
+      g.arc(tx, ty, 5.4, 0, Math.PI * 2);
+      g.stroke();
+      g.beginPath();
+      g.moveTo(tx - 8, ty);
+      g.lineTo(tx - 5.4, ty);
+      g.moveTo(tx + 5.4, ty);
+      g.lineTo(tx + 8, ty);
+      g.moveTo(tx, ty - 8);
+      g.lineTo(tx, ty - 5.4);
+      g.moveTo(tx, ty + 5.4);
+      g.lineTo(tx, ty + 8);
+      g.stroke();
+    }
+
     // The player last, so nothing can cover it.
     const px = tile.x * SCALE + 1;
     const py = tile.y * SCALE + 1;
@@ -159,7 +203,7 @@ export function Minimap({
     g.beginPath();
     g.arc(px, py, 2, 0, Math.PI * 2);
     g.fill();
-  }, [tile.x, tile.y, npcs, signals]);
+  }, [tile.x, tile.y, npcs, signals, tracked]);
 
   return (
     <div
@@ -172,6 +216,8 @@ export function Minimap({
         ref={canvasRef}
         role="img"
         aria-label={`Map of District 01. You are near ${nearest?.name ?? "the block"}. ${
+          tracked ? `Following ${tracked.name}. ` : ""
+        }${
           openCount === 0
             ? "Nothing open on the block right now."
             : `${openCount} ${openCount === 1 ? "situation" : "situations"} on the block. The quest list names each one.`

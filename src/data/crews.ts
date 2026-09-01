@@ -1,4 +1,4 @@
-import type { Crew, LeaderboardEntry } from "@/types/social";
+import type { Crew } from "@/types/social";
 
 /**
  * Seeded crews.
@@ -84,12 +84,19 @@ export const CREWS: Crew[] = [
 
 export const DEFAULT_CREW_ID = "crew-clubhouse";
 
-export const LEADERBOARD: LeaderboardEntry[] = CREWS.map((crew) => ({
-  crewId: crew.id,
-  name: crew.name,
-  weeklyXp: crew.weeklyXp,
-  rank: crew.rank,
-})).sort((a, b) => a.rank - b.rank);
+/*
+ * The cross-crew league table is gone.
+ *
+ * It ranked three crews by a fabricated weekly total, on the screen whose
+ * whole argument is that a group sets its own norm rather than competing
+ * inside or against one. It also could not have been made honest: there is no
+ * account system, so every number in it was invented, and a league table of
+ * invented numbers is the clearest possible version of the thing the data
+ * honesty rules exist to prevent.
+ *
+ * `LeaderboardEntry` stays in the types for now because nothing else has
+ * claimed the shape, and removing it would be a rename rather than a decision.
+ */
 
 export function getCrew(id: string | null | undefined): Crew | undefined {
   if (!id) return undefined;

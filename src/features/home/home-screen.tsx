@@ -7,7 +7,7 @@ import { formatXp, greetingFor } from "@/lib/format";
 import { getLevelProgress } from "@/lib/xp";
 import { useMounted, useProfile } from "@/hooks/use-profile";
 import { getFeaturedPulseItem } from "@/data/pulse";
-import { getMission } from "@/data/missions";
+import { practiceFor } from "@/data/practice-themes";
 import { getCrew } from "@/data/crews";
 import { FEATURED_STATION_ID, getRadioStation } from "@/data/radio";
 import { CAMPAIGNS } from "@/data/campaigns";
@@ -16,6 +16,8 @@ import { Wordmark } from "@/components/layout/wordmark";
 import { SignatureStrip } from "@/components/mission/signature-strip";
 import { CharacterPortrait } from "@/components/story/character-portrait";
 import { StreetsHero } from "@/features/streets/components/streets-hero";
+import { continueItem, crewThing, hasHistory, openLoop } from "@/features/home/continue-state";
+import { ContinueCard } from "@/features/home/continue-card";
 import { EchoMascot } from "@/components/echo/echo-mascot";
 import { resolveEchoStyle } from "@/data/echo-styles";
 import { cn } from "@/lib/cn";
@@ -41,18 +43,40 @@ import type { CampaignProgress } from "@/types/campaign";
  * Nothing was deleted from the product here. The field quest, the reward
  * teaser and the quick quest all still exist one tab away; they were
  * deprioritised, not removed.
+ *
+ * ## First visit and every visit after it
+ *
+ * A player with no history gets the discovery order: the world, then the
+ * campaign, then the signature three. A player with history gets one control
+ * above all of it that carries on where they stopped, because for them the
+ * question is not "what is this" but "where was I".
+ *
+ * The continue item is a strict priority and never a list. A home screen that
+ * offers four ways to resume is a menu, and the whole value of a continue
+ * control is not having to choose.
  */
 export function HomeScreen() {
   const { profile, ready } = useProfile();
+  /*
+   * What a returning player should carry on with.
+   *
+   * Derived, never stored, and nothing in it reads a clock. "Returning" here
+   * means this profile has done things before, which is exactly what it
+   * claims and no more: whether they were here yesterday is not knowable and
+   * the product does not pretend it is. See `continue-state.ts` for why there
+   * is no "new since you left" section and no streak of any kind.
+   */
+  const returning = ready && hasHistory(profile);
+  const carryOn = returning ? continueItem(profile) : null;
+  const crewNext = returning ? crewThing(profile) : null;
+  const loop = returning ? openLoop(profile) : null;
   const mounted = useMounted();
   const level = getLevelProgress(profile.xp);
 
   const campaign = CAMPAIGNS[0];
   const progress = ready && campaign ? profile.campaigns?.[campaign.id] : undefined;
   const featured = getFeaturedPulseItem();
-  const relatedMission = featured.relatedMissionId
-    ? getMission(featured.relatedMissionId)
-    : undefined;
+  const practice = practiceFor(featured.id);
   const crew = getCrew(profile.crewId);
   const station = getRadioStation(FEATURED_STATION_ID);
 
@@ -109,12 +133,22 @@ export function HomeScreen() {
       </div>
 
       {/*
+        Carry on, for anybody who has been here before.
+
+        Above the world card rather than inside it, because it outranks
+        everything else on the screen for the person it is for and does not
+        exist at all for the person it is not. A first-time visitor sees none
+        of this and gets the discovery order unchanged.
+      */}
+      {carryOn ? <ContinueCard item={carryOn} crew={crewNext} loop={loop} /> : null}
+
+      {/*
         SIDEQUEST Streets sits above the Campaign hero, because a world is the
         thing somebody has not seen before and the reason to open the app at
         all. The Campaign keeps a full hero directly beneath it: Streets is a
         way in, not a replacement, and ONE BAD MINUTE is still the flagship.
       */}
-      <StreetsHero />
+      <StreetsHero namePerson={!carryOn || carryOn.kind !== "streets"} />
 
       {campaign ? <CampaignHero progress={progress} /> : null}
 
@@ -145,7 +179,13 @@ export function HomeScreen() {
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-bold text-chalk">{crew.name}</span>
                   <span className="block truncate text-xs text-muted">
-                    {crew.currentChallenge.title}
+                    {/*
+                      The live challenge, not the one that used to be baked
+                      into the crew record. Home showed a hardcoded title while
+                      the Crew screen showed four derived ones, so the two
+                      disagreed about what the crew was doing.
+                    */}
+                    {crewNext ? crewNext.title : "Everything here is done."}
                   </span>
                 </span>
                 <Users aria-hidden className="size-4 shrink-0 text-faint" />
@@ -165,14 +205,21 @@ export function HomeScreen() {
                 The signature interaction, and the reason this section is not
                 just a news card: a story does not end when you close it, it
                 becomes the decision.
+
+                The wording matters as much as the link. This used to read
+                "Play REWIND" directly under a summary of real Police guidance,
+                which offers a fifteen year old a playable version of the news.
+                It now names the theme both things are about and says the
+                rehearsal is fictional, which is the same change made on the
+                Updates feed and detail page. See `data/practice-themes.ts`.
               */}
-              {relatedMission ? (
+              {practice ? (
                 <Link
-                  href={`/missions/${relatedMission.id}`}
+                  href={`/missions/${practice.mission.id}`}
                   className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-quest-300 hover:text-quest-400"
                 >
                   <Play aria-hidden className="size-4" />
-                  Play {relatedMission.title}
+                  Practise a fictional version
                   <ArrowRight aria-hidden className="size-4" />
                 </Link>
               ) : (

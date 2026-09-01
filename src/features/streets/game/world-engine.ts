@@ -342,6 +342,30 @@ export class WorldEngine {
   /** Echo trails the player through a short history of positions. */
   private trail: Vec[] = [];
   /**
+   * A brief, rare reaction from the companion.
+   *
+   * Deliberately a timestamp and a kind, and nothing else. Echo has no mood,
+   * no relationship level and no memory of its own: it reacts to a thing that
+   * just happened and then goes back to following, because a companion that
+   * accumulates state is a second progression system nobody asked for.
+   *
+   * **It never carries information.** Every event that triggers one is already
+   * fully described in an open sheet on screen, so a player who does not look
+   * at Echo, has reduced motion on, or cannot see the canvas at all misses
+   * nothing whatsoever. That is the rule that lets it exist.
+   */
+  private echoReaction: { kind: EchoReaction; until: number } | null = null;
+  /**
+   * Milliseconds of simulated time since the world started.
+   *
+   * Advanced by the same `dt` the rest of the step uses rather than read from
+   * `performance.now()`, so a reaction cannot outlive a paused tab or expire
+   * early after the loop stops and restarts. The world already stops stepping
+   * when a sheet is open, and a companion that finished reacting while the
+   * player was reading would be reacting to nothing.
+   */
+  private clock = 0;
+  /**
    * Where the camera is, as opposed to where the player is.
    *
    * The camera used to be welded to the player: every frame it was computed
@@ -691,6 +715,7 @@ export class WorldEngine {
 
   private step(dt: number) {
     this.dt = dt;
+    this.clock += dt * 1000;
     const { x, y } = this.input;
     const len = Math.hypot(x, y) || 1;
     const dx = (x / len) * SPEED * dt;
@@ -1684,12 +1709,42 @@ export class WorldEngine {
     const y = Math.round(spot.y - camY - 2);
 
     const tint = ECHO_TINT[this.options.echo];
+    const character = ECHO_CHARACTER[this.options.echo];
     g.fillStyle = PALETTE.shadow;
     g.beginPath();
     g.ellipse(x, y + 7, 5, 2, 0, 0, Math.PI * 2);
     g.fill();
 
-    const bob = this.options.reducedMotion ? 0 : Math.sin(this.walkPhase * 0.9) * 0.8;
+    /*
+     * Reacting, if something just happened.
+     *
+     * A hop and a face, for about a second and a half. Under reduced motion
+     * the hop is zero and the face still changes, which is the reveal rule
+     * applied to a companion: nothing is shown by motion that is not also
+     * shown without it.
+     */
+    const reaction = this.echoReaction && this.clock < this.echoReaction.until
+      ? this.echoReaction
+      : null;
+    if (this.echoReaction && !reaction) this.echoReaction = null;
+
+    /*
+     * Idle character, per variant, and it is genuinely only character.
+     *
+     * Amplitude and speed, nothing else. Scout bobs quicker and shallower,
+     * Architect is slow and steady. No variant sees further, finds more or
+     * reacts to anything another one ignores: cosmetic means cosmetic, and a
+     * test fails the build if a variant ever reaches gameplay.
+     */
+    const idle = this.options.reducedMotion
+      ? 0
+      : Math.sin(this.walkPhase * character.speed + character.phase) * character.lift;
+
+    const hop = reaction && !this.options.reducedMotion
+      ? -Math.abs(Math.sin((this.echoReaction!.until - this.clock) / 90)) * 2.6
+      : 0;
+
+    const bob = idle + hop;
     const by = y + bob;
 
     // Shield body, matching the mascot silhouette at this resolution.
@@ -1708,8 +1763,32 @@ export class WorldEngine {
     g.fillStyle = "#10131a";
     g.fillRect(x - 3.2, by - 2.4, 6.4, 5);
     g.fillStyle = "#f3f5fb";
-    g.fillRect(x - 2, by - 1.2, 1.2, 2);
-    g.fillRect(x + 0.8, by - 1.2, 1.2, 2);
+
+    if (reaction === null) {
+      g.fillRect(x - 2, by - 1.2, 1.2, 2);
+      g.fillRect(x + 0.8, by - 1.2, 1.2, 2);
+    } else if (reaction.kind === "pleased") {
+      /* Eyes close upward. The same shape the mascot uses for pleased. */
+      g.fillRect(x - 2.2, by - 0.6, 1.6, 0.9);
+      g.fillRect(x + 0.6, by - 0.6, 1.6, 0.9);
+    } else {
+      /* Curious: wide, and one of them a touch higher. */
+      g.fillRect(x - 2.1, by - 1.6, 1.4, 2.6);
+      g.fillRect(x + 0.7, by - 1.2, 1.4, 2.6);
+    }
+  }
+
+  /**
+   * Something just happened. React briefly, or do not.
+   *
+   * Rate limited by construction: a second call while a reaction is running
+   * is ignored, so a burst of events produces one hop rather than a jitter.
+   * The caller decides what is worth reacting to, and the list is short on
+   * purpose.
+   */
+  reactEcho(kind: EchoReaction) {
+    if (this.echoReaction && this.clock < this.echoReaction.until) return;
+    this.echoReaction = { kind, until: this.clock + 1500 };
   }
 
   private drawPlayer(g: CanvasRenderingContext2D, camX: number, camY: number) {
@@ -1850,6 +1929,24 @@ export class WorldEngine {
 
 /** Actions that can actually be completed, and therefore can be marked. */
 const MARKED = new Set(["mission", "campaign", "check"]);
+
+/** What a companion can react to. Two shapes, because two is enough. */
+export type EchoReaction = "pleased" | "curious";
+
+/**
+ * Idle character per variant. Cosmetic, and only cosmetic.
+ *
+ * `lift` is amplitude in pixels, `speed` multiplies the walk phase, `phase`
+ * offsets it so two variants never look like the same drawing recoloured.
+ * There is deliberately no field here that could affect what a player can do.
+ */
+const ECHO_CHARACTER: Record<EchoStyleId, { lift: number; speed: number; phase: number }> = {
+  core: { lift: 0.8, speed: 0.9, phase: 0 },
+  shift: { lift: 1.0, speed: 1.05, phase: 0.6 },
+  signal: { lift: 0.7, speed: 1.3, phase: 1.2 },
+  scout: { lift: 0.55, speed: 1.5, phase: 0.3 },
+  architect: { lift: 1.1, speed: 0.7, phase: 1.8 },
+};
 
 const ECHO_TINT: Record<EchoStyleId, string> = {
   core: "#8b78ff",

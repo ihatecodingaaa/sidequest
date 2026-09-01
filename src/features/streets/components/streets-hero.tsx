@@ -24,7 +24,7 @@ import { DISTRICT_MOMENTS } from "@/features/streets/streets-props";
  * The artwork is the same part layout the world sprite uses, so what somebody
  * sees here is exactly who walks around down there.
  */
-export function StreetsHero() {
+export function StreetsHero({ namePerson = true }: { namePerson?: boolean } = {}) {
   const { profile, ready } = useProfile();
   const look: AvatarLook = (ready && profile.streetsAvatar) || DEFAULT_AVATAR;
   const echo = ready ? resolveEchoStyle(profile) : null;
@@ -48,7 +48,16 @@ export function StreetsHero() {
    * player who has met nobody, because naming a stranger on a cold install is
    * a name that means nothing.
    */
-  const person = ready ? whoIsWaiting(profile) : null;
+  /*
+   * Naming somebody is suppressed when Home has already named them.
+   *
+   * The continue card above this one says "Wei is still waiting, at the
+   * sunrise minimart" for exactly the player this line would say the same
+   * thing to. Two cards repeating one sentence reads as a bug, and the fix
+   * belongs here rather than in a conditional on Home, because this component
+   * owns the sentence.
+   */
+  const person = ready && namePerson ? whoIsWaiting(profile) : null;
   const met = ready && person ? (profile.metNpcs ?? []).includes(person.id) : false;
   const place = person
     ? LANDMARKS.find((landmark) => landmark.id === person.landmarkId)?.name

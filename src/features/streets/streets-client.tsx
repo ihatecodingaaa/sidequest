@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { List, Volume2, VolumeX, X } from "lucide-react";
 
@@ -21,7 +21,9 @@ import { AvatarSetup } from "@/features/streets/components/avatar-setup";
 import { SoundPrompt } from "@/features/streets/components/sound-prompt";
 import { LookSheet } from "@/features/streets/components/look-sheet";
 import { HistorySheet } from "@/features/streets/components/history-sheet";
+import { StickerNotice } from "@/features/streets/components/sticker-notice";
 import { indoorLandmark, memoryAt, nearLandmark } from "@/features/streets/district-memory";
+import { earnedStickers, type DistrictSticker } from "@/data/district-stickers";
 import { WorldSheet } from "@/features/streets/components/world-sheet";
 import { AudioControls } from "@/components/ui/audio-controls";
 import {
@@ -36,7 +38,12 @@ import {
   type Npc,
 } from "@/features/streets/streets-data";
 import type { WorldProp } from "@/features/streets/streets-props";
-import type { EngineOptions, WorldEngine } from "@/features/streets/game/world-engine";
+import { npcSpot } from "@/features/streets/game/world-engine";
+import type {
+  EngineOptions,
+  NpcRuntime,
+  WorldEngine,
+} from "@/features/streets/game/world-engine";
 
 /**
  * SIDEQUEST Streets.
@@ -53,6 +60,24 @@ import type { EngineOptions, WorldEngine } from "@/features/streets/game/world-e
  */
 /* A stable empty array, so an absent ledger does not re-render every frame. */
 const EMPTY_MOMENTS: string[] = [];
+
+/*
+ * The track parameter, read without opting the route out of static rendering.
+ *
+ * `useSearchParams` would force this route dynamic or need a Suspense boundary
+ * wrapped around an entire canvas world, for a value that is fixed at arrival.
+ * Setting state from an effect is the other obvious option and the React
+ * compiler correctly rejects it. `useSyncExternalStore` is the remaining
+ * honest one: the server snapshot is null, the client snapshot is the URL, and
+ * the subscription is a no-op because the value cannot change without a
+ * navigation that remounts this anyway.
+ */
+const subscribeNothing = () => () => {};
+const readNothing = () => null;
+const readTrack = (): string | null => {
+  const id = new URLSearchParams(window.location.search).get("track");
+  return id && NPCS.some((npc) => npc.id === id) ? id : null;
+};
 
 export function StreetsClient() {
   const reduced = usePrefersReducedMotion();
@@ -313,12 +338,81 @@ export function StreetsClient() {
        * Fixtures are excluded: a noticeboard is not somebody you have met, and
        * "Met Self checkout 2" is a joke the product did not intend to make.
        */
-      if ((npc.figure ?? "person") === "person") meetNpc(npc.id);
+      if ((npc.figure ?? "person") === "person") {
+        meetNpc(npc.id);
+        /*
+         * Echo notices a person, and only a person.
+         *
+         * The reaction is rate limited in the engine and carries nothing: the
+         * conversation sheet that is about to open says everything. A
+         * companion that reacted to doors and noticeboards too would be
+         * reacting constantly, which is the same as not reacting.
+         */
+        engineRef.current?.reactEcho("curious");
+      }
       setTalkingTo(npc);
       setHint(false);
     },
     [meetNpc],
   );
+
+  /*
+   * A sticker, announced where it was earned.
+   *
+   * Stickers derive, so there is no single write to hang an announcement on.
+   * This watches the derived set instead and surfaces anything new while the
+   * player is still standing in the place that earned it, which is the same
+   * rule the Echo unlock and the district moment already follow: an unlock
+   * discovered later on another screen is a database write, not a reward.
+   *
+   * The first render seeds the baseline rather than announcing eight stickers
+   * to somebody who earned them last week.
+   */
+  /*
+   * Somebody the Quest Journal asked us to point at.
+   *
+   * Read from the URL once, on mount, rather than through `useSearchParams`.
+   * The hook would opt this route out of static rendering or need a Suspense
+   * boundary around a whole canvas world, for a value that never changes after
+   * arrival. Cleared by the player, never automatically, because a marker that
+   * vanishes on its own is worse than one that stays.
+   *
+   * The position drawn is `npcSpot`, which is where the world says they are
+   * standing right now, so tracking stays correct for the people who relocate
+   * once their situation resolves.
+   */
+  const urlTrack = useSyncExternalStore(subscribeNothing, readTrack, readNothing);
+  const [stopped, setStopped] = useState(false);
+  const trackedId = stopped || !urlTrack ? null : urlTrack;
+
+  const trackedNpc = trackedId ? (NPCS.find((npc) => npc.id === trackedId) ?? null) : null;
+  const tracked = trackedNpc
+    ? {
+        ...trackedNpc,
+        ...npcSpot({ npc: trackedNpc, done: isNpcDone(trackedNpc) } as NpcRuntime),
+      }
+    : null;
+  const trackedPlace = trackedNpc
+    ? LANDMARKS.find((landmark) => landmark.id === trackedNpc.landmarkId)
+    : undefined;
+
+  const [newSticker, setNewSticker] = useState<DistrictSticker | null>(null);
+  const knownStickers = useRef<Set<string> | null>(null);
+
+  useEffect(() => {
+    if (!bridgeReady) return;
+    const current = earnedStickers(profile);
+    if (knownStickers.current === null) {
+      knownStickers.current = new Set(current.map((sticker) => sticker.id));
+      return;
+    }
+    const fresh = current.find((sticker) => !knownStickers.current!.has(sticker.id));
+    knownStickers.current = new Set(current.map((sticker) => sticker.id));
+    if (!fresh) return;
+    setNewSticker(fresh);
+    engineRef.current?.reactEcho("pleased");
+    audioRef.current.play("discover");
+  }, [profile, bridgeReady]);
 
   /**
    * One button, whichever is nearer.
@@ -341,6 +435,8 @@ export function StreetsClient() {
     const prop = engine.lookAt;
     if (prop) {
       audioRef.current.play("prop-look");
+      /* Echo looks at what you look at, when there is something to keep. */
+      if (prop.discovery) engine.reactEcho("pleased");
       setLooking(prop);
       setHint(false);
       return;
@@ -737,6 +833,7 @@ export function StreetsClient() {
             tile={tile}
             npcs={NPCS.filter((npc) => !npc.mapId).map((npc) => ({ npc, done: isNpcDone(npc) }))}
             signals={signals}
+            tracked={tracked}
             className={cn(
               "absolute right-2",
               compact ? "top-12 w-20 p-0.5" : landscape ? "top-14 w-24" : "top-2 w-28",
@@ -789,6 +886,50 @@ export function StreetsClient() {
 
       {counterOpen ? (
         <RewardsCounter onClose={() => setCounterOpen(false)} landscape={landscape} />
+      ) : null}
+
+      {/*
+        Who you asked to be pointed at, in words.
+
+        The ring on the minimap is four pixels across, so it cannot be the only
+        carrier: this names the person and the place in real text, and carries
+        the control that stops following them. Tracking never expires on its
+        own, because a marker that disappears while somebody is walking towards
+        it is worse than no marker.
+      */}
+      {trackedNpc && engineReady ? (
+        <div
+          className={cn(
+            "absolute left-3 z-20 flex max-w-[62%] items-center gap-2 rounded-full border border-white/20 bg-black/60 py-1 pr-1 pl-3 backdrop-blur",
+            compact ? "top-[4.5rem]" : landscape ? "top-24" : "top-12",
+          )}
+        >
+          <span className="min-w-0 truncate text-xs font-semibold text-chalk">
+            Following {trackedNpc.name}
+            {trackedPlace ? `, at the ${trackedPlace.name.toLowerCase()}` : ""}
+          </span>
+          <button
+            type="button"
+            onClick={() => setStopped(true)}
+            aria-label={`Stop following ${trackedNpc.name}`}
+            className="sq-pressable grid size-8 shrink-0 place-items-center rounded-full text-faint hover:text-chalk"
+          >
+            <X aria-hidden className="size-3.5" />
+          </button>
+        </div>
+      ) : null}
+
+      {/*
+        A sticker, said quietly, where it happened.
+
+        A strip rather than a sheet, because this must not interrupt: the
+        player earned it by doing something else, and stopping the world to
+        announce a cosmetic would make a free thing feel like a toll. It is a
+        live region so it is announced without stealing focus, it dismisses
+        itself, and tapping it goes to the collection.
+      */}
+      {newSticker ? (
+        <StickerNotice sticker={newSticker} onDismiss={() => setNewSticker(null)} />
       ) : null}
 
       {looking ? (

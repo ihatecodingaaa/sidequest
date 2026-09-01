@@ -74,12 +74,30 @@ export function AvatarSetup({
       <h1 className="font-display text-2xl font-extrabold tracking-tight text-chalk">{title}</h1>
       <p className="mt-1 text-sm text-muted">{lede}</p>
 
-      {/* The sprite, at the size it appears in the world, x4. */}
-      <div className="my-6 grid place-items-center rounded-3xl border border-white/10 bg-[#3f7a46] py-7">
+      {/*
+        The sprite, at the size it appears in the world, x4.
+
+        The padding is tighter on a short viewport than it was. At 390 by 844
+        the preview was taking 195 of the 368 pixels the choices had to share,
+        which pushed Top and One extra entirely below a fold with nothing to
+        indicate they existed: two of the five things a player can change were
+        effectively invisible on the most common phone size in the target
+        market. The preview still leads, it is just no longer most of the
+        screen.
+      */}
+      <div className="my-4 grid place-items-center rounded-3xl border border-white/10 bg-[#3f7a46] py-4 sm:my-6 sm:py-7">
         <AvatarPreview look={look} />
       </div>
 
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
+      {/*
+        A fade at the bottom edge, so a cut-off row reads as more content.
+
+        Decorative and pointer-transparent: it is the only signal that the list
+        continues, and without it a row clipped exactly at the boundary looks
+        like the end of the list rather than the middle of it.
+      */}
+      <div className="relative min-h-0 flex-1">
+        <div className="h-full space-y-4 overflow-y-auto pb-6">
         <Row label="Skin">
           {SKIN_TONES.map((tone) => (
             <Swatch
@@ -153,6 +171,11 @@ export function AvatarSetup({
             </button>
           ))}
         </Row>
+        </div>
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-ink-900 to-transparent"
+        />
       </div>
 
       <div className="mt-5 space-y-2.5">

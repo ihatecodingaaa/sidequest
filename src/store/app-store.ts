@@ -113,6 +113,10 @@ interface AppState {
    * says "not now" has still met them.
    */
   meetNpc: (id: string) => void;
+  /** Pins one earned sticker to the player's corner, or clears it. */
+  pinSticker: (id: string | null) => void;
+  /** Sets the crew banner for this device. Cosmetic, pays nothing. */
+  setCrewBanner: (banner: { emblem: string; pattern: string; accent: string }) => void;
   /** Cosmetic only. Stored locally, never a photograph. */
   setStreetsAvatar: (look: AvatarLook) => void;
   isMissionComplete: (missionId: string) => boolean;
@@ -335,6 +339,17 @@ export const useAppStore = create<AppState>()(
           if (met.includes(id)) return state;
           return { profile: { ...state.profile, metNpcs: [...met, id] } };
         }),
+
+      /*
+       * Pinning pays nothing and unpins by pinning the same one again, which
+       * is handled at the call site. Storing null rather than deleting the key
+       * keeps the persisted shape stable across versions.
+       */
+      pinSticker: (id) =>
+        set((state) => ({ profile: { ...state.profile, pinnedSticker: id ?? undefined } })),
+
+      setCrewBanner: (banner) =>
+        set((state) => ({ profile: { ...state.profile, crewBanner: banner } })),
 
       setStreetsAvatar: (look) =>
         set((state) => ({ profile: { ...state.profile, streetsAvatar: look } })),

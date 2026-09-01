@@ -9,7 +9,7 @@ import { ACCENT_TEXT } from "@/lib/accent";
 import { DISCOVERY_LINKS, PULSE_ITEMS } from "@/data/pulse";
 import type { DiscoveryLink } from "@/types/content";
 import { PULSE_MOTIF, StoryMotif } from "@/components/story/story-motif";
-import { getMission } from "@/data/missions";
+import { practiceFor } from "@/data/practice-themes";
 import { PageHeader } from "@/components/layout/app-shell";
 import { ExternalLink, ProvenanceTag } from "@/components/ui/primitives";
 import { useAppStore } from "@/store/app-store";
@@ -61,6 +61,14 @@ const INTEREST_TO_CATEGORY: Partial<Record<Interest, ContentCategory[]>> = {
  * and appears in full on every detail page. It is not repeated on every card,
  * where at eight-per-screen it had stopped being information and become
  * texture.
+ *
+ * ## The practice link, and why its wording changed
+ *
+ * The lead used to offer "Play REWIND" directly under a summary of real Police
+ * guidance, which read as an invitation to play the news. It now names the
+ * theme both things are about and offers a fictional version of that theme.
+ * The mapping lives on the theme rather than on the story, so no code path
+ * connects one report to one scenario. See `src/data/practice-themes.ts`.
  */
 export function PulseFeed() {
   const { profile, ready } = useProfile();
@@ -139,7 +147,7 @@ export function PulseFeed() {
           {rest.length ? (
             <ul className="mt-7 divide-y divide-white/6 overflow-hidden rounded-2xl border border-white/8">
               {rest.map((item) => {
-                const mission = item.relatedMissionId ? getMission(item.relatedMissionId) : undefined;
+                const practice = practiceFor(item.id);
                 return (
                   <li key={item.id}>
                     <Link
@@ -159,8 +167,10 @@ export function PulseFeed() {
                         </span>
                         <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-faint">
                           <span>{offsetLabel(item.publishedOffsetHours)}</span>
-                          {mission ? (
-                            <span className="font-semibold text-quest-300">Has a quest</span>
+                          {practice ? (
+                            <span className="font-semibold text-quest-300">
+                              Has a fictional version
+                            </span>
                           ) : null}
                         </span>
                       </span>
@@ -241,7 +251,7 @@ function LeadStory({
   saved: boolean;
   onToggleSave: () => void;
 }) {
-  const mission = item.relatedMissionId ? getMission(item.relatedMissionId) : undefined;
+  const practice = practiceFor(item.id);
 
   return (
     <article>
@@ -286,15 +296,25 @@ function LeadStory({
         <p className="mt-3 text-xs text-faint">Based on {item.source}</p>
       </Link>
 
-      {mission ? (
-        <Link
-          href={`/missions/${mission.id}`}
-          className="mt-5 inline-flex min-h-12 items-center gap-2 rounded-full bg-quest-500 px-5 text-sm font-bold text-white sq-pressable hover:bg-quest-400"
-        >
-          <Play aria-hidden className="size-4" />
-          Play {mission.title}
-          <ArrowRight aria-hidden className="size-4" />
-        </Link>
+      {practice ? (
+        <div className="mt-5 rounded-2xl border border-quest-500/25 bg-quest-500/6 p-4">
+          <p className="text-sm leading-relaxed text-mist">
+            This is about <span className="font-semibold text-chalk">{practice.theme.name}</span>.{" "}
+            {practice.theme.fiction}
+          </p>
+          <Link
+            href={`/missions/${practice.mission.id}`}
+            className="sq-pressable mt-3 inline-flex min-h-12 items-center gap-2 rounded-full bg-quest-500 px-5 text-sm font-bold text-white hover:bg-quest-400"
+          >
+            <Play aria-hidden className="size-4" />
+            Practise a fictional version
+            <ArrowRight aria-hidden className="size-4" />
+          </Link>
+          <p className="mt-2.5 text-xs leading-relaxed text-faint">
+            Written by SIDEQUEST. Not a recreation of the report above, and not based on any real
+            person or incident.
+          </p>
+        </div>
       ) : null}
     </article>
   );

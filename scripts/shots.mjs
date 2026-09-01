@@ -33,6 +33,7 @@ const DEFAULT_ROUTES = [
   "/rewards",
   "/crew",
   "/settings",
+  "/streets",
 ];
 
 const viewport = desktop ? { width: 1440, height: 900 } : { width: 390, height: 844 };
@@ -58,6 +59,19 @@ const SEED = {
       },
       submissions: [],
       rewardClaims: [],
+      /*
+       * Enough history that the returning-player surfaces render.
+       *
+       * The seed used to describe somebody who had played three missions and
+       * never been outside, so every screen added in the district passes was
+       * photographed in its empty state. These are the same shape of facts,
+       * just for a player who has actually been on the block.
+       */
+      metNpcs: ["npc-wei", "npc-ken", "npc-lek", "npc-bea"],
+      districtMoments: ["moment-court", "moment-bench", "moment-planter", "moment-shelf"],
+      threadSteps: ["thread-favour:hear-devi"],
+      pinnedSticker: "sticker-first-light",
+      crewBanner: { emblem: "ring", pattern: "plain", accent: "quest" },
       onboardedAt: "2026-08-20T10:00:00.000Z",
     },
   },

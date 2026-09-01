@@ -8,9 +8,16 @@ test.describe("information to action", () => {
     await seedProfile(page);
     await page.goto("/");
 
-    // The signature interaction, straight off Home. The featured story is a
-    // peer pressure piece and it hands off to REWIND.
-    await page.getByRole("link", { name: /^Play REWIND/ }).click();
+    /*
+     * The signature interaction, straight off Home. The featured story is a
+     * peer pressure piece and it hands off to REWIND.
+     *
+     * The control says "Practise a fictional version" rather than naming the
+     * mission, and that wording is the point of the assertion: the story is
+     * real reporting and the thing on the other side of this link must never
+     * read as a playable version of it.
+     */
+    await page.getByRole("link", { name: /^Practise a fictional version/ }).click();
     await expect(page).toHaveURL(/\/missions\/mission-rewind$/);
     await expect(page.getByRole("heading", { name: "REWIND" })).toBeVisible();
 
@@ -20,7 +27,7 @@ test.describe("information to action", () => {
     await expect(source).toHaveAttribute("href", "https://www.police.gov.sg/Advisories");
     await expect(source).toHaveAttribute("target", "_blank");
 
-    await page.getByRole("link", { name: /Try the related quest/ }).click();
+    await page.getByRole("link", { name: /Practise a fictional version/ }).click();
     await expect(page).toHaveURL(/\/missions\/mission-job-scam$/);
 
     expect(errors).toEqual([]);

@@ -10,6 +10,8 @@ import { useAppStore } from "@/store/app-store";
 import { AvatarFigure } from "@/features/streets/components/avatar-figure";
 import { AvatarSetup } from "@/features/streets/components/avatar-setup";
 import { districtMemory } from "@/features/streets/district-memory";
+import { getSticker } from "@/data/district-stickers";
+import { StickerMark } from "@/components/district/sticker-mark";
 import { DEFAULT_AVATAR, LANDMARKS, type AvatarLook } from "@/features/streets/streets-data";
 
 /**
@@ -53,6 +55,16 @@ export function YourCorner() {
   const look: AvatarLook = (ready && profile.streetsAvatar) || DEFAULT_AVATAR;
   const echo = ready ? resolveEchoStyle(profile) : null;
   const memories = ready ? districtMemory(profile) : [];
+  /*
+   * The pinned sticker, if it is both chosen and still earned.
+   *
+   * Re-checked rather than trusted. The pin stores an id, and whether that
+   * sticker is earned derives from history, so a profile that somehow holds a
+   * pin it has not earned shows nothing rather than showing a reward it did
+   * not get.
+   */
+  const pinnedSticker = ready ? getSticker(profile.pinnedSticker) : undefined;
+  const pinned = pinnedSticker && pinnedSticker.earned(profile) ? pinnedSticker : undefined;
   const places = new Set(memories.map((entry) => entry.locationId)).size;
 
   /*
@@ -84,9 +96,15 @@ export function YourCorner() {
             <p className="text-[0.7rem] font-bold tracking-[0.16em] text-volt-300 uppercase">
               Your corner
             </p>
-            <h2 className="mt-1 truncate font-display text-2xl leading-tight font-extrabold tracking-tight text-chalk">
-              {ready && profile.displayName ? profile.displayName : "You"}
-            </h2>
+            <span className="mt-1 flex items-center gap-2">
+              <h2 className="min-w-0 truncate font-display text-2xl leading-tight font-extrabold tracking-tight text-chalk">
+                {ready && profile.displayName ? profile.displayName : "You"}
+              </h2>
+              {pinned ? (
+                <StickerMark art={pinned.art} size={26} className="shrink-0" />
+              ) : null}
+            </span>
+            {pinned ? <p className="sr-only">Pinned sticker: {pinned.name}.</p> : null}
             <p className="mt-1.5 text-sm leading-snug text-mist">{line}</p>
 
             <button

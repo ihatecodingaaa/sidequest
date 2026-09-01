@@ -222,6 +222,33 @@ export const WORLD_PROPS: WorldProp[] = [
   },
 
 
+  {
+    id: "prop-seat",
+    locationId: "foodcourt",
+    mapId: "kopitiam-in",
+    x: 8, y: 13,
+    name: "The corner seat",
+    lines: ["The one under the fan, with the wobbly leg everybody knows about."],
+    choices: [
+      {
+        id: "sit",
+        label: "Sit down for a minute",
+        response:
+          "The fan goes past every four seconds. Somebody two tables over is explaining something at length.",
+      },
+      {
+        id: "wedge",
+        label: "Fold something under the wobbly leg",
+        response: "It stops wobbling. It will start again by Thursday, but for now it is level.",
+      },
+      {
+        id: "stand",
+        label: "Stay standing",
+        response: "Fair. You were not planning to be here long.",
+      },
+    ],
+  },
+
   /* ------------------------------------------------------- Nothing at all
 
      Six things that exist because they are nice, and one of them is a
@@ -333,6 +360,30 @@ export const WORLD_PROPS: WorldProp[] = [
     lines: [
       "The little chime above the door, taped to the frame at a slight angle.",
       "It has been going all day and nobody in here hears it any more.",
+    ],
+  },
+
+  {
+    id: "prop-chess",
+    locationId: "voiddeck",
+    mapId: "hub-in",
+    x: 9, y: 12,
+    name: "The chess set",
+    lines: [
+      "Somebody left a game halfway through and weighted the board down with a cup.",
+      "White is losing and has been losing for a while.",
+    ],
+    choices: [
+      {
+        id: "study",
+        label: "Work out whose move it is",
+        response: "White, and white has one move that is not terrible. It is not the obvious one.",
+      },
+      {
+        id: "nothing",
+        label: "Leave it exactly as it is",
+        response: "Two people are coming back to this. The cup is holding the board down for a reason.",
+      },
     ],
   },
 

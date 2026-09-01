@@ -161,6 +161,29 @@ export interface UserProfile {
    */
   districtMoments?: string[];
   /**
+   * The one district sticker the player has put on their corner.
+   *
+   * Purely which small drawing shows next to their name. Optional, cosmetic,
+   * free, and holds a sticker id rather than the sticker, so an id that is
+   * removed from the set later simply stops resolving instead of rendering a
+   * ghost. Whether a sticker is *earned* is never stored: that derives from
+   * the same history everything else derives from.
+   */
+  pinnedSticker?: string;
+  /**
+   * How this player's crew banner looks, chosen on this device.
+   *
+   * Deliberately on the profile rather than on the crew, because there is no
+   * backend and no way for four phones to agree on anything. The Crew screen
+   * says that in words next to the control: a real version would settle this
+   * once for the crew, and this one settles it for you. Storing it anywhere
+   * else would be pretending the agreement happened.
+   *
+   * Cosmetic and free. The pattern is the only part that can be locked, and it
+   * unlocks from a crew challenge this player did their share of.
+   */
+  crewBanner?: { emblem: string; pattern: string; accent: string };
+  /**
    * People the player has actually spoken to.
    *
    * The only piece of state district memory adds, and it exists because it is

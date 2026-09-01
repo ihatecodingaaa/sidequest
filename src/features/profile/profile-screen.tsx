@@ -18,6 +18,7 @@ import { LevelRing } from "./level-ring";
 import { CampaignContributions } from "@/features/campaigns/campaign-contributions";
 import { EchoCollection } from "@/features/profile/echo-collection";
 import { DistrictMemories } from "@/features/profile/district-memories";
+import { DistrictStickers } from "@/features/profile/district-stickers";
 import { YourCorner } from "@/features/profile/your-corner";
 
 export function ProfileScreen() {
@@ -71,6 +72,14 @@ export function ProfileScreen() {
         that is about the world rather than about the player's record, and it
         is the surface somebody looks at when deciding whether to go back out.
       */}
+      {/*
+        The collection sits between who you are and what happened, because a
+        sticker is the shorthand for a memory and the memories are the long
+        form. Reading them the other way round means meeting the summary after
+        the detail.
+      */}
+      <DistrictStickers />
+
       <DistrictMemories />
 
       {/*

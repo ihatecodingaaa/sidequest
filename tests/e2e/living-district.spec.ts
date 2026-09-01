@@ -170,10 +170,35 @@ test.describe("home names a person", () => {
      * helper only writes when storage is empty, on purpose, so re-seeding
      * inside a test silently does nothing and the assertion that follows is
      * about the previous state.
+     *
+     * Once a player has history the naming moves up into the continue card,
+     * which is the stronger placement, and the world card below stops
+     * repeating it. Both halves of that are asserted here because the
+     * duplication is what a screenshot caught and a test did not.
      */
-    await seedPlayer(page, { metNpcs: ["npc-wei"] });
+    await seedPlayer(page, { metNpcs: ["npc-wei"], xp: 40 });
     await page.goto("/");
-    await expect(page.getByText(/is still at the/)).toBeVisible();
+
+    const carryOn = page.getByRole("region", { name: "Where you were" });
+    await expect(carryOn.getByText(/Wei is still waiting/)).toBeVisible();
+    await expect(carryOn.getByText(/At the sunrise minimart/)).toBeVisible();
+
+    /* And the world card does not say the same sentence a second time. */
+    await expect(page.getByText(/is still at the sunrise minimart/)).toHaveCount(0);
+  });
+
+  test("still counts strangers on the world card for a player with no history", async ({
+    page,
+  }) => {
+    /*
+     * The suppression must be conditional. Somebody who has met nobody has no
+     * continue card at all, so the world card is the only thing that can say
+     * what is out there and it has to keep saying it.
+     */
+    await seedPlayer(page, { xp: 0, crewId: null });
+    await page.goto("/");
+    await expect(page.getByRole("region", { name: "Where you were" })).toHaveCount(0);
+    await expect(page.getByText(/want a word|who is out/)).toBeVisible();
   });
 });
 

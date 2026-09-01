@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Check, MapPin } from "lucide-react";
+import { ArrowRight, Check, Crosshair, MapPin } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import { ACCENT_GRADIENT, ACCENT_TEXT } from "@/lib/accent";
@@ -34,7 +34,7 @@ export function SignatureStrip({ className }: { className?: string }) {
         const complete = ready && profile.completedMissionIds.includes(mission.id);
 
         return (
-          <li key={mission.id}>
+          <li key={mission.id} className="flex h-full flex-col">
             <Link
               href={`/missions/${mission.id}`}
               className="sq-card sq-pressable group relative flex h-full flex-col overflow-hidden p-4 hover:border-white/16"
@@ -103,6 +103,17 @@ export function SignatureStrip({ className }: { className?: string }) {
                 />
               </span>
             </Link>
+
+            {/*
+              Beside the card, never inside it. The card is already one big
+              link, and a link inside a link is invalid markup that browsers
+              resolve by guessing.
+
+              Only while there is something left to do: pointing somebody at a
+              neighbour who has nothing more to say is a worse outcome than not
+              offering it.
+            */}
+            {!complete ? <TrackLink missionId={mission.id} className="mt-2 self-start" /> : null}
           </li>
         );
       })}
@@ -119,6 +130,24 @@ export function SignatureStrip({ className }: { className?: string }) {
  * somebody who is still waiting. Neither state gates anything: the mission
  * opens from here either way.
  */
+function TrackLink({ missionId, className }: { missionId: string; className?: string }) {
+  const { profile } = useProfile();
+  const giver = questGiver(missionId, profile);
+  if (!giver) return null;
+  return (
+    <Link
+      href={`/streets?track=${giver.npcId}`}
+      className={cn(
+        "sq-pressable inline-flex min-h-11 items-center gap-1.5 rounded-full border border-white/16 px-3.5 text-xs font-bold text-mist hover:text-chalk",
+        className,
+      )}
+    >
+      <Crosshair aria-hidden className="size-3.5" />
+      Show me where
+    </Link>
+  );
+}
+
 function GiverLine({ missionId }: { missionId: string }) {
   const { profile, ready } = useProfile();
   const giver = questGiver(missionId, profile);
