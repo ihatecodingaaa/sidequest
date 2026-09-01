@@ -303,6 +303,50 @@ the action that produced them: the sheet snapped back to idle lines the instant
 somebody chose something. The conversation belongs to the step it opened with,
 and closing the sheet is what ends it.
 
+## District Memory
+
+What the block remembers about you, filed by place. Full spec in
+`docs/DISTRICT_MEMORY_SPEC.md`; the architecture-relevant part is where the
+state lives.
+
+| | |
+| - | - |
+| Module | `district-memory.ts`, pure functions over a `UserProfile` |
+| New state | **One field: `profile.metNpcs`.** Everything else is derived |
+| Derived from | `completedMissionIds`, `streetChecksDone`, `threadSteps`, `districtMoments`, `questDrafts`, `submissions`, `crewId`, `rewardClaims`, `campaigns` |
+| Read in the world | The place label becomes a control with a count, opening `HistorySheet` |
+| Read on You | `DistrictMemories`, grouped by landmark |
+| Pays | Nothing. No XP, no unlock, no cosmetic, ever |
+
+**Why derived and not logged.** A stored event log is a second source of truth
+for facts that already have one, and when the two disagree the district is
+lying about the player's own life. A derivation cannot drift, cannot
+double-count, needs no migration, and is correct for profiles written before it
+existed. The cost is that there is no chronology, because nothing records when;
+that was accepted, and neither surface implies a timeline.
+
+**Where you can be.** Interiors resolve through the door you came in by.
+Outdoors it is the nearest landmark within five tiles, which exists because the
+court and the bus stop have no interior and their memory was otherwise
+reachable from nowhere.
+
+## Things that pay nothing
+
+Six props (`prop-cat`, `prop-mural`, `prop-bike`, `prop-hoop`, `prop-vending`,
+`prop-bell`) carry no discovery, no factor and no reward of any kind. Three of
+them offer two or three harmless choices through `WorldProp.choices`, rendered
+with the same `ChoiceCards` a mission uses, resolved in component state and
+persisted nowhere.
+
+One choice mechanic, not three minigames: a vending machine, a basketball and a
+bicycle bell are the same interaction wearing different clothes, and three
+bespoke implementations would be three accessibility surfaces for an experience
+a player would not distinguish.
+
+`tests/unit/useless-fun.test.ts` fails the build if a prop with choices ever
+gains a discovery, which is the one combination that would quietly reintroduce
+payment.
+
 ## What the world deliberately does not have
 
 | Not built | Why |
@@ -319,5 +363,7 @@ and closing the sheet is what ends it.
 | Severity tiers on signals | A severity scale makes the worst thing on the map the most interesting thing on it. |
 | Randomly spawning signals | Every one is authored. A farmable red teaches people to walk towards danger. |
 | Police roleplay, ranks, case files | The Crew has roles and no powers. |
-| Audio | Deferred. See the research doc. |
+| A stored memory log | District Memory derives from existing state. A second source of truth can disagree with the first. |
+| A memory timeline | Nothing records when anything happened, and inventing a clock to display would be state that exists only to be shown. |
+| XP for ambient interaction | Paying for the parts somebody already finds interesting is the exact case the undermining evidence covers. |
 | A bigger map | A sparse world feels empty and costs more to build. |

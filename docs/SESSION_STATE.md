@@ -4,13 +4,55 @@ Kept current so another session can pick this up cold. Update after every major
 stage.
 
 **Last updated:** 1 September 2026
-**Status:** The world has sound, things worth stopping at, and a district that
-visibly reacts. SIDEQUEST ships zero audio files: every sound in it is
-synthesised at runtime.
+**Status:** The block remembers you. District Memory is live, the catalogue and
+the world admit they are the same product, and six things in the district are
+worth nothing at all on purpose.
 
 ---
 
-## The pass that just landed
+## The pass that just landed: Living District 2.0
+
+The question was whether SIDEQUEST is somewhere a young person would want to
+exist, rather than somewhere they complete things. The audit answer was that
+**everything in the product was instrumental**: every object taught, every
+screen scored, every reason to walk somewhere was a task. No place knew
+anything about you, two characters in a cast of twenty had heard of each other,
+the You page opened with five numbers about the player, and the front door
+counted a backlog.
+
+### What landed
+
+| Thing | Where |
+| ----- | ----- |
+| **District Memory**, derived not stored | `src/features/streets/district-memory.ts` |
+| History at a place, in the world | `src/features/streets/components/history-sheet.tsx` |
+| Memories by place, on You | `src/features/profile/district-memories.tsx` |
+| Your corner: avatar, Echo, and a way to change your look | `src/features/profile/your-corner.tsx` |
+| Six props that pay absolutely nothing | `src/features/streets/streets-props.ts` |
+| Harmless choices at a prop, one reusable mechanic | `src/features/streets/components/look-sheet.tsx` |
+| Eight character cross-references, gated on both | `src/features/streets/streets-data.ts` |
+| Who asks for a mission, and where | `src/features/missions/quest-journal.ts` |
+| Home names a person instead of counting one | `src/features/streets/game/quest-bridge.ts` |
+| The spec | `docs/DISTRICT_MEMORY_SPEC.md` |
+| The research, and what it refused to claim | `docs/LIVING_DISTRICT_2_RESEARCH.md` |
+
+**One new profile field in the entire pass: `metNpcs`.** Every other memory is
+computed from state the product already had, so a profile written in July
+opened this build with its history already present. See
+`docs/DISTRICT_MEMORY_SPEC.md` section 3 for why derivation beat a stored log.
+
+### Honesty note on the research
+
+Thirteen research agents were dispatched and one returned. A later attempt to
+verify claims directly found the session web search budget exhausted. So
+`docs/LIVING_DISTRICT_2_RESEARCH.md` labels every claim Established,
+Directional or Rejected, quotes **no effect sizes at all**, and carries a
+verification queue. Four of its eleven design justifications are recorded as
+observation or craft rather than as evidence. That is the honest distribution.
+
+---
+
+## The pass before that
 
 The observation driving it was that Streets is interesting but becomes boring,
 because the world gives you nothing to enjoy between objectives. An audit
@@ -89,7 +131,7 @@ particles, no hit stop shipped.
 | The one-time sound question | `src/features/streets/components/sound-prompt.tsx` |
 | Twelve interactable props across five maps | `src/features/streets/streets-props.ts` |
 | Looking at something, and keeping a moment | `src/features/streets/components/look-sheet.tsx` |
-| District moments collection | `src/features/profile/district-moments.tsx` |
+| District memories, by place | `src/features/profile/district-memories.tsx` |
 | Audio direction and provenance | `docs/AUDIO_ART_DIRECTION.md`, `docs/ASSET_LICENSES.md` |
 | The research | `docs/LIVING_WORLD_RESEARCH.md` |
 

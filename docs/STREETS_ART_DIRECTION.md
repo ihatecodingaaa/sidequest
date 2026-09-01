@@ -151,6 +151,26 @@ same information is carried in words in the Quest List.
 Only things that can be finished get one. Safe, the rewards counter and the
 noticeboards have no done state, so a marker over them would never go out.
 
+**Nothing worth nothing gets a marker.** The cat, the mural, the bicycle, the
+hoop, the drinks machine and the door chime are unmarked and stay unmarked. A
+marker is a promise that there is something to get, and the whole value of
+those six is that there is not. They are found by walking near them, which is
+the only way an ambient thing can be found without becoming an objective.
+
+## The place label
+
+Where you are, drawn top left. It becomes a control, with a count, only once
+something has happened to you there.
+
+The count is a number of things that happened. **It is never a fraction.**
+There is no denominator anywhere in District Memory, because the moment a place
+reads "4 of 9" it stops being somewhere you have been and becomes something you
+have partly finished.
+
+Before there is any history, the label stays the plain text it always was. A
+button that opens an empty panel teaches a player that the button is not worth
+pressing, and they are right.
+
 ---
 
 ## Motion

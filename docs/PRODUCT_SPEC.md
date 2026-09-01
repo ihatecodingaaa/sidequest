@@ -96,6 +96,29 @@ would turn every scenario into an obstacle in front of a number.
 Three Street Checks sit around the district, sourced to SPF and ScamShield
 guidance and worth XP once each.
 
+**The block remembers you.** District Memory is a per-place record of what has
+actually happened to this player: who they met, who they helped, what they
+noticed, what they changed, what they made, where they have been. Standing at
+or inside a landmark you have history in turns the place label into a control
+with a count; the same record is grouped by place on You. It is derived
+entirely from existing progress rather than logged, so a profile written before
+it shipped already has its history. It pays nothing, has no denominator, and
+ranks nobody. Full spec in `docs/DISTRICT_MEMORY_SPEC.md`.
+
+**Some things in the district are worth nothing on purpose.** A cat, a mural, a
+bicycle bell, the hoop, a drinks machine and the shop door chime. No XP, no
+collectible, no discovery, no counter. Three of them offer a small harmless
+choice and answer it. This is the least intuitive decision in the product and
+the best evidenced one: paying for an interaction somebody already finds
+interesting is precisely the case the undermining literature covers, and a
+world where every object teaches something is a worksheet with a walk attached.
+
+**The neighbours know each other.** Eight characters say one line about another
+once **both** of their situations are resolved, so the line is always a memory
+of two things the player did and never a hint about a third they have not. A
+test fails the build on imperative phrasing, because a character who says "go
+see Nadia" is a quest arrow with a face.
+
 **Both orientations are first class,** in three tiers. Portrait keeps the world
 above reachable controls. Landscape gives the world the whole screen with the
 controls floating at the outer edges. **Compact landscape**, a sideways phone
@@ -347,6 +370,21 @@ each phrased as something the holder can do:
 The passport is a SIDEQUEST record. It is not a SkillsFuture credential and
 carries no formal recognition. The structure is designed so that a recognised
 credential could be issued by an appropriate body later.
+
+### You
+
+The You page opens with the person, not the score: their figure in the clothes
+they chose, the Echo they equipped, their name, and one line about where they
+have been on the block. Their look is editable from here, as often as they
+like, which it was not before: customisation used to be reachable exactly once,
+on first entry to Streets, so a look chosen in the first thirty seconds of
+using the product was permanent.
+
+The order is deliberate and pinned by test: **person, district memories, Echo
+collection, level and XP, Safety Passport, contributions.** Every number that
+used to open the page is still on it, one screen down. A page that leads with a
+level ring, an XP total, a progress bar and three stat tiles is a report card,
+and a report card is what a young person already gets from school.
 
 ## 7. Rewards
 

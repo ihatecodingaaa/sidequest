@@ -553,3 +553,67 @@ remember.
   that took ten seconds. The source moved behind a disclosure, on the same
   contract the thread panel uses: **play first, one takeaway, detail on
   request.**
+
+---
+
+## Round three: is it fun to exist inside?
+
+Added 1 September 2026, against the build at commit `3b00b4c`. A different
+question from the previous rounds, which asked whether the product is legible.
+This one asks whether somebody would open it with nothing to do.
+
+**The finding, in one line: everything in the product was instrumental.** Every
+object taught something, every screen scored something, and every reason to
+walk somewhere was a task. There is no single defect in that sentence, which is
+what made it hard to see: each individual decision to make a thing useful was
+correct.
+
+Six specific consequences, all now addressed:
+
+**No place knew anything.** Finish all three things at the minimart, walk back,
+and the minimart was the minimart you first arrived at. A district you had
+spent forty minutes in looked identical to one you had never entered. Fixed by
+District Memory, filed by place rather than by player, because the same entries
+in a global feed are a profile and under six landmark headings are a
+relationship with six places.
+
+**Two characters in a cast of twenty had heard of each other.** Everyone was
+the centre of a private world, which is what makes a cast read as a menu. Now
+eight cross-references, each gated on both situations being resolved so the
+line is always a memory and never a hint.
+
+**The You page opened with five numbers about the player.** A level ring, an XP
+total, a progress bar and three stat tiles, before anything the player owns.
+That is a report card, and a report card is what a young person already gets
+from school. It now opens with the person: their figure, their Echo, their
+name, and one line about where they have been. Every number is still on the
+page, one screen down, where it reads as a record rather than a verdict. The
+ordering claim is pinned by an end-to-end test that compares bounding boxes,
+because "which is first" is the entire difference.
+
+**Customisation was reachable exactly once.** On first entry to Streets, and
+never again. A look chosen in the first thirty seconds of using the product was
+permanent, which is the opposite of ownership.
+
+**The catalogue and the world did not admit they were one product.** Missions
+and the district were built in that order and it showed: eleven experiences in
+a list, eleven neighbours who open them, and nothing on either side saying they
+were the same eleven things. Now derived from the NPC data, so it cannot drift.
+
+**The front door counted a backlog.** "Three people want a word" tells somebody
+the size of a queue. "Wei is still at the minimart" tells them there is a
+person there. The count survives for a player who has met nobody, because
+naming a stranger on a cold install is a name that means nothing.
+
+### What was deliberately not done
+
+**No decoration, furniture or room to arrange.** A locker was on the table and
+a room simulator is a different product. Ownership here is seeing yourself,
+changing yourself, and being known by the block.
+
+**No second district.** The first is not finished, and breadth before polish is
+how a vertical slice becomes a demo.
+
+**No XP was added anywhere.** Six props ship paying nothing at all, which is
+the least intuitive decision in the pass and the best supported one. See
+`docs/LIVING_DISTRICT_2_RESEARCH.md` section 2.

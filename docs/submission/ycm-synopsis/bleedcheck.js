@@ -12,7 +12,6 @@
  * Usage:  node docs/submission/ycm-synopsis/bleedcheck.js
  */
 
-const fs = require("node:fs");
 const path = require("node:path");
 const sharp = require("sharp");
 

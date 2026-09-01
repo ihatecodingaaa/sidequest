@@ -39,12 +39,12 @@ checked, would cost more than the criterion was worth.
 
 | | |
 | - | - |
-| **Product evidence** | The Signal system: four modes that name **the response a situation needs** rather than how serious it is, in a product category that reliably does the opposite. Crew Shift: two private rounds either side of a discussion, which makes peer influence visible in about ninety seconds without a backend. An explorable district where prevention is something you walk into rather than a menu item. All art drawn in code. |
-| **Demo evidence** | Point at an amber chevron: "the colour describes what this needs, not who that person is." Then Crew Shift's two distributions. |
+| **Product evidence** | The Signal system: four modes that name **the response a situation needs** rather than how serious it is, in a product category that reliably does the opposite. Crew Shift: two private rounds either side of a discussion, which makes peer influence visible in about ninety seconds without a backend. An explorable district where prevention is something you walk into rather than a menu item. District Memory: the block accumulates a record of what you did in it, filed by place, derived entirely from existing state and worth no points at all. Six things in the world that pay nothing on purpose. All art drawn in code. |
+| **Demo evidence** | Point at an amber chevron: "the colour describes what this needs, not who that person is." Then Crew Shift's two distributions. Then walk to the court and open "you have history here". |
 | **Pilot metric** | Not a metric. Innovation is judged, not measured, and pretending otherwise would be worse than saying so. |
-| **Remaining gap** | The four-mode vocabulary is untested on real young people. It may turn out that three modes are learnable and four are not. |
+| **Remaining gap** | The four-mode vocabulary is untested on real young people. It may turn out that three modes are learnable and four are not. Whether District Memory produces attachment is a hypothesis, not a finding: see `docs/LIVING_DISTRICT_2_RESEARCH.md` section 3, where it is labelled Directional and put in the verification queue. |
 | **May claim** | "The marker describes the response, and it is structurally impossible for it to describe a person: there is no risk field on a person anywhere, and a test fails the build if one appears." |
-| **Must not claim** | "The first product to do this." Unverified, and unnecessary. |
+| **Must not claim** | "The first product to do this." Unverified, and unnecessary. Also not: "research shows players get attached to places that remember them." The direction is supported, the transfer to a fictional district on a phone is not, and the research doc says so. |
 
 ---
 

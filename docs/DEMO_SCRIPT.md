@@ -1,7 +1,7 @@
 # Demo script
 
 Target: about seven and a half minutes with both the Campaign section and
-SIDEQUEST Streets (455 seconds across ten moments), four to five without them.
+SIDEQUEST Streets (485 seconds across ten moments), four to five without them.
 Practise it twice before judging.
 
 If you only have three minutes, cut Moments 5 and 7 and keep Campaigns. It is
@@ -55,7 +55,7 @@ Point at the bottom bar without tapping it yet.
 > "And that shield in the middle is Safe. Same place on every screen, so nobody
 > has to remember where it is. We will come back to it."
 
-## Moment 2b: SIDEQUEST Streets, 90 seconds
+## Moment 2b: SIDEQUEST Streets, 120 seconds
 
 The thing nobody else will have. Do not narrate it, just start walking.
 
@@ -84,6 +84,23 @@ who sent you.** Worth saying out loud, because it is the difference between a
 world and a menu:
 
 > "It puts me back where I was, and the thing I just dealt with is dealt with."
+
+**Then the sentence that separates this from a level.** Walk south to the
+court, where the place label carries a small count, and tap it:
+
+> "The block remembers what I did here. Who I met, what I noticed, what I
+> changed. It is per place, not a feed, and none of it is worth any points."
+
+If a judge asks whether that is stored: it is not. Every line in that sheet is
+derived from progress the app already had, which is why somebody who played in
+July opens this build with their history already in it.
+
+**Touch something useless on the way back.** The hoop, the drinks machine or
+the cat, whichever is closest:
+
+> "That pays nothing. No XP, no collectible, no counter. A world where every
+> object teaches you something is a worksheet you can walk around in, and
+> teenagers work that out in about a minute."
 
 **If the walking is not going well, tap Quests instead.** The list opens the
 identical experiences and is a peer of the map, not a fallback. Say so:
