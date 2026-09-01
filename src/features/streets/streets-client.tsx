@@ -20,11 +20,14 @@ import { QuestList } from "@/features/streets/components/quest-list";
 import { AvatarSetup } from "@/features/streets/components/avatar-setup";
 import { SoundPrompt } from "@/features/streets/components/sound-prompt";
 import { LookSheet } from "@/features/streets/components/look-sheet";
+import { HistorySheet } from "@/features/streets/components/history-sheet";
+import { indoorLandmark, memoryAt, nearLandmark } from "@/features/streets/district-memory";
 import { WorldSheet } from "@/features/streets/components/world-sheet";
 import { AudioControls } from "@/components/ui/audio-controls";
 import {
   DEFAULT_AVATAR,
   DISTRICT_ID,
+  LANDMARKS,
   MAPS,
   NPCS,
   SPAWN,
@@ -66,6 +69,9 @@ export function StreetsClient() {
   const { ready: bridgeReady, equippedEcho, isNpcDone, signals } = bridge;
   const setStreetsAvatar = useAppStore((state) => state.setStreetsAvatar);
   const keepMoment = useAppStore((state) => state.keepMoment);
+  const meetNpc = useAppStore((state) => state.meetNpc);
+  const metNpcs = useAppStore((state) => state.profile.metNpcs) ?? EMPTY_MOMENTS;
+  const profile = useAppStore((state) => state.profile);
   const moments = useAppStore((state) => state.profile.districtMoments) ?? EMPTY_MOMENTS;
   const storedLook = useAppStore((state) => state.profile.streetsAvatar);
 
@@ -109,12 +115,39 @@ export function StreetsClient() {
   const [hubOpen, setHubOpen] = useState(false);
   const [hint, setHint] = useState(true);
   const [soundOpen, setSoundOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const look: AvatarLook = storedLook ?? DEFAULT_AVATAR;
   const needsAvatar = bridgeReady && !storedLook;
   const place = MAPS[placeId] ?? MAPS[DISTRICT_ID];
+  /*
+   * Which landmark the player is standing in or at, and what happened there.
+   *
+   * Two ways of being somewhere, because the district has both kinds of place.
+   * An interior maps to its landmark through the door the player came in by,
+   * so memory made inside the shop belongs to the shop rather than to a room
+   * id nobody has seen a name for. Outdoors it is proximity, because the court
+   * and the bus stop have no interior at all and their history was reachable
+   * from nowhere: two of six places could remember things the player could
+   * never be shown.
+   *
+   * The radius is deliberately tight. Standing at the court means the court,
+   * not the whole block, and a chip that followed the player everywhere would
+   * be a history of everything, which is a dashboard.
+   */
+  const placeLandmarkId = placeId === DISTRICT_ID ? nearLandmark(tile) : indoorLandmark(placeId);
+  const historyPlace = placeLandmarkId
+    ? LANDMARKS.find((landmark) => landmark.id === placeLandmarkId)
+    : undefined;
+  const history = placeLandmarkId ? memoryAt(profile, placeLandmarkId) : [];
   const busy =
-    Boolean(talkingTo) || listOpen || counterOpen || hubOpen || soundOpen || Boolean(looking);
+    Boolean(talkingTo) ||
+    listOpen ||
+    counterOpen ||
+    hubOpen ||
+    soundOpen ||
+    historyOpen ||
+    Boolean(looking);
 
   /* --------------------------------------------------------- Engine boot */
 
@@ -272,10 +305,19 @@ export function StreetsClient() {
     (npc: Npc) => {
       // The rewards counter is a screen of its own. Everybody else talks first.
       audioRef.current.play("npc-talk");
+      /*
+       * Meeting somebody happens when the conversation opens, not when it
+       * finishes. A player who opens a sheet and taps "Not now" has still met
+       * them, and the greeting next time should say so.
+       *
+       * Fixtures are excluded: a noticeboard is not somebody you have met, and
+       * "Met Self checkout 2" is a joke the product did not intend to make.
+       */
+      if ((npc.figure ?? "person") === "person") meetNpc(npc.id);
       setTalkingTo(npc);
       setHint(false);
     },
-    [],
+    [meetNpc],
   );
 
   /**
@@ -632,7 +674,7 @@ export function StreetsClient() {
           after that. Losing the pill keeps the information and returns the
           background.
         */}
-        {engineReady ? (
+        {engineReady && history.length === 0 ? (
           <p
             className={cn(
               "pointer-events-none absolute left-3 max-w-[52%] truncate font-semibold text-chalk",
@@ -644,6 +686,45 @@ export function StreetsClient() {
           >
             {place?.name ?? "District 01"}
           </p>
+        ) : null}
+
+        {/*
+          Where you are, and what has happened to you here.
+
+          The place name becomes a control only once there is something behind
+          it. Before that it stays the plain label it was, because a button
+          that opens an empty panel teaches a player that the button is not
+          worth pressing, and they are right.
+
+          The count is the whole invitation. It is a number of things that
+          happened, not a score and not a fraction of a total: there is no
+          denominator here on purpose.
+        */}
+        {engineReady && history.length > 0 ? (
+          <button
+            type="button"
+            onClick={() => setHistoryOpen(true)}
+            aria-label={`${historyPlace?.name ?? place?.name}. ${history.length} ${
+              history.length === 1 ? "thing has" : "things have"
+            } happened here. Open.`}
+            className={cn(
+              "sq-pressable absolute left-3 flex max-w-[52%] items-center gap-1.5 font-semibold text-chalk",
+              compact
+                ? "top-11 min-h-9 text-xs [text-shadow:0_1px_3px_rgba(0,0,0,0.9)]"
+                : "min-h-9 rounded-full bg-black/45 px-3 text-sm backdrop-blur",
+              landscape && !compact ? "top-14" : compact ? "" : "top-2",
+            )}
+          >
+            <span className="truncate">
+              {historyPlace?.name ?? place?.name ?? "District 01"}
+            </span>
+            <span
+              aria-hidden
+              className="shrink-0 rounded-full bg-volt-500/20 px-1.5 text-[0.65rem] font-bold text-volt-300 tabular-nums"
+            >
+              {history.length}
+            </span>
+          </button>
         ) : null}
 
         {/*
@@ -691,6 +772,7 @@ export function StreetsClient() {
         <DialogueOverlay
           npc={talkingTo}
           done={bridge.isNpcDone(talkingTo)}
+          met={metNpcs.includes(talkingTo.id)}
           bridge={bridge}
           onClose={() => setTalkingTo(null)}
           onOpenRewards={() => {
@@ -716,6 +798,15 @@ export function StreetsClient() {
           onKeep={keepMoment}
           onClose={() => setLooking(null)}
           landscape={landscape}
+        />
+      ) : null}
+
+      {historyOpen && placeLandmarkId ? (
+        <HistorySheet
+          placeName={historyPlace?.name ?? place?.name ?? "District 01"}
+          entries={history}
+          landscape={landscape}
+          onClose={() => setHistoryOpen(false)}
         />
       ) : null}
 

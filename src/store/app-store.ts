@@ -105,6 +105,14 @@ interface AppState {
    * exist to prevent.
    */
   keepMoment: (id: string) => void;
+  /**
+   * Records that the player has spoken to somebody. Idempotent, pays nothing.
+   *
+   * Called when a conversation opens rather than when it finishes, because
+   * having met somebody is true the moment you talk to them, and a player who
+   * says "not now" has still met them.
+   */
+  meetNpc: (id: string) => void;
   /** Cosmetic only. Stored locally, never a photograph. */
   setStreetsAvatar: (look: AvatarLook) => void;
   isMissionComplete: (missionId: string) => boolean;
@@ -319,6 +327,13 @@ export const useAppStore = create<AppState>()(
           const found = state.profile.districtMoments ?? [];
           if (found.includes(id)) return state;
           return { profile: { ...state.profile, districtMoments: [...found, id] } };
+        }),
+
+      meetNpc: (id) =>
+        set((state) => {
+          const met = state.profile.metNpcs ?? [];
+          if (met.includes(id)) return state;
+          return { profile: { ...state.profile, metNpcs: [...met, id] } };
         }),
 
       setStreetsAvatar: (look) =>

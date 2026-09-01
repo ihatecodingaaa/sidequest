@@ -39,6 +39,14 @@ import type { ProtectiveFactorId } from "@/types/protective";
 
 export interface WorldProp {
   id: string;
+  /**
+   * Which landmark this belongs to, for district memory.
+   *
+   * Stated rather than inferred from position. A bench on the open street is
+   * near several things and the map cannot say which one it belongs to, and a
+   * memory filed under the wrong place is worse than no memory.
+   */
+  locationId: string;
   /** Absent means the district itself. */
   mapId?: string;
   x: number;
@@ -55,6 +63,19 @@ export interface WorldProp {
    * opposite of noticing something.
    */
   discovery?: DistrictMoment;
+  /**
+   * A couple of things you can do with it, and what happens.
+   *
+   * The whole micro-activity mechanic, and there is deliberately only one of
+   * them. A vending machine, a basketball and a lift button are the same
+   * interaction wearing different clothes: look at a thing, pick one of two or
+   * three harmless options, see what happens. Building a bespoke minigame for
+   * each would be three code paths, three sets of accessibility work and three
+   * things to break, for an experience the player would not distinguish.
+   *
+   * None of these pays anything. That is the point of them.
+   */
+  choices?: { id: string; label: string; response: string }[];
   /**
    * A protective factor this observation happens to illustrate.
    *
@@ -76,6 +97,7 @@ export const WORLD_PROPS: WorldProp[] = [
 
   {
     id: "prop-court",
+    locationId: "court",
     x: 20, y: 18,
     name: "The court",
     lines: [
@@ -86,12 +108,14 @@ export const WORLD_PROPS: WorldProp[] = [
   },
   {
     id: "prop-bench-west",
+    locationId: "voiddeck",
     x: 2, y: 20,
     name: "The bench",
     lines: ["Two names and a date, scratched in years ago. Neither is a tag."],
   },
   {
     id: "prop-planter",
+    locationId: "voiddeck",
     x: 12, y: 7,
     name: "The planter",
     lines: [
@@ -101,6 +125,7 @@ export const WORLD_PROPS: WorldProp[] = [
   },
   {
     id: "prop-crossing",
+    locationId: "busstop",
     x: 18, y: 23,
     name: "The crossing",
     lines: [
@@ -109,6 +134,7 @@ export const WORLD_PROPS: WorldProp[] = [
   },
   {
     id: "prop-tree-east",
+    locationId: "busstop",
     x: 36, y: 12,
     name: "The big tree",
     lines: [
@@ -127,6 +153,7 @@ export const WORLD_PROPS: WorldProp[] = [
      * A unit test fails the build if anything lands there again.
      */
     id: "prop-busstop",
+    locationId: "busstop",
     x: 27, y: 21,
     name: "The bus stop",
     lines: ["Timetable, a taped-up notice for a lost cat, and three people not talking."],
@@ -136,6 +163,7 @@ export const WORLD_PROPS: WorldProp[] = [
 
   {
     id: "prop-shelf",
+    locationId: "minimart",
     mapId: "minimart-in",
     x: 3, y: 6,
     name: "The shelves",
@@ -148,6 +176,7 @@ export const WORLD_PROPS: WorldProp[] = [
   },
   {
     id: "prop-mirror",
+    locationId: "minimart",
     mapId: "minimart-in",
     x: 11, y: 6,
     name: "The corner mirror",
@@ -161,6 +190,7 @@ export const WORLD_PROPS: WorldProp[] = [
 
   {
     id: "prop-lift-board",
+    locationId: "safehub",
     mapId: "post-in",
     x: 3, y: 8,
     name: "The lift lobby board",
@@ -174,6 +204,7 @@ export const WORLD_PROPS: WorldProp[] = [
 
   {
     id: "prop-fan",
+    locationId: "foodcourt",
     mapId: "kopitiam-in",
     x: 11, y: 7,
     name: "The ceiling fan",
@@ -181,6 +212,7 @@ export const WORLD_PROPS: WorldProp[] = [
   },
   {
     id: "prop-table",
+    locationId: "foodcourt",
     mapId: "kopitiam-in",
     x: 6, y: 7,
     name: "The corner table",
@@ -189,10 +221,126 @@ export const WORLD_PROPS: WorldProp[] = [
     ],
   },
 
+
+  /* ------------------------------------------------------- Nothing at all
+
+     Six things that exist because they are nice, and one of them is a
+     basketball.
+
+     Every one of these pays zero XP, unlocks nothing, and is worth no
+     discovery. That is a deliberate and slightly uncomfortable decision, and
+     it is the one the reward evidence supports most directly: paying for an
+     interaction somebody already finds interesting is the exact cell where the
+     measured undermining is largest. See docs/LIVING_DISTRICT_2_RESEARCH.md.
+
+     They are also the answer to the honest version of the toy test. A world
+     where every object teaches something is a curriculum with a walk attached,
+     and a young person works that out faster than we would like. */
+
+  {
+    id: "prop-cat",
+    locationId: "voiddeck",
+    x: 5, y: 13,
+    name: "The cat",
+    lines: [
+      "Orange, enormous, asleep on the warm bit of the wall.",
+      "It opens one eye, decides you are not interesting, and closes it.",
+    ],
+  },
+  {
+    id: "prop-mural",
+    locationId: "voiddeck",
+    x: 16, y: 4,
+    name: "The mural",
+    lines: [
+      "Somebody painted the block on the block. The tree is too big and the bus is the wrong colour.",
+      "It is better than the wall was.",
+    ],
+  },
+  {
+    id: "prop-bike",
+    locationId: "busstop",
+    x: 33, y: 20,
+    name: "The bicycle",
+    lines: ["Chained to itself rather than to anything. The bell still works."],
+    choices: [
+      {
+        id: "ring",
+        label: "Ring the bell",
+        response: "Two clear notes, louder than expected. A window somewhere closes.",
+      },
+      {
+        id: "leave",
+        label: "Leave it alone",
+        response: "Probably wise. It is somebody's bike.",
+      },
+    ],
+  },
+  {
+    id: "prop-hoop",
+    locationId: "court",
+    x: 22, y: 15,
+    name: "The hoop",
+    lines: ["Netless, a bit bent, and somebody has left a ball under it."],
+    choices: [
+      {
+        id: "shoot",
+        label: "Take a shot",
+        response: "Rim, rim, in. Nobody saw it, which is the way of these things.",
+      },
+      {
+        id: "bounce",
+        label: "Just bounce it a bit",
+        response: "Three bounces and the sound comes back off the block. Good sound.",
+      },
+      {
+        id: "pass",
+        label: "Put it back under the hoop",
+        response: "Where the next person will find it, which is where it was.",
+      },
+    ],
+  },
+  {
+    id: "prop-vending",
+    locationId: "foodcourt",
+    x: 31, y: 14,
+    name: "The drinks machine",
+    lines: ["Half the buttons have faded. Three of them still have labels."],
+    choices: [
+      {
+        id: "grass",
+        label: "Something called GRASS JELLY MAX",
+        response: "It is exactly what it says. Echo looks at it, then at you.",
+      },
+      {
+        id: "kopi",
+        label: "Iced kopi, the one everybody picks",
+        response: "Correct answer. It lands with a clunk and it is very cold.",
+      },
+      {
+        id: "mystery",
+        label: "The one with no label",
+        response: "Barley. It is always barley. Somebody has known that for years.",
+      },
+    ],
+  },
+  {
+    id: "prop-bell",
+    locationId: "minimart",
+    mapId: "minimart-in",
+    x: 7, y: 15,
+    name: "The door bell",
+    lines: [
+      "The little chime above the door, taped to the frame at a slight angle.",
+      "It has been going all day and nobody in here hears it any more.",
+    ],
+  },
+
   /* --------------------------------------------------------- The crew room */
 
   {
     id: "prop-crew-wall",
+    locationId: "voiddeck",
     mapId: "hub-in",
     x: 3, y: 7,
     name: "The wall",

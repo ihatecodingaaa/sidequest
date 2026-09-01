@@ -14,6 +14,8 @@ import { MissionCard } from "@/components/mission/mission-card";
 import { SignatureStrip } from "@/components/mission/signature-strip";
 import { PageHeader } from "@/components/layout/app-shell";
 import { useProfile } from "@/hooks/use-profile";
+import { questGiver, splitByStatus } from "@/features/missions/quest-journal";
+import type { UserProfile } from "@/types/profile";
 import type { Mission, MissionType } from "@/types/mission";
 
 type Filter = "all" | MissionType;
@@ -44,6 +46,17 @@ const FILTERS: { id: Filter; label: string }[] = [
  * cards with differently coloured chips. A two minute scenario and a two hour
  * volunteering session are not the same kind of commitment, and a colour chip
  * is too weak a signal to carry that difference.
+ *
+ * The third change is that this list now knows about the district. Every row
+ * that somebody in the world opens says who asks and where they stand, and
+ * says it differently once you have met them, so the catalogue and the
+ * neighbourhood are visibly the same eleven things rather than two products
+ * sharing an app. See `quest-journal.ts` for why that is derived and not
+ * stored.
+ *
+ * Finished missions drop to their own group at the bottom. They are still
+ * here, still replayable and still free to replay; they have simply stopped
+ * competing for attention with the ones somebody has not done.
  */
 export function MissionsBrowser() {
   const { profile, ready } = useProfile();
@@ -60,6 +73,8 @@ export function MissionsBrowser() {
 
   const isDone = (mission: Mission) =>
     ready && profile.completedMissionIds.includes(mission.id);
+
+  const { open, done } = splitByStatus(missions, profile, ready);
 
   return (
     <div>
@@ -137,8 +152,26 @@ export function MissionsBrowser() {
           Nothing here yet. Try another filter.
         </p>
       ) : (
-        <MissionList missions={missions} isDone={isDone} />
+        <MissionList missions={open} isDone={isDone} profile={profile} ready={ready} />
       )}
+
+      {done.length ? (
+        <section className="mt-8">
+          <h3 className="mb-1 text-xs font-semibold tracking-[0.1em] text-faint uppercase">
+            Already played
+          </h3>
+          <p className="mb-2.5 text-sm text-muted">
+            Replay any of these. They cost nothing and pay nothing the second time.
+          </p>
+          <ul className="divide-y divide-white/6 overflow-hidden rounded-2xl border border-white/8">
+            {done.map((mission) => (
+              <li key={mission.id}>
+                <QuickRow mission={mission} done profile={profile} ready={ready} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
 }
@@ -151,9 +184,13 @@ export function MissionsBrowser() {
 function MissionList({
   missions,
   isDone,
+  profile,
+  ready,
 }: {
   missions: Mission[];
   isDone: (mission: Mission) => boolean;
+  profile: UserProfile;
+  ready: boolean;
 }) {
   const quick = missions.filter(
     (mission) => mission.missionType === "quick" || mission.missionType === "crew",
@@ -172,7 +209,12 @@ function MissionList({
           <ul className="divide-y divide-white/6 overflow-hidden rounded-2xl border border-white/8">
             {quick.map((mission) => (
               <li key={mission.id}>
-                <QuickRow mission={mission} done={isDone(mission)} />
+                <QuickRow
+                  mission={mission}
+                  done={isDone(mission)}
+                  profile={profile}
+                  ready={ready}
+                />
               </li>
             ))}
           </ul>
@@ -188,6 +230,7 @@ function MissionList({
             {bigger.map((mission) => (
               <li key={mission.id}>
                 <MissionCard mission={mission} complete={isDone(mission)} />
+                <GiverLine mission={mission} profile={profile} ready={ready} className="mt-1.5 px-1" />
               </li>
             ))}
           </ul>
@@ -197,7 +240,51 @@ function MissionList({
   );
 }
 
-function QuickRow({ mission, done }: { mission: Mission; done: boolean }) {
+/**
+ * Who asks for this, and where.
+ *
+ * Two states, and the difference between them is the whole reason it is here.
+ * Before you have met somebody it names a stranger and a place, which is an
+ * invitation. After you have met them it says so, which turns a catalogue row
+ * into a person you owe an answer to. Neither state is a score and neither is
+ * a lock: everything is openable from here regardless.
+ */
+function GiverLine({
+  mission,
+  profile,
+  ready,
+  className,
+}: {
+  mission: Mission;
+  profile: UserProfile;
+  ready: boolean;
+  className?: string;
+}) {
+  const giver = questGiver(mission.id, profile);
+  if (!giver) return null;
+  return (
+    <span className={cn("flex items-center gap-1 text-xs font-semibold text-faint", className)}>
+      <MapPin aria-hidden className="size-3.5 shrink-0" />
+      <span className="truncate">
+        {ready && giver.met
+          ? `${giver.name} asked you, at the ${giver.place.toLowerCase()}`
+          : `${giver.name} asks, at the ${giver.place.toLowerCase()}`}
+      </span>
+    </span>
+  );
+}
+
+function QuickRow({
+  mission,
+  done,
+  profile,
+  ready,
+}: {
+  mission: Mission;
+  done: boolean;
+  profile: UserProfile;
+  ready: boolean;
+}) {
   const locked = mission.status === "coming-soon";
   const content = (
     <>
@@ -221,6 +308,7 @@ function QuickRow({ mission, done }: { mission: Mission; done: boolean }) {
             </span>
           ) : null}
         </span>
+        <GiverLine mission={mission} profile={profile} ready={ready} className="mt-1" />
       </span>
       <ArrowRight aria-hidden className="size-4 shrink-0 text-faint" />
     </>

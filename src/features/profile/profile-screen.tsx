@@ -17,7 +17,8 @@ import { useProfile } from "@/hooks/use-profile";
 import { LevelRing } from "./level-ring";
 import { CampaignContributions } from "@/features/campaigns/campaign-contributions";
 import { EchoCollection } from "@/features/profile/echo-collection";
-import { DistrictMoments } from "@/features/profile/district-moments";
+import { DistrictMemories } from "@/features/profile/district-memories";
+import { YourCorner } from "@/features/profile/your-corner";
 
 export function ProfileScreen() {
   const { profile, ready } = useProfile();
@@ -40,8 +41,8 @@ export function ProfileScreen() {
   return (
     <div className="space-y-7">
       <PageHeader
-        title={ready && profile.displayName ? profile.displayName : "Your progress"}
-        lede="What you have done, and what you are getting good at."
+        title="You"
+        lede="Who you are on the block, and what has happened to you there."
         action={
           <Link
             href="/settings"
@@ -52,6 +53,42 @@ export function ProfileScreen() {
           </Link>
         }
       />
+
+      {/*
+        Who you are, before what you scored.
+
+        This page used to open with a level ring, an XP total, a progress bar
+        and three stat tiles, which is five numbers about the player before
+        anything the player owns. The numbers are all still here, one screen
+        down, where they read as a record rather than as a verdict.
+      */}
+      <YourCorner />
+
+      {/*
+        What has happened to you, by place.
+
+        Above the passport for the same reason Echo is: this is the part of You
+        that is about the world rather than about the player's record, and it
+        is the surface somebody looks at when deciding whether to go back out.
+      */}
+      <DistrictMemories />
+
+      {/*
+        Echo sits above the passport, and the reason is measurement rather than
+        taste. Below it, the collection heading landed 739px down an 1812px
+        page: past the level ring, three stat tiles, seven capability rows and
+        two disclaimers. Nobody scrolled that far to discover a feature they
+        did not know existed, which is why the previous pass shipped a
+        collection that users never found.
+
+        The older ordering argued that what you can do outranks what your
+        companion looks like. That is still true of importance, and the
+        passport still carries more of the screen. It is not true of
+        discovery: a capability record is something you go looking for once
+        you have earned it, and a collection is the thing that has to be seen
+        before you know there is anything to earn.
+      */}
+      <EchoCollection />
 
       {/* Level */}
       <section className="sq-card flex items-center gap-5 p-5">
@@ -94,34 +131,6 @@ export function ProfileScreen() {
           accent="volt"
         />
       </div>
-
-      {/*
-        Echo sits above the passport, and the reason is measurement rather than
-        taste. Below it, the collection heading landed 739px down an 1812px
-        page: past the level ring, three stat tiles, seven capability rows and
-        two disclaimers. Nobody scrolled that far to discover a feature they
-        did not know existed, which is why the previous pass shipped a
-        collection that users never found.
-
-        The older ordering argued that what you can do outranks what your
-        companion looks like. That is still true of importance, and the
-        passport still carries more of the screen. It is not true of
-        discovery: a capability record is something you go looking for once
-        you have earned it, and a collection is the thing that has to be seen
-        before you know there is anything to earn.
-      */}
-      <EchoCollection />
-
-      {/*
-        What the block looks like to somebody who has walked around it.
-
-        Placed above the passport for the same reason Echo is: this is the part
-        of You that is about the world rather than about the player's record,
-        and a screen that opens with a capability audit is a report card. The
-        passport is still here and still the substantive thing; it is just no
-        longer the first thing somebody sees about themselves.
-      */}
-      <DistrictMoments />
 
       {/*
         Safety Passport.

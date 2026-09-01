@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Check, Eye } from "lucide-react";
 
 import { useAudio } from "@/hooks/use-audio";
+import { ChoiceCards } from "@/components/interaction/choice-cards";
 import { WorldSheet } from "@/features/streets/components/world-sheet";
 import type { WorldProp } from "@/features/streets/streets-props";
 
@@ -36,6 +37,18 @@ import type { WorldProp } from "@/features/streets/streets-props";
  *
  * The first time one is found, it is announced here rather than discovered
  * later on another screen, which is the same rule the Echo unlock follows.
+ *
+ * ## Things you can do, as opposed to things you can read
+ *
+ * A few props offer two or three harmless options: ring the bell or leave the
+ * bike alone, take the shot or just bounce the ball. They award nothing, store
+ * nothing and cannot be got wrong, and they use the same `ChoiceCards` a
+ * mission uses, so the act of choosing feels identical whether the stakes are
+ * a drinks machine or somebody's afternoon.
+ *
+ * That reuse is also the honest version of the interaction rule. A bespoke
+ * minigame per prop would be several code paths and several accessibility
+ * surfaces for an experience a player would not distinguish from this one.
  */
 export function LookSheet({
   prop,
@@ -62,6 +75,17 @@ export function LookSheet({
    * it opened in, exactly as the thread panel latches the step it opened on.
    */
   const [kept] = useState(() => Boolean(prop.discovery) && !found);
+
+  /*
+   * Which harmless thing they did, if the prop offered any.
+   *
+   * Component state and nothing else. It is not persisted, not counted and not
+   * on the profile: walking away and coming back gives you the machine with
+   * all three buttons again, because the interesting part was pressing one and
+   * there is nothing here to complete.
+   */
+  const [picked, setPicked] = useState<string | null>(null);
+  const choice = prop.choices?.find((entry) => entry.id === picked) ?? null;
 
   /*
    * The discovery is banked on open, not behind a button.
@@ -96,6 +120,21 @@ export function LookSheet({
         ))}
       </div>
 
+      {prop.choices && !choice ? (
+        <ChoiceCards
+          className="mt-4"
+          legend={`What do you do with ${prop.name.toLowerCase()}?`}
+          options={prop.choices.map((entry) => ({ id: entry.id, label: entry.label }))}
+          onChoose={setPicked}
+        />
+      ) : null}
+
+      {choice ? (
+        <p className="animate-rise mt-4 text-[1.05rem] leading-relaxed text-mist">
+          {choice.response}
+        </p>
+      ) : null}
+
       {kept && prop.discovery ? (
         <p
           role="status"
@@ -106,13 +145,23 @@ export function LookSheet({
         </p>
       ) : null}
 
-      <button
-        type="button"
-        onClick={onClose}
-        className="sq-pressable mt-5 flex min-h-12 w-full items-center justify-center rounded-2xl bg-volt-500 text-sm font-bold text-ink-900"
-      >
-        Back to the block
-      </button>
+      {/*
+        One way out, and it waits.
+
+        While there are options on screen the sheet keeps its close control in
+        the header and nothing else, so the choice is not competing with a
+        primary button that also ends the moment. Exactly one advance control
+        per screen is the story rule, and a look is a very small story.
+      */}
+      {prop.choices && !choice ? null : (
+        <button
+          type="button"
+          onClick={onClose}
+          className="sq-pressable mt-5 flex min-h-12 w-full items-center justify-center rounded-2xl bg-volt-500 text-sm font-bold text-ink-900"
+        >
+          Back to the block
+        </button>
+      )}
     </WorldSheet>
   );
 }

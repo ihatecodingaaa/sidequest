@@ -292,7 +292,7 @@ for (const size of WIDTHS) {
       }
 
       await page.goto("/you");
-      await expect(page.getByRole("heading", { name: "District moments" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "District memories" })).toBeVisible();
       expect(await overflows(page), `${size.name} you`).toBe(false);
 
       await page.goto("/settings");

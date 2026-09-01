@@ -288,6 +288,43 @@ export interface Npc {
   lines: string[];
   /** Shown instead once the linked experience is done. Short. */
   doneLines: string[];
+  /**
+   * What they say when you come back before finishing what they needed.
+   *
+   * Three states, not two: never met, met, helped. This is the middle one, and
+   * it exists because a neighbour who greets you identically on your first and
+   * fifth visit is a vending machine with a face.
+   *
+   * It **replaces** the opening line rather than being added before it, so a
+   * repeat conversation is exactly as long as the first. The rule that at most
+   * two short bubbles arrive before the player does something is not relaxed
+   * for recognition, and a character who recaps the relationship every time is
+   * the failure mode this is trying to avoid, not an improvement on it.
+   *
+   * Optional. Fixtures do not have one, and neither does anybody whose opening
+   * line already works on a second reading.
+   */
+  metLine?: string;
+  /**
+   * What this person says about somebody else, once you have helped both.
+   *
+   * The district is twenty people standing in the same six places, and before
+   * this it was twenty people who had never heard of each other. Wei did not
+   * know you had been in her own shop. Ken did not know you had spent an hour
+   * with his neighbour on the same void deck. Every character was the centre
+   * of a private world, which is the thing that makes a cast feel like a menu.
+   *
+   * The condition is deliberately double: this line appears only when **both**
+   * situations are resolved, so it is always a memory of two things the player
+   * actually did, never a hint about a third they have not. A character who
+   * says "you should go see Nadia" is a quest arrow with a face. A character
+   * who says "Nadia told me what you did" is a neighbourhood.
+   *
+   * Rendered after the done lines, one at most, first match wins. It never
+   * replaces anything and it never appears on a first conversation, so the
+   * two-bubbles-before-you-act rule is untouched.
+   */
+  aboutOthers?: { npcId: string; line: string }[];
   /** The label on the button that leaves the world. */
   cta: string;
   /**
@@ -348,8 +385,15 @@ export const NPCS: Npc[] = [
     tint: "#5ac8e0",
     lines: ["Eh. Come here a second.", "I keep thinking about that thing at the shop."],
     doneLines: ["You actually said something. Most people just watch."],
+    metLine: "Oh, it is you. I am still thinking about it.",
     signal: "redirect",
     situation: "A shop floor moment somebody is still thinking about",
+    aboutOthers: [
+      {
+        npcId: "npc-bea",
+        line: "Bea told me you just scanned it and walked out like it was nothing. That is the whole trick.",
+      },
+    ],
     cta: "Play REWIND",
     action: { kind: "mission", missionId: "mission-rewind" },
     landmarkId: "minimart",
@@ -363,8 +407,15 @@ export const NPCS: Npc[] = [
     tint: "#e8663c",
     lines: ["Ilyas is not answering the group chat.", "Something happened on Thursday."],
     doneLines: ["You saw the whole thing play out. Twice."],
+    metLine: "You again. Still nothing from Ilyas.",
     signal: "redirect",
     situation: "A group chat has gone quiet since Thursday",
+    aboutOthers: [
+      {
+        npcId: "npc-nadia",
+        line: "Nadia said you sat through the same thing downstairs. Busy week for you.",
+      },
+    ],
     cta: "Open ONE BAD MINUTE",
     action: { kind: "campaign", slug: "one-bad-minute" },
     landmarkId: "voiddeck",
@@ -378,6 +429,7 @@ export const NPCS: Npc[] = [
     tint: "#c9a2ff",
     lines: ["Settle an argument for us.", "How many people here would actually do it?"],
     doneLines: ["Turns out we were all guessing high."],
+    metLine: "Good, you are back. Settle this for us.",
     signal: "connect",
     situation: "An argument about what everybody else would really do",
     cta: "Play Norm Mirror",
@@ -393,8 +445,15 @@ export const NPCS: Npc[] = [
     tint: "#8fbf2e",
     lines: ["We are four and we cannot agree.", "You in?"],
     doneLines: ["Two of us changed our minds. Nobody argued about it."],
+    metLine: "You know these four. Pick a side.",
     signal: "redirect",
     situation: "Four people, one decision, nobody agreeing",
+    aboutOthers: [
+      {
+        npcId: "npc-kai",
+        line: "Kai has been on the court since. Different, though. Quieter.",
+      },
+    ],
     cta: "Play Crew Shift",
     action: { kind: "campaign", slug: "one-bad-minute" },
     landmarkId: "court",
@@ -408,8 +467,15 @@ export const NPCS: Npc[] = [
     tint: "#f0b545",
     lines: ["That machine charged me twice last week.", "Nobody could tell me why."],
     doneLines: ["You changed the machine, not the person. Smart."],
+    metLine: "Ah, you. Come and look at this machine again.",
     signal: "prevent",
     situation: "A machine that charges people twice and nobody fixes",
+    aboutOthers: [
+      {
+        npcId: "npc-rina",
+        line: "That girl Rina was asking about the same thing. You two should compare notes.",
+      },
+    ],
     cta: "Play BREAKSAFE",
     action: { kind: "mission", missionId: "mission-breaksafe" },
     landmarkId: "foodcourt",
@@ -423,8 +489,15 @@ export const NPCS: Npc[] = [
     tint: "#5ac8e0",
     lines: ["Someone messaged me about a job.", "It pays a lot for basically nothing."],
     doneLines: ["You worked out what they actually wanted."],
+    metLine: "You have seen this already, right? Look again.",
     signal: "connect",
     situation: "A job offer that wants an account, not a worker",
+    aboutOthers: [
+      {
+        npcId: "npc-ken",
+        line: "Ken mentioned you. He does not mention people, so.",
+      },
+    ],
     cta: "Take a look",
     action: { kind: "check", checkId: "check-job" },
     landmarkId: "voiddeck",
@@ -438,8 +511,15 @@ export const NPCS: Npc[] = [
     tint: "#c9a2ff",
     lines: ["My cousin just video called asking for money.", "It looked like him."],
     doneLines: ["You checked another way instead of trusting the screen."],
+    metLine: "Still on my mind, this one.",
     signal: "connect",
     situation: "A video call asking for money tonight",
+    aboutOthers: [
+      {
+        npcId: "npc-joy",
+        line: "Joy said you got to her before the message did. Good.",
+      },
+    ],
     cta: "Take a look",
     action: { kind: "check", checkId: "check-verify" },
     landmarkId: "busstop",
@@ -478,6 +558,7 @@ export const NPCS: Npc[] = [
     tint: "#f06fd0",
     lines: ["Can I ask you something weird.", "Haziq wants to borrow my bank login."],
     doneLines: ["He asked me again. I had the words ready that time."],
+    metLine: "You came back. I have not answered him yet.",
     /* Back under the block, out of the middle of the walkway. */
     after: { x: 17, y: 13 },
     signal: "connect",
@@ -495,6 +576,7 @@ export const NPCS: Npc[] = [
     tint: "#5ac8e0",
     lines: ["He asked me first, you know.", "I said no and he went quiet about it."],
     doneLines: ["Glad somebody said something to him."],
+    metLine: "Back again? I said the same thing to him.",
     cta: "Ask what she knows",
     action: { kind: "thread", threadId: "thread-favour" },
     landmarkId: "busstop",
@@ -508,6 +590,7 @@ export const NPCS: Npc[] = [
     tint: "#e8663c",
     lines: ["You heard already.", "It is one week. Then I close it."],
     doneLines: ["I stopped asking. Took the number you gave me."],
+    metLine: "You again. Nothing has changed.",
     cta: "Say something",
     action: { kind: "thread", threadId: "thread-favour" },
     landmarkId: "court",
@@ -524,10 +607,17 @@ export const NPCS: Npc[] = [
     tint: "#c9a2ff",
     lines: ["It started as nothing.", "I do not want to be the one who makes it worse."],
     doneLines: ["I am alright. Thanks for not leaving me standing there."],
+    metLine: "You are still here. It has not stopped.",
     /* Off the court and back along the walkway, which is the whole lesson. */
     after: { x: 14, y: 21 },
     signal: "protect",
     situation: "Raised voices at the court and one person has stopped talking",
+    aboutOthers: [
+      {
+        npcId: "npc-jas",
+        line: "Jas said the group talked it out properly after. That is new.",
+      },
+    ],
     cta: "Help",
     action: { kind: "thread", threadId: "thread-shout" },
     landmarkId: "court",
@@ -563,6 +653,7 @@ export const NPCS: Npc[] = [
     tint: "#7fd4a8",
     lines: ["Kai does it at Sunrise. Every time.", "He says nobody notices."],
     doneLines: ["The stack by the counter moved. That was you, was it."],
+    metLine: "Back? Good. Kai is still doing it.",
     /* Sat down. Nothing to be worried about from here. */
     after: { x: 11, y: 10 },
     signal: "connect",
@@ -580,6 +671,7 @@ export const NPCS: Npc[] = [
     tint: "#e8a33c",
     lines: ["You talked to Lek. About me, is it.", "It is two things."],
     doneLines: ["I have not been back in there. Not like that anyway."],
+    metLine: "You again. Come to have another go?",
     /* On the court itself, which is what his thread's world change promises. */
     after: { x: 22, y: 17 },
     cta: "Say something",
@@ -599,7 +691,14 @@ export const NPCS: Npc[] = [
     tint: "#4ea3c9",
     lines: ["You are on the Crew. Help me with the shop, not with him.", "Something in here is doing half the work."],
     doneLines: ["Stack is gone. I can see the whole aisle from here now."],
+    metLine: "You came back. The shop is still the shop.",
     situation: "A shop that is making the wrong thing easy",
+    aboutOthers: [
+      {
+        npcId: "npc-mira",
+        line: "Mira came in and noticed straight away. First person who did.",
+      },
+    ],
     cta: "Take a look",
     action: { kind: "thread", threadId: "thread-last-two" },
     landmarkId: "minimart",
@@ -615,6 +714,7 @@ export const NPCS: Npc[] = [
     tint: "#f06fd0",
     lines: ["Five things in the basket.", "She scanned three and she is watching me."],
     doneLines: ["You just scanned it. Nobody had to make it a whole thing."],
+    metLine: "You saw. She is still waiting.",
     signal: "redirect",
     situation: "Five things in the basket and three of them scanned",
     cta: "Take a look",
@@ -708,6 +808,7 @@ export const NPCS: Npc[] = [
     tint: "#3d7de0",
     lines: ["I run the youth sessions upstairs.", "Ask me the awkward one. That is the job."],
     doneLines: ["Come back if the next one is harder."],
+    metLine: "Back with another one? Go on.",
     cta: "Ask her",
     action: { kind: "thread", threadId: "thread-favour" },
     landmarkId: "safehub",
@@ -722,6 +823,7 @@ export const NPCS: Npc[] = [
     tint: "#f5b93f",
     lines: ["We are open latest on this block.", "People come in here when they need somewhere lit."],
     doneLines: ["She is sitting inside. She is alright."],
+    metLine: "You know where we are now. Come in.",
     cta: "Talk to her",
     action: { kind: "thread", threadId: "thread-shout" },
     landmarkId: "foodcourt",
@@ -742,6 +844,7 @@ export const NPCS: Npc[] = [
       "We practise the boring version of helping, which is the one that works.",
     ],
     doneLines: ["Board is up. Take whatever you want."],
+    metLine: "Back on the block. Board is up.",
     cta: "Open the Crew board",
     action: { kind: "hub" },
     landmarkId: "voiddeck",

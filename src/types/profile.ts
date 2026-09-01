@@ -160,4 +160,20 @@ export interface UserProfile {
    * or expires. See `streets-props.ts`.
    */
   districtMoments?: string[];
+  /**
+   * People the player has actually spoken to.
+   *
+   * The only piece of state district memory adds, and it exists because it is
+   * the only thing the product did not already know. Whether somebody
+   * finished a mission, banked a thread step, found a moment or saved a draft
+   * is all recorded elsewhere for its own reasons, so every other memory is
+   * derived from what is already true rather than written twice.
+   *
+   * Fixtures are never in here. A noticeboard is not somebody you have met.
+   *
+   * Optional, so a profile saved before this existed rehydrates as a player
+   * who has met nobody, which is wrong but harmless: the first conversation
+   * fixes it, and the alternative is inventing history somebody did not have.
+   */
+  metNpcs?: string[];
 }

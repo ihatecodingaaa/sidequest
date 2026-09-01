@@ -37,11 +37,28 @@ import {
 export function AvatarSetup({
   onDone,
   onSkip,
+  initial,
+  title = "Who are you today?",
+  lede = "Change it whenever. It is only how you look.",
+  confirmLabel,
+  skipLabel = "Skip",
 }: {
   onDone: (look: AvatarLook) => void;
   onSkip: () => void;
+  /**
+   * What they are already wearing.
+   *
+   * Absent on the first run, where there is nothing to start from. Present
+   * everywhere else, because reopening this to change one thing and finding
+   * the default staring back is starting over rather than editing.
+   */
+  initial?: AvatarLook;
+  title?: string;
+  lede?: string;
+  confirmLabel?: string;
+  skipLabel?: string;
 }) {
-  const [look, setLook] = useState<AvatarLook>(DEFAULT_AVATAR);
+  const [look, setLook] = useState<AvatarLook>(initial ?? DEFAULT_AVATAR);
 
   const randomise = () =>
     setLook({
@@ -54,10 +71,8 @@ export function AvatarSetup({
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-ink-900 px-5 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-      <h1 className="font-display text-2xl font-extrabold tracking-tight text-chalk">
-        Who are you today?
-      </h1>
-      <p className="mt-1 text-sm text-muted">Change it whenever. It is only how you look.</p>
+      <h1 className="font-display text-2xl font-extrabold tracking-tight text-chalk">{title}</h1>
+      <p className="mt-1 text-sm text-muted">{lede}</p>
 
       {/* The sprite, at the size it appears in the world, x4. */}
       <div className="my-6 grid place-items-center rounded-3xl border border-white/10 bg-[#3f7a46] py-7">
@@ -146,7 +161,7 @@ export function AvatarSetup({
           onClick={() => onDone(look)}
           className="sq-pressable flex min-h-13 w-full items-center justify-center rounded-2xl bg-volt-500 py-3.5 text-sm font-bold text-ink-900"
         >
-          Head out
+          {confirmLabel ?? "Head out"}
         </button>
         <div className="flex gap-2.5">
           <button
@@ -162,7 +177,7 @@ export function AvatarSetup({
             onClick={onSkip}
             className="sq-pressable flex min-h-12 flex-1 items-center justify-center rounded-2xl text-sm font-semibold text-muted hover:text-chalk"
           >
-            Skip
+            {skipLabel}
           </button>
         </div>
       </div>

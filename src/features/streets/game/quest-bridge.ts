@@ -132,9 +132,44 @@ export function npcDone(profile: UserProfile, npc: Npc): boolean {
 export const COUNTABLE_ACTIONS = new Set(["mission", "campaign", "check", "thread"]);
 
 export function waitingCount(profile: UserProfile): number {
+  return waitingPeople(profile).length;
+}
+
+/**
+ * The actual people with something unresolved, in world order.
+ *
+ * A count is a number and a name is a reason. "Three people want a word" tells
+ * somebody the size of a backlog, which is the language of a task list; "Wei
+ * is still at the minimart" tells them there is a person there, which is the
+ * language of a place. The count is still available and still used where a
+ * number is genuinely the right unit, but the front door now leads with a
+ * name, and prefers somebody already met over a stranger, because being owed
+ * an answer is a stronger reason to go back than being offered a new one.
+ *
+ * Machines are excluded. A self checkout does not want a word.
+ */
+export function waitingPeople(profile: UserProfile): Npc[] {
   return NPCS.filter(
-    (npc) => COUNTABLE_ACTIONS.has(npc.action.kind) && !npcDone(profile, npc),
-  ).length;
+    (npc) =>
+      (npc.figure ?? "person") === "person" &&
+      COUNTABLE_ACTIONS.has(npc.action.kind) &&
+      !npcDone(profile, npc),
+  );
+}
+
+/**
+ * One person to mention on Home, or nobody.
+ *
+ * Deterministic: the first unresolved neighbour the player has already met,
+ * falling back to the first unresolved neighbour at all. No rotation, no
+ * randomness and no recency, so the front door says the same thing until the
+ * player changes something, and what changes it is always legible.
+ */
+export function whoIsWaiting(profile: UserProfile): Npc | null {
+  const waiting = waitingPeople(profile);
+  if (waiting.length === 0) return null;
+  const met = new Set(profile.metNpcs ?? []);
+  return waiting.find((npc) => met.has(npc.id)) ?? waiting[0];
 }
 
 export function useStreetsBridge(): StreetsBridge {

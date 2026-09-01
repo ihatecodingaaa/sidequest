@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, MapPin } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import { ACCENT_GRADIENT, ACCENT_TEXT } from "@/lib/accent";
@@ -10,6 +10,7 @@ import { HERO_MISSION_IDS, getMissions } from "@/data/missions";
 import { useProfile } from "@/hooks/use-profile";
 import { MISSION_ART } from "@/components/mission/mission-art";
 import { MissionWorld } from "@/components/mission/mission-world";
+import { questGiver } from "@/features/missions/quest-journal";
 
 /**
  * The three signature missions, given their own treatment.
@@ -17,6 +18,11 @@ import { MissionWorld } from "@/components/mission/mission-world";
  * They carry the product's argument (rehearsal, norms, environment design) and
  * a flat list buries them among the quick quests. This is the shortest route to
  * the part of SIDEQUEST that is actually different.
+ *
+ * Each one also says who asks for it and where they stand, because these three
+ * are exactly the missions somebody in the district opens, and until now the
+ * catalogue and the neighbourhood described the same three experiences without
+ * either one admitting it.
  */
 export function SignatureStrip({ className }: { className?: string }) {
   const { profile, ready } = useProfile();
@@ -85,7 +91,9 @@ export function SignatureStrip({ className }: { className?: string }) {
                 {mission.subtitle}
               </span>
 
-              <span className="mt-3 flex items-center gap-2 text-xs font-semibold text-faint">
+              <GiverLine missionId={mission.id} />
+
+              <span className="mt-2 flex items-center gap-2 text-xs font-semibold text-faint">
                 {formatDuration(mission.durationMinutes)}
                 <span aria-hidden>&middot;</span>
                 <span className={ACCENT_TEXT[mission.accent]}>{mission.xp} XP</span>
@@ -99,5 +107,31 @@ export function SignatureStrip({ className }: { className?: string }) {
         );
       })}
     </ul>
+  );
+}
+
+/**
+ * Who asks, and where they stand.
+ *
+ * Two states. Before you have met them it is an introduction to a stranger in
+ * a named place, which is an invitation to go and find them. After you have
+ * met them it says you were asked, which turns a card in a catalogue into
+ * somebody who is still waiting. Neither state gates anything: the mission
+ * opens from here either way.
+ */
+function GiverLine({ missionId }: { missionId: string }) {
+  const { profile, ready } = useProfile();
+  const giver = questGiver(missionId, profile);
+  if (!giver) return null;
+
+  return (
+    <span className="mt-2.5 flex items-center gap-1 text-xs font-semibold text-faint">
+      <MapPin aria-hidden className="size-3.5 shrink-0" />
+      <span className="truncate">
+        {ready && giver.met
+          ? `${giver.name} asked you, at the ${giver.place.toLowerCase()}`
+          : `${giver.name} asks, at the ${giver.place.toLowerCase()}`}
+      </span>
+    </span>
   );
 }

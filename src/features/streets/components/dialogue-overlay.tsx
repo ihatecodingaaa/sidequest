@@ -12,7 +12,7 @@ import { ExternalLink, ProvenanceTag } from "@/components/ui/primitives";
 import { getOfficialResource } from "@/lib/official-links";
 import { ThreadPanel } from "@/features/streets/components/thread-panel";
 import { WorldSheet } from "@/features/streets/components/world-sheet";
-import { STREET_CHECKS, type Npc } from "@/features/streets/streets-data";
+import { NPCS, STREET_CHECKS, type Npc } from "@/features/streets/streets-data";
 import type { StreetsBridge } from "@/features/streets/game/quest-bridge";
 import type { AwardResult } from "@/lib/xp";
 
@@ -31,6 +31,7 @@ import type { AwardResult } from "@/lib/xp";
 export function DialogueOverlay({
   npc,
   done,
+  met,
   bridge,
   onClose,
   onOpenRewards,
@@ -39,6 +40,8 @@ export function DialogueOverlay({
 }: {
   npc: Npc;
   done: boolean;
+  /** Whether the player has spoken to this person before. */
+  met: boolean;
   bridge: StreetsBridge;
   onClose: () => void;
   /** The rewards counter is a screen of its own, opened from Mei's line. */
@@ -74,7 +77,57 @@ export function DialogueOverlay({
    * they say when they have nothing to hand you, which is why a finished
    * thread falls back to them.
    */
-  const lines = threadStep ? threadStep.step.lines : done ? npc.doneLines : npc.lines;
+  /*
+   * Three states, not two: never met, met, helped.
+   *
+   * A live thread step always speaks for itself, because the story is more
+   * specific than any greeting. Otherwise: somebody who has finished what you
+   * needed says their done lines, somebody you have met before opens
+   * differently, and somebody you have never spoken to gets the full
+   * introduction.
+   *
+   * The met greeting REPLACES the opening line rather than being added to it,
+   * so a repeat conversation is exactly as long as the first one. Recognition
+   * is not a licence to make people talk more.
+   */
+  /*
+   * Latched on open, exactly as the thread step above is, and for the same
+   * class of reason. Opening the sheet is what records the meeting, so by the
+   * time this renders the store already says the player has met them. Reading
+   * it live would give somebody the "back again" greeting during the
+   * conversation where they were introduced.
+   */
+  const [metOnOpen] = useState(met);
+
+  const baseLines = threadStep
+    ? threadStep.step.lines
+    : done
+      ? npc.doneLines
+      : metOnOpen && npc.metLine
+        ? [npc.metLine, ...npc.lines.slice(1)]
+        : npc.lines;
+  /*
+   * One line about somebody else, when both of their situations are resolved.
+   *
+   * Appended to the done lines rather than replacing them, and latched on open
+   * with everything else, so a conversation cannot change shape underneath the
+   * player. First match wins: a character says one thing about one neighbour,
+   * because two is a monologue and the two-bubble rule does not stop applying
+   * because the content got warmer.
+   *
+   * Read through the bridge, which is the only way anything in here is allowed
+   * to ask the product a question about progress.
+   */
+  const [heard] = useState(() => {
+    if (!done) return null;
+    for (const entry of npc.aboutOthers ?? []) {
+      const other = NPCS.find((candidate) => candidate.id === entry.npcId);
+      if (other && bridge.isNpcDone(other)) return entry.line;
+    }
+    return null;
+  });
+
+  const lines = heard ? [...baseLines, heard] : baseLines;
   const linesDone = beat >= lines.length - 1;
 
   /* Street Check state, kept local: the ledger lives in the store. */
